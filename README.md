@@ -1,15 +1,14 @@
-# UNT PEI Control Pro
+# UNT PEI — Sistema + Semáforos Pro
 
-Versión visual inspirada en un panel ejecutivo institucional: azul/blanco, tarjetas compactas, semáforos 3D, anillos de salud, radar estático y diseño responsive.
+Misma lógica y misma estructura funcional de la versión Refinado Visual, con una capa estética inspirada en un sistema institucional moderno.
 
-## Archivos
-- `app.py`
-- `basededatos.xlsx`
-- `requirements.txt`
-
-## Ejecutar
-```powershell
-python -m streamlit run app.py
-```
-
-No hay cargador de Excel: la aplicación lee `basededatos.xlsx` desde la misma carpeta.
+- Barra superior azul institucional y cabecera compacta.
+- Panel principal tipo centro de control.
+- Tarjetas KPI compactas con iconos y microtrazos.
+- Semáforos 3D integrados en IND.01, P17 y D1–D4.
+- D1–D4 en tarjetas de salud con anillos.
+- Comparación D1–D4 fija, sin zoom ni arrastre.
+- P1–P16 en tarjetas responsive.
+- Likert en cápsulas segmentadas estáticas.
+- Responsive para PC, tablet y celular.
+- `basededatos.xlsx` se carga automáticamente.
