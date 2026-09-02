@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from html import escape
-from io import BytesIO
 from pathlib import Path
 
 import pandas as pd
@@ -10,7 +9,7 @@ import streamlit as st
 
 
 # ==============================================================
-# CONFIGURACIÓN
+# CONFIGURACIÓN GENERAL
 # ==============================================================
 st.set_page_config(
     page_title="UNT | Satisfacción estudiantil",
@@ -28,32 +27,36 @@ DIMENSIONS = {
         "name": "Calidad del proceso académico",
         "short": "Proceso académico",
         "items": ["P1", "P2", "P3", "P4"],
-        "color": "#2F6BFF",
-        "soft": "#EAF0FF",
+        "color": "#3157D5",
+        "soft": "#EEF2FF",
+        "icon": "📘",
         "desc": "Pertinencia curricular, plan de estudios, carga académica y coherencia de las asignaturas.",
     },
     "D2": {
         "name": "Desempeño docente y estrategias pedagógicas",
-        "short": "Docencia",
+        "short": "Docencia y pedagogía",
         "items": ["P5", "P6", "P7", "P8"],
-        "color": "#6C5CE7",
-        "soft": "#F0EDFF",
+        "color": "#6D4CC7",
+        "soft": "#F3EFFF",
+        "icon": "🎓",
         "desc": "Dominio docente, metodología, participación del estudiante y retroalimentación.",
     },
     "D3": {
         "name": "Servicios y gestión educativa",
         "short": "Servicios y gestión",
         "items": ["P9", "P10", "P11", "P12"],
-        "color": "#D97706",
-        "soft": "#FFF4E5",
+        "color": "#B7791F",
+        "soft": "#FFF7E8",
+        "icon": "🏛️",
         "desc": "Trámites, información académica, infraestructura, recursos y aseguramiento de la calidad.",
     },
     "D4": {
         "name": "Formación integral y desarrollo personal",
         "short": "Formación integral",
         "items": ["P13", "P14", "P15", "P16"],
-        "color": "#0F9D7A",
-        "soft": "#E8F7F2",
+        "color": "#16836B",
+        "soft": "#ECF8F4",
+        "icon": "🌱",
         "desc": "Competencias profesionales, valores, desarrollo personal y preparación para el ejercicio profesional.",
     },
 }
@@ -80,203 +83,228 @@ ITEM_TEXT = {
 
 STATUS = {
     "Insatisfactorio": {
-        "color": "#DC2626",
-        "dark": "#991B1B",
-        "soft": "#FEF2F2",
+        "color": "#D9363E",
+        "dark": "#8F1F25",
+        "soft": "#FFF0F1",
         "range": "0% a <60%",
         "signal": "red",
-        "icon": "●",
+        "emoji": "🔴",
         "action": "Atención prioritaria",
     },
     "Regular": {
-        "color": "#F59E0B",
-        "dark": "#B45309",
-        "soft": "#FFFBEB",
+        "color": "#E59A18",
+        "dark": "#9A6209",
+        "soft": "#FFF7E6",
         "range": "60% a <75%",
         "signal": "amber",
-        "icon": "●",
+        "emoji": "🟠",
         "action": "Requiere seguimiento",
     },
     "Satisfactorio": {
-        "color": "#16A34A",
-        "dark": "#166534",
-        "soft": "#F0FDF4",
+        "color": "#1C9B62",
+        "dark": "#126540",
+        "soft": "#ECF9F2",
         "range": "75% a <90%",
         "signal": "green",
-        "icon": "●",
+        "emoji": "🟢",
         "action": "Cumple el estándar",
     },
     "Muy satisfactorio": {
-        "color": "#059669",
-        "dark": "#065F46",
-        "soft": "#ECFDF5",
+        "color": "#087A57",
+        "dark": "#07513C",
+        "soft": "#E7F7F0",
         "range": "90% a 100%",
         "signal": "green",
-        "icon": "★",
+        "emoji": "🟢",
         "action": "Desempeño destacado",
     },
 }
 
 LIKERT = {
-    "Desfavorable (1–2)": "#E45757",
-    "Neutral (3)": "#A7B0BE",
-    "Favorable (4–5)": "#1F9D78",
+    "Desfavorable (1–2)": "#D9595F",
+    "Neutral (3)": "#AAB3C0",
+    "Favorable (4–5)": "#248B70",
+}
+
+PLOT_CONFIG = {
+    "displayModeBar": False,
+    "responsive": True,
+    "scrollZoom": False,
+    "doubleClick": False,
 }
 
 
 # ==============================================================
-# CSS — ARQUITECTURA VISUAL NUEVA
+# ESTILO RESPONSIVE — COMPUTADORA, TABLET Y CELULAR
 # ==============================================================
 st.html(
     """
 <style>
 :root{
-  --ink:#132238;
-  --muted:#667085;
-  --line:#E7ECF2;
+  --ink:#172033;
+  --muted:#6D788A;
+  --line:#E6EAF0;
   --paper:#FFFFFF;
-  --bg:#F4F7FB;
-  --navy:#0A1E35;
-  --navy2:#123B5B;
-  --blue:#2F6BFF;
+  --bg:#F5F7FB;
+  --navy:#0D1F35;
+  --navy2:#163D5C;
+  --blue:#3157D5;
+  --shadow:0 16px 38px rgba(25,39,62,.08),0 3px 8px rgba(25,39,62,.035);
 }
+*{box-sizing:border-box}
 html,body,[class*="css"]{font-family:"Aptos","Segoe UI Variable","Segoe UI",Inter,Arial,sans-serif;}
 .stApp{
   background:
-    radial-gradient(circle at 10% -10%,rgba(47,107,255,.10),transparent 34rem),
-    radial-gradient(circle at 98% 8%,rgba(15,157,122,.08),transparent 28rem),
-    linear-gradient(180deg,#F9FBFE 0%,var(--bg) 100%);
+    radial-gradient(circle at 8% -6%,rgba(49,87,213,.09),transparent 34rem),
+    radial-gradient(circle at 98% 4%,rgba(22,131,107,.08),transparent 30rem),
+    linear-gradient(180deg,#FAFBFD 0%,var(--bg) 100%);
   color:var(--ink);
 }
-.block-container{max-width:1500px;padding-top:1.15rem;padding-bottom:3.5rem;}
+.block-container{max-width:1420px;padding:1rem 1.5rem 3rem;}
 #MainMenu,footer{visibility:hidden;}
-header[data-testid="stHeader"]{background:rgba(249,251,254,.84);backdrop-filter:blur(12px);}
+header[data-testid="stHeader"]{background:rgba(250,251,253,.86);backdrop-filter:blur(12px);}
+section[data-testid="stSidebar"]{display:none!important;}
+[data-testid="stSidebarCollapsedControl"]{display:none!important;}
 
 /* HERO */
-.hero-shell{
-  position:relative;overflow:hidden;border-radius:26px;padding:27px 30px 25px;
-  background:linear-gradient(118deg,#081B30 0%,#103A59 58%,#0C6670 125%);
-  color:white;border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 24px 60px rgba(10,30,53,.20),inset 0 1px 0 rgba(255,255,255,.10);
+.hero{
+  position:relative;overflow:hidden;border-radius:28px;padding:28px 30px;
+  background:linear-gradient(120deg,#0A1C31 0%,#113C5C 62%,#0D6C70 130%);
+  color:#fff;border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 26px 62px rgba(13,31,53,.20),inset 0 1px 0 rgba(255,255,255,.10);
 }
-.hero-shell:before{content:"";position:absolute;right:-65px;top:-115px;width:330px;height:330px;border-radius:50%;border:58px solid rgba(255,255,255,.045);}
-.hero-shell:after{content:"";position:absolute;right:190px;bottom:-145px;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,rgba(73,194,184,.18),transparent 67%);}
-.hero-kicker{font-size:.72rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#9ED9E2;margin-bottom:7px;}
-.hero-title{font-size:2.05rem;font-weight:800;letter-spacing:-.045em;line-height:1.08;margin:0 0 8px;color:white;}
-.hero-sub{font-size:.94rem;color:#D6E6EE;max-width:900px;line-height:1.5;}
-.hero-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1;}
-.hero-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);font-size:.75rem;color:#EFF7FA;}
+.hero:before{content:"";position:absolute;right:-85px;top:-130px;width:360px;height:360px;border-radius:50%;border:64px solid rgba(255,255,255,.045)}
+.hero-kicker{font-size:.72rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#A8DDE3;margin-bottom:8px}
+.hero-title{font-size:clamp(1.65rem,4vw,2.45rem);font-weight:850;letter-spacing:-.045em;line-height:1.05;margin:0;color:white}
+.hero-sub{font-size:clamp(.83rem,1.5vw,.98rem);color:#D8E7EE;line-height:1.5;max-width:920px;margin-top:9px}
+.hero-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px;position:relative;z-index:1}
+.hero-chip{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);font-size:.74rem;color:#F2F8FA}
 
-/* TÍTULOS */
-.section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:1.35rem 0 .72rem;}
-.section-kicker{font-size:.67rem;color:#2F6BFF;font-weight:850;text-transform:uppercase;letter-spacing:.12em;margin-bottom:3px;}
-.section-title{font-size:1.22rem;font-weight:800;letter-spacing:-.025em;color:#172B3A;line-height:1.2;}
-.section-note{font-size:.78rem;color:#7A8797;text-align:right;max-width:460px;}
+/* SECCIONES */
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin:1.45rem 0 .72rem}
+.section-kicker{font-size:.67rem;color:#3157D5;font-weight:850;text-transform:uppercase;letter-spacing:.12em;margin-bottom:3px}
+.section-title{font-size:clamp(1.05rem,2.3vw,1.3rem);font-weight:850;letter-spacing:-.025em;color:#17263A;line-height:1.2}
+.section-note{font-size:.77rem;color:#7A8797;text-align:right;max-width:460px}
 
-/* TARJETAS GENERALES */
-.glass-card,.metric-card,.dim-card,.insight-card,.method-card,.table-shell{
-  background:linear-gradient(145deg,#FFFFFF 0%,#FBFCFE 62%,#F5F8FB 100%);
-  border:1px solid var(--line);border-radius:20px;
-  box-shadow:0 16px 38px rgba(19,34,56,.075),0 3px 8px rgba(19,34,56,.035),inset 0 1px 0 rgba(255,255,255,.95);
+/* GRIDS RESPONSIVE */
+.top-grid{display:grid;grid-template-columns:minmax(300px,.92fr) minmax(0,1.65fr);gap:18px;align-items:stretch}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.dim-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.insight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.method-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.rule-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+
+/* TARJETAS */
+.card,.metric-card,.dim-card,.insight-card,.method-card,.rule-card{
+  background:linear-gradient(145deg,#FFFFFF 0%,#FBFCFE 66%,#F5F7FA 100%);
+  border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);
 }
-.metric-card,.dim-card,.insight-card{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;}
-.metric-card:hover,.dim-card:hover,.insight-card:hover{transform:translateY(-3px);box-shadow:0 24px 48px rgba(19,34,56,.105),0 5px 10px rgba(19,34,56,.045);border-color:#D7DEE8;}
+.metric-card,.dim-card,.insight-card{transition:transform .18s ease,box-shadow .18s ease}
+.metric-card:hover,.dim-card:hover,.insight-card:hover{transform:translateY(-2px);box-shadow:0 22px 48px rgba(25,39,62,.11)}
 
-/* CONTROL CENTRAL / SEMÁFORO */
-.command-card{height:100%;min-height:330px;padding:20px 20px 18px;position:relative;overflow:hidden;}
-.command-card:after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;right:-90px;bottom:-90px;background:radial-gradient(circle,rgba(47,107,255,.08),transparent 68%);}
-.command-label{font-size:.68rem;font-weight:850;letter-spacing:.12em;text-transform:uppercase;color:#718096;}
-.command-title{font-size:1rem;font-weight:800;color:#1B2D40;margin-top:4px;}
-.signal-stage{display:grid;grid-template-columns:112px minmax(0,1fr);gap:18px;align-items:center;margin-top:15px;padding:17px;border-radius:18px;background:linear-gradient(145deg,#0A1825,#122D43);border:1px solid rgba(255,255,255,.07);box-shadow:0 16px 30px rgba(8,24,37,.22),inset 0 1px 0 rgba(255,255,255,.07);}
-.traffic-shell{width:78px;margin:auto;padding:10px 9px;border-radius:25px;background:linear-gradient(145deg,#1C2732,#080C10);border:2px solid #30404F;box-shadow:10px 12px 22px rgba(0,0,0,.32),inset 6px 6px 12px rgba(255,255,255,.045),inset -6px -7px 13px rgba(0,0,0,.48);position:relative;}
-.traffic-shell:before{content:"🚦";position:absolute;font-size:1.05rem;right:-13px;top:-15px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25));}
-.lamp{width:48px;height:48px;border-radius:50%;margin:8px auto;position:relative;opacity:.18;box-shadow:inset 8px 9px 13px rgba(255,255,255,.07),inset -9px -10px 15px rgba(0,0,0,.45),0 3px 5px rgba(0,0,0,.50);}
-.lamp:after{content:"";position:absolute;width:14px;height:9px;border-radius:50%;left:10px;top:7px;background:rgba(255,255,255,.30);transform:rotate(-18deg);}
+/* SEMÁFORO 3D GLOBAL */
+.signal-card{padding:20px;min-height:336px;position:relative;overflow:hidden}
+.signal-label{font-size:.66rem;font-weight:850;text-transform:uppercase;letter-spacing:.12em;color:#718096}
+.signal-title{font-size:1.02rem;font-weight:850;color:#1A2E43;margin-top:5px}
+.signal-stage{margin-top:15px;padding:17px;border-radius:20px;background:linear-gradient(145deg,#091520,#122B3E);border:1px solid rgba(255,255,255,.08);box-shadow:0 16px 30px rgba(8,24,37,.23),inset 0 1px 0 rgba(255,255,255,.07);display:grid;grid-template-columns:105px minmax(0,1fr);gap:18px;align-items:center}
+.traffic-wrap{display:flex;justify-content:center}
+.traffic{
+  width:80px;padding:10px 9px;border-radius:26px;background:linear-gradient(145deg,#26333F,#080C10);
+  border:2px solid #344656;box-shadow:11px 13px 22px rgba(0,0,0,.34),inset 6px 6px 12px rgba(255,255,255,.045),inset -7px -8px 14px rgba(0,0,0,.5);position:relative
+}
+.traffic:before{content:"🚦";position:absolute;font-size:1.15rem;right:-16px;top:-17px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
+.lamp{width:49px;height:49px;border-radius:50%;margin:8px auto;opacity:.16;position:relative;box-shadow:inset 8px 9px 13px rgba(255,255,255,.07),inset -9px -10px 15px rgba(0,0,0,.45),0 3px 5px rgba(0,0,0,.5)}
+.lamp:after{content:"";position:absolute;width:14px;height:9px;border-radius:50%;left:10px;top:7px;background:rgba(255,255,255,.30);transform:rotate(-18deg)}
 .lamp.red{background:#EF4444}.lamp.amber{background:#F59E0B}.lamp.green{background:#22C55E}
-.lamp.active{opacity:1;animation:pulseLamp 2.1s ease-in-out infinite;}
-.lamp.red.active{box-shadow:0 0 11px #EF4444,0 0 33px rgba(239,68,68,.70),inset 8px 9px 13px rgba(255,255,255,.30),inset -9px -10px 15px rgba(80,0,0,.35);}
-.lamp.amber.active{box-shadow:0 0 11px #F59E0B,0 0 33px rgba(245,158,11,.70),inset 8px 9px 13px rgba(255,255,255,.30),inset -9px -10px 15px rgba(86,51,0,.35);}
-.lamp.green.active{box-shadow:0 0 11px #22C55E,0 0 33px rgba(34,197,94,.68),inset 8px 9px 13px rgba(255,255,255,.30),inset -9px -10px 15px rgba(0,68,35,.35);}
-@keyframes pulseLamp{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
-.signal-copy .big-score{font-size:2.55rem;font-weight:850;color:#FFFFFF;letter-spacing:-.055em;line-height:1;}
-.signal-copy .big-level{font-size:1rem;font-weight:800;margin-top:7px;}
-.signal-copy .big-range{font-size:.76rem;color:#C8D8E2;margin-top:5px;line-height:1.35;}
-.signal-copy .big-action{display:inline-flex;margin-top:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);border-radius:999px;padding:6px 9px;font-size:.71rem;color:#F3F8FA;}
-.scale-zone{margin-top:14px;}
-.scale-track{height:12px;border-radius:999px;display:grid;grid-template-columns:60fr 15fr 15fr 10fr;overflow:hidden;border:1px solid #E6EBF0;box-shadow:inset 0 1px 2px rgba(15,23,42,.08);}
-.scale-track span:nth-child(1){background:#EF4444}.scale-track span:nth-child(2){background:#F59E0B}.scale-track span:nth-child(3){background:#22C55E}.scale-track span:nth-child(4){background:#059669}
-.scale-legend{display:grid;grid-template-columns:60fr 15fr 15fr 10fr;gap:0;margin-top:5px;font-size:.61rem;color:#748195;line-height:1.15;}
-.scale-legend div{padding-right:4px;}
+.lamp.on{opacity:1;animation:glow 2s ease-in-out infinite}
+.lamp.red.on{box-shadow:0 0 11px #EF4444,0 0 34px rgba(239,68,68,.72),inset 8px 9px 13px rgba(255,255,255,.30),inset -9px -10px 15px rgba(80,0,0,.35)}
+.lamp.amber.on{box-shadow:0 0 11px #F59E0B,0 0 34px rgba(245,158,11,.72),inset 8px 9px 13px rgba(255,255,255,.30),inset -9px -10px 15px rgba(86,51,0,.35)}
+.lamp.green.on{box-shadow:0 0 11px #22C55E,0 0 34px rgba(34,197,94,.70),inset 8px 9px 13px rgba(255,255,255,.30),inset -9px -10px 15px rgba(0,68,35,.35)}
+@keyframes glow{0%,100%{transform:scale(1)}50%{transform:scale(1.055)}}
+.signal-score{font-size:clamp(2.25rem,5vw,3rem);font-weight:900;letter-spacing:-.06em;color:#fff;line-height:1}
+.signal-level{font-size:1rem;font-weight:850;margin-top:8px}
+.signal-range{font-size:.75rem;color:#CAD9E2;margin-top:5px;line-height:1.42}
+.signal-action{display:inline-flex;margin-top:10px;border-radius:999px;padding:6px 9px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);font-size:.7rem;color:#F4F8FA}
+.scale{height:10px;border-radius:999px;display:grid;grid-template-columns:60fr 15fr 15fr 10fr;overflow:hidden;margin-top:15px;border:1px solid #E4E9F0}
+.scale span:nth-child(1){background:#D9363E}.scale span:nth-child(2){background:#E59A18}.scale span:nth-child(3){background:#1C9B62}.scale span:nth-child(4){background:#087A57}
+.scale-labels{display:grid;grid-template-columns:60fr 15fr 15fr 10fr;margin-top:5px;font-size:.59rem;color:#7D8999;line-height:1.2}
 
-/* MÉTRICAS */
-.metric-card{padding:16px 17px;min-height:118px;position:relative;overflow:hidden;}
-.metric-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
-.metric-icon{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:#EEF3FF;color:#2F6BFF;font-size:1rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.9);}
-.metric-label{font-size:.69rem;color:#758195;font-weight:800;text-transform:uppercase;letter-spacing:.075em;margin-top:11px;}
-.metric-value{font-size:1.62rem;color:#15263B;font-weight:850;letter-spacing:-.045em;margin-top:2px;line-height:1.05;}
-.metric-foot{font-size:.73rem;color:#788699;margin-top:6px;line-height:1.3;}
+/* KPIs */
+.metric-card{padding:16px;min-height:116px}
+.metric-icon{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;background:#EEF2FF;font-size:1.02rem;box-shadow:inset 0 1px 0 #fff}
+.metric-label{font-size:.65rem;color:#7A8697;font-weight:850;text-transform:uppercase;letter-spacing:.075em;margin-top:10px}
+.metric-value{font-size:1.55rem;color:#17263A;font-weight:900;letter-spacing:-.045em;margin-top:2px}
+.metric-foot{font-size:.71rem;color:#788699;margin-top:5px;line-height:1.35}
 
-/* DIMENSIONES */
-.dim-card{padding:17px;min-height:184px;position:relative;overflow:hidden;}
-.dim-card:before{content:"";position:absolute;left:0;top:0;width:100%;height:4px;background:var(--dim);}
-.dim-header{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.dim-code{font-size:.72rem;font-weight:900;letter-spacing:.08em;color:var(--dim);background:var(--soft);padding:5px 8px;border-radius:9px;}
-.status-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;background:var(--status-soft);color:var(--status-dark);font-size:.68rem;font-weight:800;border:1px solid rgba(0,0,0,.035);}
-.status-led{width:8px;height:8px;border-radius:50%;background:var(--status);box-shadow:0 0 0 3px var(--status-soft);}
-.dim-body{display:grid;grid-template-columns:82px minmax(0,1fr);gap:12px;align-items:center;margin-top:13px;}
-.progress-ring{--p:0;--ring:#2F6BFF;width:76px;height:76px;border-radius:50%;position:relative;background:conic-gradient(var(--ring) calc(var(--p)*1%),#E9EEF5 0);display:grid;place-items:center;box-shadow:0 8px 18px rgba(19,34,56,.11),inset 0 1px 0 rgba(255,255,255,.9);}
-.progress-ring:before{content:"";width:58px;height:58px;border-radius:50%;background:linear-gradient(145deg,#FFFFFF,#F6F8FB);box-shadow:inset 0 1px 2px rgba(15,23,42,.08);position:absolute;}
-.progress-ring span{position:relative;z-index:1;font-size:.88rem;font-weight:850;color:#172B3A;}
-.dim-name{font-size:.84rem;font-weight:800;color:#22364A;line-height:1.28;}
-.dim-meta{font-size:.70rem;color:#7B8797;margin-top:6px;line-height:1.35;}
-.dim-target{font-size:.69rem;font-weight:750;margin-top:6px;color:#4B5C70;}
-
-/* MINI SEMÁFORO */
-.mini-signal{display:inline-flex;gap:4px;padding:4px 6px;border-radius:999px;background:#17212B;box-shadow:inset 0 1px 2px rgba(255,255,255,.08),0 3px 8px rgba(15,23,42,.12);}
-.mini-light{width:8px;height:8px;border-radius:50%;opacity:.18}.mini-light.red{background:#EF4444}.mini-light.amber{background:#F59E0B}.mini-light.green{background:#22C55E}.mini-light.on{opacity:1}.mini-light.red.on{box-shadow:0 0 8px #EF4444}.mini-light.amber.on{box-shadow:0 0 8px #F59E0B}.mini-light.green.on{box-shadow:0 0 8px #22C55E}
+/* SATISFACCIÓN DE LAS 4 DIMENSIONES */
+.dim-card{padding:17px;min-height:210px;position:relative;overflow:hidden}
+.dim-card:before{content:"";position:absolute;left:0;top:0;width:100%;height:4px;background:var(--dim)}
+.dim-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dim-id{display:flex;align-items:center;gap:7px}
+.dim-icon{font-size:1rem}
+.dim-code{font-size:.7rem;font-weight:900;color:var(--dim);background:var(--soft);padding:5px 8px;border-radius:9px}
+.status-badge{display:flex;align-items:center;gap:5px;padding:5px 7px;border-radius:999px;background:var(--status-soft);color:var(--status-dark);font-size:.64rem;font-weight:850;white-space:nowrap}
+.dim-score-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:17px}
+.dim-score{font-size:clamp(1.75rem,3vw,2.15rem);font-weight:900;color:#17263A;letter-spacing:-.055em;line-height:1}
+.dim-caption{font-size:.66rem;color:#7B8797;font-weight:750;margin-top:4px;text-transform:uppercase;letter-spacing:.04em}
+.mini-traffic{display:flex;gap:4px;padding:6px 7px;border-radius:999px;background:linear-gradient(145deg,#273440,#10161C);box-shadow:4px 5px 10px rgba(15,23,42,.18),inset 0 1px 0 rgba(255,255,255,.08)}
+.mini-light{width:10px;height:10px;border-radius:50%;opacity:.16;box-shadow:inset 1px 1px 2px rgba(255,255,255,.24)}
+.mini-light.red{background:#EF4444}.mini-light.amber{background:#F59E0B}.mini-light.green{background:#22C55E}
+.mini-light.on{opacity:1}.mini-light.red.on{box-shadow:0 0 9px rgba(239,68,68,.85)}.mini-light.amber.on{box-shadow:0 0 9px rgba(245,158,11,.85)}.mini-light.green.on{box-shadow:0 0 9px rgba(34,197,94,.85)}
+.dim-name{font-size:.82rem;font-weight:850;color:#25384D;line-height:1.32;margin-top:14px;min-height:2.15em}
+.dim-foot{display:flex;justify-content:space-between;gap:8px;align-items:end;margin-top:12px;padding-top:10px;border-top:1px solid #EDF0F4}
+.dim-range{font-size:.67rem;color:#758294}.dim-gap{font-size:.67rem;color:#4D5D70;font-weight:750;text-align:right}
 
 /* INSIGHTS */
-.insight-card{padding:15px 16px;min-height:118px;border-left:4px solid var(--accent);}
-.insight-kicker{font-size:.66rem;font-weight:850;text-transform:uppercase;letter-spacing:.08em;color:#7A8798;}
-.insight-title{font-size:.92rem;font-weight:850;color:#1C3045;margin-top:6px;line-height:1.25;}
-.insight-text{font-size:.75rem;color:#677587;margin-top:6px;line-height:1.4;}
+.insight-card{padding:16px;border-left:4px solid var(--accent);min-height:116px}
+.insight-kicker{font-size:.64rem;font-weight:850;text-transform:uppercase;letter-spacing:.08em;color:#7A8798}
+.insight-title{font-size:.9rem;font-weight:850;color:#1D3044;margin-top:6px;line-height:1.25}
+.insight-text{font-size:.74rem;color:#687688;margin-top:6px;line-height:1.42}
 
-/* TABLAS Y PANELES */
-.table-shell{padding:14px 15px 12px;}
-.table-title{font-size:.91rem;font-weight:850;color:#1A2E43;}
-.table-sub{font-size:.73rem;color:#778496;margin-top:3px;margin-bottom:10px;}
-div[data-testid="stDataFrame"]{border:1px solid #E6EBF1;border-radius:14px;overflow:hidden;}
-div[data-testid="stPlotlyChart"]{background:linear-gradient(145deg,#FFFFFF,#FBFCFE);border:1px solid #E6EBF1;border-radius:18px;padding:7px 8px 2px;box-shadow:0 12px 28px rgba(19,34,56,.055);}
+/* PLOTS / TABLAS */
+div[data-testid="stPlotlyChart"]{background:linear-gradient(145deg,#FFFFFF,#FBFCFE);border:1px solid #E6EAF0;border-radius:19px;padding:7px 7px 1px;box-shadow:0 12px 28px rgba(25,39,62,.055);overflow:hidden}
+div[data-testid="stDataFrame"]{border:1px solid #E6EAF0;border-radius:15px;overflow:hidden}
+[data-testid="stMetric"]{background:#fff;border:1px solid #E6EAF0;border-radius:16px;padding:12px 14px;box-shadow:0 8px 20px rgba(25,39,62,.05)}
 
-/* TABS */
-.stTabs [data-baseweb="tab-list"]{gap:7px;background:#EDF2F7;padding:5px;border-radius:15px;width:max-content;box-shadow:inset 0 1px 2px rgba(15,23,42,.06);}
-.stTabs [data-baseweb="tab"]{height:38px;border-radius:11px;padding:0 16px;color:#536273;font-weight:700;font-size:.82rem;}
-.stTabs [aria-selected="true"]{background:#FFFFFF!important;color:#17304B!important;box-shadow:0 5px 12px rgba(15,23,42,.10)!important;}
-.stTabs [data-baseweb="tab-highlight"]{display:none;}
+/* TABS: scroll horizontal en móvil, sin cortar */
+.stTabs [data-baseweb="tab-list"]{gap:7px;background:#EDF1F6;padding:5px;border-radius:15px;width:100%;overflow-x:auto;white-space:nowrap;scrollbar-width:thin}
+.stTabs [data-baseweb="tab"]{height:39px;border-radius:11px;padding:0 15px;color:#536273;font-weight:750;font-size:.8rem;flex:0 0 auto}
+.stTabs [aria-selected="true"]{background:#fff!important;color:#17304B!important;box-shadow:0 5px 12px rgba(15,23,42,.10)!important}
+.stTabs [data-baseweb="tab-highlight"]{display:none}
 
-/* INPUTS */
-div[data-testid="stSelectbox"]>div>div,div[data-testid="stFileUploaderDropzone"]{border-radius:13px!important;}
-[data-testid="stMetric"]{background:#FFFFFF;border:1px solid #E6EBF1;border-radius:16px;padding:13px 15px;box-shadow:0 8px 22px rgba(19,34,56,.05);}
-
-/* SIDEBAR SOLO PARA DATOS */
-section[data-testid="stSidebar"]{background:linear-gradient(180deg,#081B30,#10344E);border-right:1px solid rgba(255,255,255,.07);}
-section[data-testid="stSidebar"] h1,section[data-testid="stSidebar"] h2,section[data-testid="stSidebar"] h3{color:#FFFFFF!important;}
-section[data-testid="stSidebar"] p,section[data-testid="stSidebar"] label,section[data-testid="stSidebar"] [data-testid="stCaptionContainer"]{color:#D2E0E8!important;}
-.data-badge{display:flex;align-items:center;gap:8px;padding:10px 11px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.11);color:#EFF7FA;font-size:.78rem;}
-.data-dot{width:9px;height:9px;border-radius:50%;background:#34D399;box-shadow:0 0 12px rgba(52,211,153,.8);}
+/* SELECT */
+div[data-testid="stSelectbox"]{max-width:760px}
+div[data-testid="stSelectbox"]>div>div{border-radius:14px!important}
 
 /* METODOLOGÍA */
-.method-card{padding:18px;min-height:186px;}
-.method-icon{font-size:1.15rem;margin-bottom:8px;}
-.method-title{font-size:.91rem;font-weight:850;color:#193047;}
-.method-text{font-size:.78rem;color:#687789;line-height:1.48;margin-top:7px;}
-.rule-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;}
-.rule{padding:13px;border-radius:14px;border:1px solid var(--line);background:#FFFFFF;box-shadow:0 7px 18px rgba(19,34,56,.04);}
-.rule-dot{width:11px;height:11px;border-radius:50%;margin-bottom:7px;box-shadow:0 0 0 4px rgba(0,0,0,.03);}
-.rule-name{font-size:.77rem;font-weight:850;color:#243A4F}.rule-range{font-size:.72rem;color:#788698;margin-top:4px;}
+.method-card{padding:18px;min-height:180px}
+.method-icon{font-size:1.15rem;margin-bottom:8px}.method-title{font-size:.9rem;font-weight:850;color:#193047}.method-text{font-size:.76rem;color:#687789;line-height:1.48;margin-top:7px}
+.rule-card{padding:13px}.rule-dot{width:12px;height:12px;border-radius:50%;margin-bottom:7px}.rule-name{font-size:.75rem;font-weight:850;color:#243A4F}.rule-range{font-size:.7rem;color:#788698;margin-top:4px}
 
-@media(max-width:900px){
-  .hero-title{font-size:1.65rem}.signal-stage{grid-template-columns:90px minmax(0,1fr)}.rule-grid{grid-template-columns:1fr 1fr}.section-note{display:none;}
+/* TABLET */
+@media(max-width:1100px){
+  .top-grid{grid-template-columns:1fr}
+  .dim-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .signal-card{min-height:0}
+}
+
+/* CELULAR */
+@media(max-width:700px){
+  .block-container{padding:.65rem .72rem 2.2rem}
+  .hero{border-radius:20px;padding:20px 17px}
+  .hero-chip{font-size:.67rem;padding:6px 8px}
+  .section-head{align-items:flex-start;margin:1.15rem 0 .62rem}
+  .section-note{display:none}
+  .kpi-grid,.dim-grid,.insight-grid,.method-grid,.rule-grid{grid-template-columns:1fr}
+  .signal-stage{grid-template-columns:84px minmax(0,1fr);gap:12px;padding:14px 12px}
+  .traffic{width:67px;padding:8px 7px;border-radius:22px}
+  .lamp{width:40px;height:40px;margin:7px auto}
+  .signal-card{padding:15px}
+  .scale-labels{font-size:.53rem}
+  .dim-card{min-height:0}
+  .dim-name{min-height:0}
+  .stTabs [data-baseweb="tab"]{padding:0 12px;font-size:.75rem}
+  div[data-testid="stPlotlyChart"]{border-radius:15px;padding:3px 2px 0}
 }
 </style>
 """
@@ -284,12 +312,10 @@ section[data-testid="stSidebar"] p,section[data-testid="stSidebar"] label,sectio
 
 
 # ==============================================================
-# LÓGICA DE DATOS
+# LÓGICA ESTADÍSTICA
 # ==============================================================
 def level_for(p: float) -> str:
-    if pd.isna(p):
-        return "Insatisfactorio"
-    if p < 0.60:
+    if pd.isna(p) or p < 0.60:
         return "Insatisfactorio"
     if p < 0.75:
         return "Regular"
@@ -299,9 +325,7 @@ def level_for(p: float) -> str:
 
 
 def pct(p: float, digits: int = 1) -> str:
-    if pd.isna(p):
-        return "—"
-    return f"{p * 100:.{digits}f}%"
+    return "—" if pd.isna(p) else f"{p * 100:.{digits}f}%"
 
 
 def require_columns(df: pd.DataFrame) -> None:
@@ -317,33 +341,29 @@ def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
     for i in range(1, 18):
         df[f"P{i}"] = pd.to_numeric(df[f"P{i}"], errors="coerce")
 
-    # Regla original: promedio de las cuatro preguntas >= 4 => satisfecho en la dimensión.
+    # Misma lógica estadística del instrumento:
+    # promedio de las 4 preguntas de la dimensión >= 4 => satisfecho.
     for code, info in DIMENSIONS.items():
-        df[f"{code}_Promedio_calc"] = df[info["items"]].mean(axis=1, skipna=True)
-        df[f"{code}_Satisfecho_calc"] = (df[f"{code}_Promedio_calc"] >= 4).astype(float)
+        avg_col = f"{code}_Promedio_calc"
+        sat_col = f"{code}_Satisfecho_calc"
+        df[avg_col] = df[info["items"]].mean(axis=1, skipna=True)
+        df[sat_col] = (df[avg_col] >= 4).astype(float)
 
-    # P17 define satisfacción general; 4–5 = satisfecho.
+    # P17 es satisfacción general independiente.
     df["Global_Satisfecho_calc"] = (df["P17"] >= 4).astype(float)
     return df
 
 
 @st.cache_data(show_spinner=False)
-def load_local(path: str, mtime: float) -> pd.DataFrame:
-    raw = pd.read_excel(path, sheet_name=SHEET_NAME)
-    return prepare_data(raw)
-
-
-@st.cache_data(show_spinner=False)
-def load_upload(payload: bytes) -> pd.DataFrame:
-    raw = pd.read_excel(BytesIO(payload), sheet_name=SHEET_NAME)
-    return prepare_data(raw)
+def load_data(path: str, mtime: float) -> pd.DataFrame:
+    return prepare_data(pd.read_excel(path, sheet_name=SHEET_NAME))
 
 
 def dim_summary(df: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for code, info in DIMENSIONS.items():
-        sat = df[f"{code}_Satisfecho_calc"].mean()
-        avg = df[f"{code}_Promedio_calc"].mean()
+        sat = float(df[f"{code}_Satisfecho_calc"].mean())
+        avg = float(df[f"{code}_Promedio_calc"].mean())
         level = level_for(sat)
         rows.append({
             "Código": code,
@@ -366,28 +386,17 @@ def item_summary(df: pd.DataFrame, items: list[str]) -> pd.DataFrame:
             "Ítem": item,
             "Dimensión": code,
             "Pregunta": ITEM_TEXT[item],
-            "Promedio": s.mean(),
-            "Favorable": (s >= 4).mean(),
-            "Neutral": (s == 3).mean(),
-            "Desfavorable": (s <= 2).mean(),
+            "Promedio": float(s.mean()),
+            "Favorable": float((s >= 4).mean()),
+            "Neutral": float((s == 3).mean()),
+            "Desfavorable": float((s <= 2).mean()),
         })
     return pd.DataFrame(rows)
 
 
-def mini_signal(level: str) -> str:
-    signal = STATUS[level]["signal"]
-    rr = " on" if signal == "red" else ""
-    aa = " on" if signal == "amber" else ""
-    gg = " on" if signal == "green" else ""
-    return (
-        '<span class="mini-signal" aria-label="Semáforo">'
-        f'<span class="mini-light red{rr}"></span>'
-        f'<span class="mini-light amber{aa}"></span>'
-        f'<span class="mini-light green{gg}"></span>'
-        '</span>'
-    )
-
-
+# ==============================================================
+# COMPONENTES HTML
+# ==============================================================
 def section_head(kicker: str, title: str, note: str = "") -> None:
     st.html(
         f'<div class="section-head"><div><div class="section-kicker">{escape(kicker)}</div>'
@@ -396,177 +405,168 @@ def section_head(kicker: str, title: str, note: str = "") -> None:
     )
 
 
-def hero(source: str, n: int) -> None:
+def hero(n: int) -> None:
     st.html(
-        f'''<div class="hero-shell">
+        f'''<div class="hero">
           <div class="hero-kicker">Universidad Nacional de Trujillo · tablero ejecutivo</div>
           <div class="hero-title">Satisfacción estudiantil</div>
-          <div class="hero-sub">Una lectura ejecutiva de satisfacción general, desempeño de las cuatro dimensiones y prioridades concretas de mejora.</div>
-          <div class="hero-meta">
-            <span class="hero-chip">● Base activa: {escape(source)}</span>
+          <div class="hero-sub">Panel responsive para lectura rápida de la satisfacción general, las cuatro dimensiones y los aspectos prioritarios de mejora.</div>
+          <div class="hero-row">
+            <span class="hero-chip">● Base institucional integrada</span>
             <span class="hero-chip">👥 {n:,} estudiantes</span>
-            <span class="hero-chip">🎯 Meta institucional: 75%</span>
+            <span class="hero-chip">🎯 Meta institucional 75%</span>
+            <span class="hero-chip">📱 Adaptable a celular, tablet y PC</span>
           </div>
         </div>'''
     )
 
 
-def traffic_command(global_sat: float) -> None:
-    level = level_for(global_sat)
+def traffic_html(value: float) -> str:
+    level = level_for(value)
     meta = STATUS[level]
-    red = " active" if meta["signal"] == "red" else ""
-    amber = " active" if meta["signal"] == "amber" else ""
-    green = " active" if meta["signal"] == "green" else ""
-    st.html(
-        f'''<div class="glass-card command-card">
-          <div class="command-label">Estado institucional</div>
-          <div class="command-title">Satisfacción general · P17</div>
-          <div class="signal-stage">
-            <div class="traffic-shell">
-              <div class="lamp red{red}"></div>
-              <div class="lamp amber{amber}"></div>
-              <div class="lamp green{green}"></div>
-            </div>
-            <div class="signal-copy">
-              <div class="big-score">{pct(global_sat)}</div>
-              <div class="big-level" style="color:{meta['color']}">{escape(level)}</div>
-              <div class="big-range">Intervalo: {meta['range']}<br>Regla: P17 = 4 o 5 se considera satisfecho.</div>
-              <span class="big-action">{meta['icon']} {escape(meta['action'])}</span>
-            </div>
-          </div>
-          <div class="scale-zone">
-            <div class="scale-track"><span></span><span></span><span></span><span></span></div>
-            <div class="scale-legend">
-              <div><b>0–&lt;60</b><br>Insatisf.</div><div><b>60–&lt;75</b><br>Regular</div>
-              <div><b>75–&lt;90</b><br>Satisf.</div><div><b>90–100</b><br>Muy sat.</div>
-            </div>
-          </div>
-        </div>'''
-    )
+    signal = meta["signal"]
+    return f'''<div class="card signal-card">
+      <div class="signal-label">Estado institucional</div>
+      <div class="signal-title">Satisfacción general · P17</div>
+      <div class="signal-stage">
+        <div class="traffic-wrap"><div class="traffic" aria-label="Semáforo institucional">
+          <div class="lamp red{' on' if signal == 'red' else ''}"></div>
+          <div class="lamp amber{' on' if signal == 'amber' else ''}"></div>
+          <div class="lamp green{' on' if signal == 'green' else ''}"></div>
+        </div></div>
+        <div>
+          <div class="signal-score">{pct(value)}</div>
+          <div class="signal-level" style="color:{meta['color']}">{meta['emoji']} {escape(level)}</div>
+          <div class="signal-range">Intervalo: {escape(meta['range'])}<br>P17 = 4 o 5 se considera satisfecho.</div>
+          <div class="signal-action">{escape(meta['action'])}</div>
+        </div>
+      </div>
+      <div class="scale"><span></span><span></span><span></span><span></span></div>
+      <div class="scale-labels"><div>0–&lt;60<br>Insatisf.</div><div>60–&lt;75<br>Regular</div><div>75–&lt;90<br>Satisf.</div><div>90–100<br>Muy sat.</div></div>
+    </div>'''
 
 
-def metric_card(icon: str, label: str, value: str, foot: str) -> None:
-    st.html(
-        f'''<div class="metric-card">
-          <div class="metric-top"><div class="metric-icon">{icon}</div></div>
-          <div class="metric-label">{escape(label)}</div>
-          <div class="metric-value">{escape(value)}</div>
-          <div class="metric-foot">{foot}</div>
-        </div>'''
-    )
+def metric_html(icon: str, label: str, value: str, foot: str) -> str:
+    return f'''<div class="metric-card">
+      <div class="metric-icon">{icon}</div>
+      <div class="metric-label">{escape(label)}</div>
+      <div class="metric-value">{escape(value)}</div>
+      <div class="metric-foot">{foot}</div>
+    </div>'''
 
 
-def dimension_card(code: str, sat: float) -> None:
+def mini_traffic(level: str) -> str:
+    signal = STATUS[level]["signal"]
+    return f'''<span class="mini-traffic" aria-label="{escape(level)}">
+      <span class="mini-light red{' on' if signal == 'red' else ''}"></span>
+      <span class="mini-light amber{' on' if signal == 'amber' else ''}"></span>
+      <span class="mini-light green{' on' if signal == 'green' else ''}"></span>
+    </span>'''
+
+
+def dimension_html(code: str, sat: float) -> str:
     info = DIMENSIONS[code]
     level = level_for(sat)
-    sm = STATUS[level]
+    meta = STATUS[level]
     gap = max(0.0, TARGET - sat)
-    target_text = "Meta alcanzada" if gap <= 0 else f"Faltan {gap*100:.1f} pp para 75%"
-    st.html(
-        f'''<div class="dim-card" style="--dim:{info['color']};--soft:{info['soft']};--status:{sm['color']};--status-dark:{sm['dark']};--status-soft:{sm['soft']};">
-          <div class="dim-header">
-            <span class="dim-code">{code}</span>
-            <span class="status-chip"><span class="status-led"></span>{escape(level)}</span>
-          </div>
-          <div class="dim-body">
-            <div class="progress-ring" style="--p:{sat*100:.1f};--ring:{info['color']}"><span>{pct(sat)}</span></div>
-            <div>
-              <div class="dim-name">{escape(info['short'])}</div>
-              <div class="dim-meta">{mini_signal(level)} &nbsp; {escape(sm['range'])}</div>
-              <div class="dim-target">{escape(target_text)}</div>
-            </div>
-          </div>
-        </div>'''
-    )
+    gap_text = "Meta alcanzada" if gap == 0 else f"Faltan {gap * 100:.1f} pp para 75%"
+    return f'''<div class="dim-card" style="--dim:{info['color']};--soft:{info['soft']};--status-soft:{meta['soft']};--status-dark:{meta['dark']}">
+      <div class="dim-head">
+        <div class="dim-id"><span class="dim-icon">{info['icon']}</span><span class="dim-code">{code}</span></div>
+        <div class="status-badge">{meta['emoji']} {escape(level)}</div>
+      </div>
+      <div class="dim-score-row">
+        <div><div class="dim-score">{pct(sat)}</div><div class="dim-caption">Satisfacción de la dimensión</div></div>
+        {mini_traffic(level)}
+      </div>
+      <div class="dim-name">{escape(info['name'])}</div>
+      <div class="dim-foot"><div class="dim-range">{escape(meta['range'])}</div><div class="dim-gap">{escape(gap_text)}</div></div>
+    </div>'''
 
 
-def insight_card(kicker: str, title: str, text: str, accent: str) -> None:
-    st.html(
-        f'''<div class="insight-card" style="--accent:{accent}">
-          <div class="insight-kicker">{escape(kicker)}</div>
-          <div class="insight-title">{escape(title)}</div>
-          <div class="insight-text">{text}</div>
-        </div>'''
-    )
+def insight_html(kicker: str, title: str, text: str, accent: str) -> str:
+    return f'''<div class="insight-card" style="--accent:{accent}">
+      <div class="insight-kicker">{escape(kicker)}</div>
+      <div class="insight-title">{escape(title)}</div>
+      <div class="insight-text">{text}</div>
+    </div>'''
 
 
-def plot_theme(fig: go.Figure, height: int = 430) -> go.Figure:
+# ==============================================================
+# GRÁFICOS RESPONSIVE
+# ==============================================================
+def base_plot(fig: go.Figure, height: int) -> go.Figure:
     fig.update_layout(
         height=height,
-        margin=dict(l=18, r=28, t=34, b=28),
+        margin=dict(l=12, r=12, t=28, b=34),
+        autosize=True,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Aptos, Segoe UI, Arial", color="#566477", size=12),
+        font=dict(family="Aptos, Segoe UI, Arial", color="#566477", size=11),
         hoverlabel=dict(bgcolor="#FFFFFF", font_color="#172B3A", bordercolor="#D8E0E8"),
-        legend=dict(bgcolor="rgba(255,255,255,.80)", borderwidth=0, orientation="h", yanchor="bottom", y=1.02, x=0),
+        legend=dict(orientation="h", yanchor="bottom", y=1.01, x=0, bgcolor="rgba(255,255,255,.75)"),
     )
-    fig.update_xaxes(gridcolor="#EBEFF4", zeroline=False)
-    fig.update_yaxes(gridcolor="rgba(0,0,0,0)", zeroline=False)
+    fig.update_xaxes(automargin=True, gridcolor="#EBEFF4", zeroline=False)
+    fig.update_yaxes(automargin=True, gridcolor="rgba(0,0,0,0)", zeroline=False)
     return fig
 
 
 def dimension_chart(summary: pd.DataFrame) -> go.Figure:
-    d = summary.sort_values("Satisfacción", ascending=True).copy()
-    d["Etiqueta"] = d["Código"] + " · " + d["Dimensión"]
+    d = summary.sort_values("Código").copy()
     colors = [STATUS[x]["color"] for x in d["Nivel"]]
     fig = go.Figure()
-    for x0, x1, color in [
-        (0.00, 0.60, "rgba(239,68,68,.045)"),
-        (0.60, 0.75, "rgba(245,158,11,.055)"),
-        (0.75, 0.90, "rgba(34,197,94,.045)"),
-        (0.90, 1.00, "rgba(5,150,105,.060)"),
-    ]:
-        fig.add_vrect(x0=x0, x1=x1, fillcolor=color, line_width=0, layer="below")
+    fig.add_hrect(y0=0.00, y1=0.60, fillcolor="rgba(217,54,62,.045)", line_width=0, layer="below")
+    fig.add_hrect(y0=0.60, y1=0.75, fillcolor="rgba(229,154,24,.055)", line_width=0, layer="below")
+    fig.add_hrect(y0=0.75, y1=0.90, fillcolor="rgba(28,155,98,.045)", line_width=0, layer="below")
+    fig.add_hrect(y0=0.90, y1=1.00, fillcolor="rgba(8,122,87,.060)", line_width=0, layer="below")
     fig.add_trace(go.Bar(
-        x=d["Satisfacción"], y=d["Etiqueta"], orientation="h",
-        marker=dict(color=colors, line=dict(width=0)),
+        x=d["Código"], y=d["Satisfacción"], marker_color=colors,
         text=d["Satisfacción"].map(lambda x: f"{x*100:.1f}%"), textposition="outside",
-        customdata=d[["Nivel", "Intervalo", "Promedio Likert", "Brecha a 75%"]],
+        customdata=d[["Dimensión", "Nivel", "Intervalo", "Promedio Likert", "Brecha a 75%"]],
         hovertemplate=(
-            "<b>%{y}</b><br>Satisfacción: %{x:.2%}<br>Nivel: %{customdata[0]}"
-            "<br>Intervalo: %{customdata[1]}<br>Promedio Likert: %{customdata[2]:.2f}"
-            "<br>Brecha a 75%: %{customdata[3]:.2%}<extra></extra>"
+            "<b>%{x} · %{customdata[0]}</b><br>Satisfacción: %{y:.2%}<br>Nivel: %{customdata[1]}"
+            "<br>Intervalo: %{customdata[2]}<br>Promedio Likert: %{customdata[3]:.2f}"
+            "<br>Brecha a 75%: %{customdata[4]:.2%}<extra></extra>"
         ),
     ))
-    fig.add_vline(x=.75, line_dash="dash", line_width=1.5, line_color="#0F766E", annotation_text="Meta 75%", annotation_position="top")
-    fig.update_xaxes(tickformat=".0%", range=[0, 1.05], title=None)
-    fig.update_yaxes(title=None, tickfont=dict(size=11))
+    fig.add_hline(y=.75, line_dash="dash", line_width=1.5, line_color="#0F766E")
+    fig.add_annotation(x=3.45, y=.765, text="Meta 75%", showarrow=False, font=dict(size=10, color="#0F766E"))
+    fig.update_yaxes(tickformat=".0%", range=[0,1.06], title=None)
+    fig.update_xaxes(title=None, tickfont=dict(size=12))
     fig.update_layout(showlegend=False)
-    return plot_theme(fig, 410)
+    return base_plot(fig, 390)
 
 
-def item_bar(items: pd.DataFrame, title: str = "") -> go.Figure:
+def item_bar(items: pd.DataFrame, height: int | None = None) -> go.Figure:
     d = items.sort_values("Favorable", ascending=True).copy()
-    d["Etiqueta"] = d.apply(lambda r: f"{r['Ítem']} · {r['Pregunta'][:58]}{'…' if len(r['Pregunta'])>58 else ''}", axis=1)
     color_map = {c: DIMENSIONS[c]["color"] for c in DIMENSIONS}
     fig = go.Figure(go.Bar(
-        x=d["Favorable"], y=d["Etiqueta"], orientation="h",
-        marker=dict(color=[color_map.get(x, "#2F6BFF") for x in d["Dimensión"]]),
+        x=d["Favorable"], y=d["Ítem"], orientation="h",
+        marker_color=[color_map.get(x, "#3157D5") for x in d["Dimensión"]],
         text=d["Favorable"].map(lambda x: f"{x*100:.1f}%"), textposition="outside",
-        customdata=d[["Ítem", "Dimensión", "Pregunta", "Promedio", "Neutral", "Desfavorable"]],
+        customdata=d[["Dimensión", "Pregunta", "Promedio", "Neutral", "Desfavorable"]],
         hovertemplate=(
-            "<b>%{customdata[0]} · %{customdata[1]}</b><br>%{customdata[2]}"
-            "<br>Favorable: %{x:.2%}<br>Neutral: %{customdata[4]:.2%}"
-            "<br>Desfavorable: %{customdata[5]:.2%}<br>Promedio: %{customdata[3]:.2f}<extra></extra>"
+            "<b>%{y} · %{customdata[0]}</b><br>%{customdata[1]}"
+            "<br>Favorable: %{x:.2%}<br>Neutral: %{customdata[3]:.2%}"
+            "<br>Desfavorable: %{customdata[4]:.2%}<br>Promedio: %{customdata[2]:.2f}<extra></extra>"
         ),
     ))
-    fig.update_xaxes(tickformat=".0%", range=[0, 1.05], title="Respuestas favorables (4–5)")
-    fig.update_yaxes(title=None, tickfont=dict(size=10))
-    fig.update_layout(showlegend=False, title=dict(text=title, font=dict(size=14)))
-    return plot_theme(fig, max(370, 42 * len(d) + 120))
+    fig.update_xaxes(tickformat=".0%", range=[0,1.08], title=None)
+    fig.update_yaxes(title=None, tickfont=dict(size=11))
+    fig.update_layout(showlegend=False)
+    return base_plot(fig, height or max(330, 33 * len(d) + 110))
 
 
 def likert_chart(df: pd.DataFrame, items: list[str]) -> go.Figure:
     rows = []
     for item in items:
         s = df[item].dropna()
-        total = len(s)
-        if total == 0:
+        if len(s) == 0:
             continue
         rows.extend([
-            {"Ítem": item, "Categoría": "Desfavorable (1–2)", "pct": (s <= 2).mean(), "Pregunta": ITEM_TEXT[item]},
-            {"Ítem": item, "Categoría": "Neutral (3)", "pct": (s == 3).mean(), "Pregunta": ITEM_TEXT[item]},
-            {"Ítem": item, "Categoría": "Favorable (4–5)", "pct": (s >= 4).mean(), "Pregunta": ITEM_TEXT[item]},
+            {"Ítem": item, "Categoría": "Desfavorable (1–2)", "pct": float((s <= 2).mean()), "Pregunta": ITEM_TEXT[item]},
+            {"Ítem": item, "Categoría": "Neutral (3)", "pct": float((s == 3).mean()), "Pregunta": ITEM_TEXT[item]},
+            {"Ítem": item, "Categoría": "Favorable (4–5)", "pct": float((s >= 4).mean()), "Pregunta": ITEM_TEXT[item]},
         ])
     d = pd.DataFrame(rows)
     fig = go.Figure()
@@ -574,134 +574,117 @@ def likert_chart(df: pd.DataFrame, items: list[str]) -> go.Figure:
         x = d[d["Categoría"] == cat]
         fig.add_trace(go.Bar(
             x=x["pct"], y=x["Ítem"], name=cat, orientation="h",
-            marker_color=LIKERT[cat],
-            customdata=x[["Pregunta"]],
-            hovertemplate="<b>%{y}</b><br>%{customdata[0]}<br>" + cat + ": %{x:.2%}<extra></extra>",
+            marker_color=LIKERT[cat], customdata=x[["Pregunta"]],
+            hovertemplate=f"<b>%{{y}}</b><br>%{{customdata[0]}}<br>{cat}: %{{x:.2%}}<extra></extra>",
         ))
     fig.update_layout(barmode="stack")
-    fig.update_xaxes(tickformat=".0%", range=[0,1], title="Distribución de respuestas")
+    fig.update_xaxes(tickformat=".0%", range=[0,1], title=None)
     fig.update_yaxes(title=None, autorange="reversed")
-    return plot_theme(fig, max(360, 38 * len(items) + 120))
+    return base_plot(fig, max(330, 37 * len(items) + 110))
 
 
 # ==============================================================
-# FUENTE DE DATOS — YA NO OBLIGA A CARGAR EL EXCEL
+# CARGA AUTOMÁTICA — NO HAY BOTÓN PARA SUBIR EXCEL
 # ==============================================================
-with st.sidebar:
-    st.markdown("### Datos")
-    if DATA_FILE.exists():
-        st.html('<div class="data-badge"><span class="data-dot"></span><span>Base incluida · carga automática</span></div>')
-        st.caption("Si este Excel está en GitHub junto a app.py, el público no tiene que cargar nada.")
-    else:
-        st.warning("No encontré basededatos.xlsx junto a app.py.")
-
-    with st.expander("Cambiar Excel temporalmente"):
-        uploaded = st.file_uploader("Selecciona otro .xlsx", type=["xlsx"])
-        st.caption("Solo reemplaza los datos durante esta sesión; no modifica el archivo del repositorio.")
-
-if uploaded is None and not DATA_FILE.exists():
-    st.error("Coloca basededatos.xlsx en la misma carpeta que app.py o carga un Excel desde la barra lateral.")
+if not DATA_FILE.exists():
+    st.error("No se encontró 'basededatos.xlsx'. Debe estar en la misma carpeta que app.py.")
     st.stop()
 
 try:
-    if uploaded is not None:
-        df = load_upload(uploaded.getvalue())
-        source_name = f"{uploaded.name} · temporal"
-    else:
-        df = load_local(str(DATA_FILE), DATA_FILE.stat().st_mtime)
-        source_name = "basededatos.xlsx"
+    df = load_data(str(DATA_FILE), DATA_FILE.stat().st_mtime)
 except Exception as exc:
-    st.error(f"No pude leer la base: {exc}")
+    st.error(f"No pude leer basededatos.xlsx: {exc}")
     st.stop()
 
 summary = dim_summary(df)
-global_sat = df["Global_Satisfecho_calc"].mean()
-items16 = item_summary(df, [f"P{i}" for i in range(1,17)])
+global_sat = float(df["Global_Satisfecho_calc"].mean())
+items16 = item_summary(df, [f"P{i}" for i in range(1, 17)])
+priority = summary.sort_values("Satisfacción").iloc[0]
+strongest = summary.sort_values("Satisfacción", ascending=False).iloc[0]
+meet = int((summary["Satisfacción"] >= TARGET).sum())
 
-hero(source_name, len(df))
+hero(len(df))
 
-# Navegación horizontal: no replica el menú de Shiny.
+# Navegación horizontal. En celular se desplaza horizontalmente sin cortar contenido.
 tab_resumen, tab_dim, tab_prior, tab_method = st.tabs([
-    "◉  Resumen ejecutivo",
-    "◫  Dimensiones",
-    "⚑  Prioridades",
-    "ⓘ  Metodología",
+    "◉ Resumen",
+    "▦ Dimensiones",
+    "⚑ Prioridades",
+    "ⓘ Metodología",
 ])
 
 
 # ==============================================================
-# RESUMEN EJECUTIVO
+# 1. RESUMEN EJECUTIVO
 # ==============================================================
 with tab_resumen:
-    section_head("Centro de control", "Estado general de la experiencia estudiantil", "Primero la señal; después el detalle.")
+    section_head("Panorama", "Estado general", "Una lectura clara antes de entrar al detalle.")
 
-    c1, c2 = st.columns([1.05, 1.95], gap="large")
-    with c1:
-        traffic_command(global_sat)
-    with c2:
-        m1, m2, m3 = st.columns(3, gap="medium")
-        priority = summary.sort_values("Satisfacción").iloc[0]
-        strongest = summary.sort_values("Satisfacción", ascending=False).iloc[0]
-        meet = int((summary["Satisfacción"] >= TARGET).sum())
-        with m1:
-            metric_card("👥", "Estudiantes", f"{len(df):,}", "Registros analizados en la base activa.")
-        with m2:
-            metric_card("🎯", "Dimensiones en meta", f"{meet} de 4", "Meta institucional: 75% o más.")
-        with m3:
-            metric_card("⚠", "Prioridad", priority["Código"], f"{pct(priority['Satisfacción'])} · {escape(priority['Nivel'])}")
-        st.write("")
-        dcols = st.columns(4, gap="small")
-        for col, code in zip(dcols, DIMENSIONS):
-            sat = float(summary.loc[summary["Código"] == code, "Satisfacción"].iloc[0])
-            with col:
-                dimension_card(code, sat)
+    top_html = '<div class="top-grid">' + traffic_html(global_sat) + '<div>'
+    top_html += '<div class="kpi-grid">'
+    top_html += metric_html("👥", "Estudiantes", f"{len(df):,}", "Registros analizados en la base institucional.")
+    top_html += metric_html("🎯", "Dimensiones en meta", f"{meet} de 4", "Meta institucional: satisfacción ≥ 75%.")
+    top_html += metric_html("⚠️", "Prioridad", str(priority["Código"]), f"{pct(priority['Satisfacción'])} · {escape(str(priority['Nivel']))}")
+    top_html += '</div>'
+    top_html += '<div class="insight-card" style="--accent:#3157D5"><div class="insight-kicker">Lectura inmediata</div>'
+    top_html += f'<div class="insight-title">La satisfacción general es {pct(global_sat)}</div>'
+    top_html += f'<div class="insight-text">El resultado P17 se ubica en nivel <b>{escape(level_for(global_sat))}</b>. La dimensión que requiere atención primero es <b>{escape(str(priority["Código"]))}</b>.</div></div>'
+    top_html += '</div></div>'
+    st.html(top_html)
 
-    section_head("Lectura ejecutiva", "Qué debería mirar primero", "Tres mensajes automáticos para orientar la discusión.")
-    i1, i2, i3 = st.columns(3, gap="medium")
-    with i1:
-        insight_card(
-            "Prioridad",
-            f"{priority['Código']} · {DIMENSIONS[priority['Código']]['short']}",
-            f"Registra <b>{pct(priority['Satisfacción'])}</b>. " + (f"La brecha hasta 75% es <b>{priority['Brecha a 75%']*100:.1f} pp</b>." if priority['Brecha a 75%'] > 0 else "Ya se encuentra en el estándar institucional."),
-            "#DC2626" if priority["Satisfacción"] < .75 else "#16A34A",
-        )
-    with i2:
-        insight_card(
-            "Fortaleza relativa",
-            f"{strongest['Código']} · {DIMENSIONS[strongest['Código']]['short']}",
-            f"Es la dimensión con mayor satisfacción: <b>{pct(strongest['Satisfacción'])}</b>, nivel <b>{escape(strongest['Nivel'])}</b>.",
-            "#16A34A",
-        )
-    with i3:
-        glevel = level_for(global_sat)
-        insight_card(
-            "Resultado general",
-            f"P17 · {glevel}",
-            f"La satisfacción general alcanza <b>{pct(global_sat)}</b>. El semáforo se interpreta con el intervalo <b>{STATUS[glevel]['range']}</b>.",
-            STATUS[glevel]["color"],
-        )
+    # Esta sección muestra explícitamente la satisfacción de D1, D2, D3 y D4.
+    section_head("Satisfacción dimensional", "Las cuatro dimensiones", "Cada tarjeta muestra porcentaje, nivel, semáforo e intervalo.")
+    dims_html = '<div class="dim-grid">'
+    for code in DIMENSIONS:
+        sat = float(summary.loc[summary["Código"] == code, "Satisfacción"].iloc[0])
+        dims_html += dimension_html(code, sat)
+    dims_html += '</div>'
+    st.html(dims_html)
 
-    section_head("Mapa de desempeño", "Comparación de D1, D2, D3 y D4", "Las bandas de fondo corresponden a la escala institucional.")
-    st.plotly_chart(dimension_chart(summary), use_container_width=True, config={"displayModeBar": False})
+    section_head("Lectura ejecutiva", "Tres mensajes para la toma de decisiones", "Priorización, fortaleza y satisfacción general.")
+    insight_grid = '<div class="insight-grid">'
+    insight_grid += insight_html(
+        "Prioridad",
+        f"{priority['Código']} · {DIMENSIONS[str(priority['Código'])]['short']}",
+        f"Satisfacción: <b>{pct(priority['Satisfacción'])}</b>. " + (f"Brecha hasta 75%: <b>{priority['Brecha a 75%']*100:.1f} pp</b>." if priority["Brecha a 75%"] > 0 else "Ya alcanza la meta institucional."),
+        "#D9363E" if priority["Satisfacción"] < TARGET else "#1C9B62",
+    )
+    insight_grid += insight_html(
+        "Fortaleza relativa",
+        f"{strongest['Código']} · {DIMENSIONS[str(strongest['Código'])]['short']}",
+        f"Es la dimensión con mayor satisfacción: <b>{pct(strongest['Satisfacción'])}</b>, nivel <b>{escape(str(strongest['Nivel']))}</b>.",
+        "#1C9B62",
+    )
+    glevel = level_for(global_sat)
+    insight_grid += insight_html(
+        "Satisfacción general",
+        f"P17 · {glevel}",
+        f"Resultado institucional: <b>{pct(global_sat)}</b>. Intervalo del semáforo: <b>{STATUS[glevel]['range']}</b>.",
+        STATUS[glevel]["color"],
+    )
+    insight_grid += '</div>'
+    st.html(insight_grid)
 
-    section_head("Detalle", "Matriz de situación institucional", "El semáforo no reemplaza el porcentaje: ambos se muestran juntos.")
-    table = summary.copy()
-    table.insert(2, "Semáforo", table["Nivel"].map(lambda x: "🔴" if x=="Insatisfactorio" else "🟠" if x=="Regular" else "🟢"))
-    table["Satisfacción"] = table["Satisfacción"].map(lambda x: f"{x*100:.2f}%")
-    table["Promedio Likert"] = table["Promedio Likert"].map(lambda x: f"{x:.2f}")
-    table["Brecha a 75%"] = table["Brecha a 75%"].map(lambda x: "—" if x <= 0 else f"{x*100:.2f} pp")
-    st.dataframe(table, use_container_width=True, hide_index=True)
+    section_head("Comparación", "D1, D2, D3 y D4", "Gráfico compacto para no cortar textos en pantallas pequeñas.")
+    st.plotly_chart(dimension_chart(summary), use_container_width=True, config=PLOT_CONFIG)
+
+    section_head("Detalle compacto", "Matriz de situación", "En móvil la tabla puede desplazarse horizontalmente sin romper el dashboard.")
+    compact = summary[["Código", "Satisfacción", "Nivel", "Intervalo", "Brecha a 75%"]].copy()
+    compact.insert(1, "Semáforo", compact["Nivel"].map(lambda x: STATUS[x]["emoji"]))
+    compact["Satisfacción"] = compact["Satisfacción"].map(lambda x: f"{x*100:.1f}%")
+    compact["Brecha a 75%"] = compact["Brecha a 75%"].map(lambda x: "—" if x <= 0 else f"{x*100:.1f} pp")
+    st.dataframe(compact, use_container_width=True, hide_index=True)
 
 
 # ==============================================================
-# DIMENSIONES
+# 2. DIMENSIONES
 # ==============================================================
 with tab_dim:
-    section_head("Exploración", "Analizar una dimensión", "Aquí se baja del resultado global a las cuatro preguntas que lo explican.")
+    section_head("Exploración", "Profundizar en una dimensión", "Seleccione D1, D2, D3 o D4; los gráficos usan códigos cortos para verse bien en celular.")
 
     selected = st.selectbox(
         "Dimensión",
-        options=list(DIMENSIONS.keys()),
+        list(DIMENSIONS.keys()),
         format_func=lambda x: f"{x} · {DIMENSIONS[x]['name']}",
         label_visibility="collapsed",
     )
@@ -711,81 +694,58 @@ with tab_dim:
     low_item = dim_items.sort_values("Favorable").iloc[0]
     high_item = dim_items.sort_values("Favorable", ascending=False).iloc[0]
 
-    a, b, c, d = st.columns(4, gap="medium")
-    with a:
-        dimension_card(selected, float(row["Satisfacción"]))
-    with b:
-        metric_card("★", "Promedio Likert", f"{row['Promedio Likert']:.2f}", "Promedio de las cuatro preguntas de la dimensión.")
-    with c:
-        metric_card("↓", "Aspecto más débil", low_item["Ítem"], f"{pct(low_item['Favorable'])} favorable")
-    with d:
-        metric_card("↑", "Aspecto más fuerte", high_item["Ítem"], f"{pct(high_item['Favorable'])} favorable")
-
+    detail_html = '<div class="dim-grid">'
+    detail_html += dimension_html(selected, float(row["Satisfacción"]))
+    detail_html += metric_html("★", "Promedio Likert", f"{row['Promedio Likert']:.2f}", "Promedio de las cuatro preguntas de la dimensión.")
+    detail_html += metric_html("↓", "Aspecto más débil", str(low_item["Ítem"]), f"{pct(low_item['Favorable'])} favorable")
+    detail_html += metric_html("↑", "Aspecto más fuerte", str(high_item["Ítem"]), f"{pct(high_item['Favorable'])} favorable")
+    detail_html += '</div>'
+    st.html(detail_html)
     st.info(info["desc"], icon="ℹ️")
 
-    left, right = st.columns([1.1, .9], gap="large")
-    with left:
-        section_head("Ítems", "Valoración favorable", "4–5 = favorable; se usa de forma descriptiva por pregunta.")
-        st.plotly_chart(item_bar(dim_items), use_container_width=True, config={"displayModeBar": False})
-    with right:
-        section_head("Distribución", "Perfil Likert", "Cómo se distribuyen respuestas desfavorables, neutrales y favorables.")
-        st.plotly_chart(likert_chart(df, info["items"]), use_container_width=True, config={"displayModeBar": False})
+    section_head("Ítems", "Valoración favorable", "En el eje solo aparece P1, P2… para evitar cortes; la pregunta completa aparece al tocar o pasar el cursor.")
+    st.plotly_chart(item_bar(dim_items, 350), use_container_width=True, config=PLOT_CONFIG)
 
-    section_head("Lectura", "Dos señales concretas", "Sirve para sustentar qué aspecto priorizar y cuál conservar.")
-    r1, r2 = st.columns(2, gap="medium")
-    with r1:
-        insight_card(
-            "Mayor oportunidad",
-            f"{low_item['Ítem']} · {pct(low_item['Favorable'])} favorable",
-            escape(low_item["Pregunta"]),
-            "#DC2626",
-        )
-    with r2:
-        insight_card(
-            "Fortaleza del bloque",
-            f"{high_item['Ítem']} · {pct(high_item['Favorable'])} favorable",
-            escape(high_item["Pregunta"]),
-            "#16A34A",
-        )
+    qtable = dim_items[["Ítem", "Pregunta", "Favorable", "Neutral", "Desfavorable"]].copy()
+    for col in ["Favorable", "Neutral", "Desfavorable"]:
+        qtable[col] = qtable[col].map(lambda x: f"{x*100:.1f}%")
+    st.dataframe(qtable, use_container_width=True, hide_index=True)
+
+    section_head("Distribución Likert", "Desfavorable, neutral y favorable", "El gráfico usa P1–P4, P5–P8, etc.; el texto completo queda en la interacción.")
+    st.plotly_chart(likert_chart(df, info["items"]), use_container_width=True, config=PLOT_CONFIG)
 
 
 # ==============================================================
-# PRIORIDADES
+# 3. PRIORIDADES
 # ==============================================================
 with tab_prior:
-    section_head("Priorización", "Ranking de los 16 aspectos", "Ordenado de menor a mayor valoración favorable.")
+    section_head("Priorización", "Ranking de P1 a P16", "Sin textos largos en el eje: en celular no se corta y la pregunta completa aparece en el tooltip.")
     ranked = items16.sort_values("Favorable", ascending=True).copy()
-    st.plotly_chart(item_bar(ranked), use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(item_bar(ranked, 660), use_container_width=True, config=PLOT_CONFIG)
 
-    section_head("Acción", "Top 5 de menor valoración", "Estos ítems ayudan a enfocar la discusión; no reemplazan el indicador oficial de la dimensión.")
+    section_head("Top 5", "Aspectos con menor valoración favorable", "Para discutir prioridades concretas sin confundirlas con la satisfacción oficial de la dimensión.")
     top5 = ranked.head(5).copy()
-    top5["Favorable"] = top5["Favorable"].map(lambda x: f"{x*100:.2f}%")
-    top5["Desfavorable"] = top5["Desfavorable"].map(lambda x: f"{x*100:.2f}%")
+    top5["Favorable"] = top5["Favorable"].map(lambda x: f"{x*100:.1f}%")
+    top5["Desfavorable"] = top5["Desfavorable"].map(lambda x: f"{x*100:.1f}%")
     top5["Promedio"] = top5["Promedio"].map(lambda x: f"{x:.2f}")
-    st.dataframe(top5[["Ítem","Dimensión","Pregunta","Favorable","Desfavorable","Promedio"]], use_container_width=True, hide_index=True)
-
-    weakest3 = ranked.head(3)
-    msg = ", ".join([f"{r['Ítem']} ({r['Dimensión']})" for _, r in weakest3.iterrows()])
-    st.warning(f"Prioridades descriptivas: {msg}. Revísalas junto con la satisfacción oficial de cada dimensión.", icon="⚑")
+    st.dataframe(top5[["Ítem", "Dimensión", "Pregunta", "Favorable", "Desfavorable", "Promedio"]], use_container_width=True, hide_index=True)
 
 
 # ==============================================================
-# METODOLOGÍA
+# 4. METODOLOGÍA
 # ==============================================================
 with tab_method:
-    section_head("Metodología", "Cómo leer el tablero", "Se conserva la lógica estadística; lo que cambia es la experiencia visual.")
-    c1, c2, c3 = st.columns(3, gap="medium")
-    with c1:
-        st.html('''<div class="method-card"><div class="method-icon">◫</div><div class="method-title">Satisfacción por dimensión</div><div class="method-text">Cada dimensión contiene 4 preguntas. Para cada estudiante se calcula el promedio de esas cuatro respuestas. Si el promedio es <b>≥ 4</b>, el estudiante se clasifica como satisfecho en esa dimensión.</div></div>''')
-    with c2:
-        st.html('''<div class="method-card"><div class="method-icon">◎</div><div class="method-title">Satisfacción general</div><div class="method-text">La satisfacción general se obtiene directamente de <b>P17</b>. Respuestas 4 o 5 = satisfecho; respuestas 1, 2 o 3 = no satisfecho. P17 no se obtiene promediando D1–D4.</div></div>''')
-    with c3:
-        st.html('''<div class="method-card"><div class="method-icon">▥</div><div class="method-title">Lectura de ítems</div><div class="method-text"><b>Desfavorable:</b> 1–2. <b>Neutral:</b> 3. <b>Favorable:</b> 4–5. Los porcentajes por ítem son descriptivos y sirven para ubicar aspectos concretos dentro de cada dimensión.</div></div>''')
+    section_head("Metodología", "Cómo se calcula", "Se conserva la lógica estadística del instrumento; solo cambia la experiencia visual.")
+    st.html('''<div class="method-grid">
+      <div class="method-card"><div class="method-icon">▦</div><div class="method-title">Satisfacción D1–D4</div><div class="method-text">Cada dimensión contiene <b>4 preguntas</b>. Para cada estudiante se calcula el promedio de sus cuatro respuestas. Si el promedio es <b>≥ 4</b>, se clasifica como satisfecho en esa dimensión.</div></div>
+      <div class="method-card"><div class="method-icon">◎</div><div class="method-title">Satisfacción general P17</div><div class="method-text">P17 se interpreta de forma independiente. Respuesta <b>4 o 5 = satisfecho</b>; respuestas 1, 2 o 3 = no satisfecho. P17 no se obtiene promediando D1–D4.</div></div>
+      <div class="method-card"><div class="method-icon">▥</div><div class="method-title">Ítems P1–P16</div><div class="method-text"><b>Desfavorable:</b> 1–2. <b>Neutral:</b> 3. <b>Favorable:</b> 4–5. Los porcentajes por ítem se usan para identificar aspectos concretos de mejora.</div></div>
+    </div>''')
 
-    section_head("Semáforo", "Escala institucional", "El color siempre aparece acompañado de nombre e intervalo.")
+    section_head("Semáforo", "Escala institucional", "El color siempre aparece acompañado del nivel y del intervalo.")
     st.html('''<div class="rule-grid">
-      <div class="rule"><div class="rule-dot" style="background:#EF4444"></div><div class="rule-name">Insatisfactorio</div><div class="rule-range">0% a &lt;60%</div></div>
-      <div class="rule"><div class="rule-dot" style="background:#F59E0B"></div><div class="rule-name">Regular</div><div class="rule-range">60% a &lt;75%</div></div>
-      <div class="rule"><div class="rule-dot" style="background:#22C55E"></div><div class="rule-name">Satisfactorio</div><div class="rule-range">75% a &lt;90%</div></div>
-      <div class="rule"><div class="rule-dot" style="background:#059669"></div><div class="rule-name">Muy satisfactorio</div><div class="rule-range">90% a 100%</div></div>
+      <div class="rule-card"><div class="rule-dot" style="background:#D9363E;box-shadow:0 0 10px rgba(217,54,62,.45)"></div><div class="rule-name">🔴 Insatisfactorio</div><div class="rule-range">0% a &lt;60%</div></div>
+      <div class="rule-card"><div class="rule-dot" style="background:#E59A18;box-shadow:0 0 10px rgba(229,154,24,.45)"></div><div class="rule-name">🟠 Regular</div><div class="rule-range">60% a &lt;75%</div></div>
+      <div class="rule-card"><div class="rule-dot" style="background:#1C9B62;box-shadow:0 0 10px rgba(28,155,98,.45)"></div><div class="rule-name">🟢 Satisfactorio</div><div class="rule-range">75% a &lt;90%</div></div>
+      <div class="rule-card"><div class="rule-dot" style="background:#087A57;box-shadow:0 0 10px rgba(8,122,87,.45)"></div><div class="rule-name">🟢 Muy satisfactorio</div><div class="rule-range">90% a 100%</div></div>
     </div>''')

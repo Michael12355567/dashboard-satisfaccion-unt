@@ -1,19 +1,20 @@
-# Dashboard UNT · Streamlit NEO
+# Dashboard UNT — Streamlit Responsive Pro
 
-## Ejecutar localmente
-Desde la carpeta que contiene este proyecto:
+## Archivos
+- `app.py`: aplicación Streamlit.
+- `basededatos.xlsx`: base que se carga automáticamente.
+- `requirements.txt`: dependencias.
+- `.streamlit/config.toml`: tema.
+
+## Ejecutar en Windows
+Desde la carpeta del proyecto:
 
 ```powershell
-C:\Users\LENOVO\AppData\Local\Programs\Python\Python314\python.exe -m pip install -r Streamlit_UNT_NEO\requirements.txt
-C:\Users\LENOVO\AppData\Local\Programs\Python\Python314\python.exe -m streamlit run Streamlit_UNT_NEO\app.py
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
 ```
 
-## Publicar en GitHub / Streamlit Community Cloud
-Sube juntos `app.py`, `basededatos.xlsx`, `requirements.txt` y la carpeta `.streamlit`.
-Si `basededatos.xlsx` está junto a `app.py`, la aplicación lo carga automáticamente y el visitante no necesita subir el Excel.
+No existe cargador de Excel en la interfaz. La aplicación siempre lee `basededatos.xlsx` desde la misma carpeta de `app.py`.
 
-## Estructura
-- `app.py`: aplicación.
-- `basededatos.xlsx`: base incluida.
-- `requirements.txt`: dependencias.
-- `.streamlit/config.toml`: tema visual.
+## Publicar
+Sube estos archivos al mismo repositorio de GitHub y despliega `app.py` en Streamlit Community Cloud.
