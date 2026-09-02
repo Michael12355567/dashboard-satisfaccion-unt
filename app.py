@@ -289,6 +289,124 @@ div[data-testid="stDataFrame"]{border:1px solid #E5EAF0;border-radius:17px;overf
   .stTabs [data-baseweb="tab"]{font-size:.72rem;padding:0 12px}
   div[data-testid="stPlotlyChart"]{border-radius:16px;padding:3px 2px 0}
 }
+
+
+/* ============================================================
+   NEXUS UI — CABECERA EJECUTIVA + MAPA 4D
+   ============================================================ */
+.command-hero{
+  position:relative;overflow:hidden;display:grid;
+  grid-template-columns:minmax(0,1.55fr) minmax(300px,.52fr);
+  gap:18px;padding:24px;border-radius:30px;
+  background:
+    radial-gradient(circle at 88% 12%,rgba(42,212,155,.16),transparent 18rem),
+    radial-gradient(circle at 68% 105%,rgba(91,124,250,.18),transparent 24rem),
+    linear-gradient(130deg,#061522 0%,#0A2D45 56%,#07535B 108%);
+  border:1px solid rgba(255,255,255,.09);
+  box-shadow:0 30px 72px rgba(9,33,52,.24),inset 0 1px 0 rgba(255,255,255,.10);
+  color:#fff;isolation:isolate;
+}
+.command-hero:before{
+  content:"";position:absolute;right:-120px;top:-180px;width:390px;height:390px;
+  border-radius:50%;border:58px solid rgba(50,211,226,.06);z-index:-1;
+}
+.hero-left{padding:5px 4px 5px 8px;align-self:center}
+.hero-brand{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hero-brand .mark{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:10px;background:linear-gradient(145deg,#29D7E2,#5474FF);box-shadow:0 10px 22px rgba(44,203,220,.22),inset 0 1px 0 rgba(255,255,255,.55);font-size:.92rem}
+.hero-brand .txt{font-size:.65rem;letter-spacing:.16em;text-transform:uppercase;font-weight:900;color:#8CECF2}
+.hero-eyebrow{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.hero-eyebrow span{font-size:.58rem;font-weight:850;letter-spacing:.06em;text-transform:uppercase;color:#D9EDF2;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);padding:6px 8px;border-radius:999px}
+.hero-title{margin-top:13px;font-size:clamp(1.9rem,4.1vw,3.15rem);font-weight:950;letter-spacing:-.06em;line-height:.98;max-width:980px}
+.hero-title .accent{background:linear-gradient(90deg,#8EEAF0,#9CB0FF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-sub{max-width:880px;margin-top:12px;color:#D7E7ED;font-size:clamp(.78rem,1.25vw,.93rem);line-height:1.5}
+.hero-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:17px;max-width:850px}
+.hero-fact{padding:10px 11px;border-radius:14px;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.11);backdrop-filter:blur(12px)}
+.hero-fact .k{font-size:.53rem;text-transform:uppercase;letter-spacing:.09em;font-weight:850;color:#94B9C7}
+.hero-fact .v{font-size:.78rem;font-weight:900;color:#F5FBFC;margin-top:3px;line-height:1.2}
+.hero-console{align-self:stretch;padding:17px;border-radius:23px;background:linear-gradient(145deg,rgba(255,255,255,.11),rgba(255,255,255,.055));border:1px solid rgba(255,255,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 18px 34px rgba(0,0,0,.12);backdrop-filter:blur(20px);display:flex;flex-direction:column;justify-content:space-between}
+.console-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.console-id{font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:#9EDCE2;font-weight:900}
+.console-title{font-size:.88rem;color:#F3FAFC;font-weight:900;line-height:1.22;margin-top:4px}
+.console-score{font-size:clamp(2.35rem,4vw,3.35rem);font-weight:950;letter-spacing:-.07em;line-height:.9;margin-top:13px}
+.console-row{display:flex;align-items:center;gap:10px;margin-top:10px}
+.console-state{font-size:.69rem;font-weight:900;line-height:1.2}
+.console-state small{display:block;font-size:.55rem;color:#A6BFCA;font-weight:700;margin-top:3px}
+.console-meter{height:7px;background:rgba(255,255,255,.11);border-radius:99px;overflow:hidden;margin-top:12px}
+.console-meter span{display:block;height:100%;border-radius:99px;box-shadow:0 0 15px currentColor}
+.console-foot{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:14px}
+.console-mini{padding:9px 10px;border-radius:12px;background:rgba(4,18,29,.26);border:1px solid rgba(255,255,255,.08)}
+.console-mini .k{font-size:.5rem;text-transform:uppercase;color:#91ABB7;font-weight:850;letter-spacing:.07em}
+.console-mini .v{font-size:.76rem;color:white;font-weight:900;margin-top:3px}
+
+.stTabs [data-baseweb="tab-list"]{
+  gap:8px;background:rgba(232,239,246,.88);padding:6px;border-radius:18px;
+  border:1px solid rgba(119,139,161,.13);box-shadow:inset 0 1px 0 white,0 10px 24px rgba(39,59,83,.05);
+}
+.stTabs [data-baseweb="tab"]{height:44px;border-radius:13px;padding:0 17px;font-size:.78rem;font-weight:850;letter-spacing:.005em;color:#65778B;border:1px solid transparent!important}
+.stTabs [aria-selected="true"]{background:linear-gradient(145deg,#FFFFFF,#F9FBFD)!important;color:#0F2C45!important;border-color:#DFE7EF!important;box-shadow:0 8px 18px rgba(30,49,72,.10),inset 0 1px 0 white!important}
+.stTabs [data-baseweb="tab-highlight"],.stTabs [data-baseweb="tab-border"]{display:none!important}
+
+.explore-intro{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 18px;border-radius:20px;background:linear-gradient(145deg,#FFFFFF,#F5F8FB);border:1px solid #E2E8EF;box-shadow:0 14px 30px rgba(37,57,82,.07),inset 0 1px 0 white;margin:14px 0 10px}
+.explore-intro .left .k{font-size:.58rem;text-transform:uppercase;letter-spacing:.12em;font-weight:900;color:#5474F2}
+.explore-intro .left .t{font-size:1rem;font-weight:950;color:#183149;margin-top:4px}
+.explore-intro .left .x{font-size:.69rem;color:#738397;line-height:1.42;margin-top:4px;max-width:860px}
+.explore-badge{padding:9px 11px;border-radius:14px;background:#EDF3FF;color:#3458C6;font-size:.65rem;font-weight:900;border:1px solid #DDE6FF;white-space:nowrap}
+
+div[data-testid="stPills"]{margin:.1rem 0 .8rem}
+div[data-testid="stPills"] button{border-radius:14px!important;font-weight:850!important;min-height:40px!important;box-shadow:0 5px 12px rgba(34,53,77,.05)!important}
+
+.dimension-cockpit{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(290px,.8fr);gap:14px;margin-top:9px}
+.cockpit-main{padding:20px;position:relative;overflow:hidden}
+.cockpit-main:after{content:"";position:absolute;width:230px;height:230px;border-radius:50%;right:-80px;bottom:-120px;background:radial-gradient(circle,var(--soft),transparent 70%);pointer-events:none}
+.cockpit-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.cockpit-code{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:12px;background:var(--soft);color:var(--accent);font-size:.7rem;font-weight:950}
+.cockpit-title{font-size:clamp(1rem,2vw,1.35rem);font-weight:950;color:#183149;line-height:1.18;margin-top:12px;max-width:760px}
+.cockpit-range{font-size:.65rem;color:#7A899A;margin-top:5px}
+.cockpit-score-row{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;margin-top:19px}
+.cockpit-score{font-size:clamp(2.6rem,5vw,4rem);font-weight:950;letter-spacing:-.07em;line-height:.9;color:#142C44}
+.cockpit-score small{display:block;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:#8391A0;margin-top:9px}
+.cockpit-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cockpit-stat{padding:11px;border-radius:14px;background:#F7FAFC;border:1px solid #E7EDF3}
+.cockpit-stat .k{font-size:.52rem;color:#8694A4;text-transform:uppercase;font-weight:850;letter-spacing:.06em}
+.cockpit-stat .v{font-size:.9rem;color:#203A52;font-weight:950;margin-top:3px}
+.cockpit-side{padding:17px;display:flex;flex-direction:column;gap:9px}
+.side-title{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:900;color:#7B8A9A}
+.item-focus{padding:12px;border-radius:15px;border:1px solid #E5EBF1;background:linear-gradient(145deg,#FBFCFE,#F5F8FB)}
+.item-focus .tag{font-size:.56rem;text-transform:uppercase;font-weight:900;letter-spacing:.08em;color:var(--accent)}
+.item-focus .name{font-size:.72rem;color:#2B4259;font-weight:850;line-height:1.35;margin-top:4px}
+.item-focus .value{font-size:1.18rem;color:#183149;font-weight:950;margin-top:7px}
+
+.item-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+.item-tile{position:relative;overflow:hidden;padding:14px;border-radius:18px;background:linear-gradient(145deg,#FFFFFF,#F5F8FB);border:1px solid #E4EAF1;box-shadow:0 12px 26px rgba(33,53,82,.07),inset 0 1px 0 white;min-height:160px}
+.item-tile:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--accent)}
+.item-tile-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.item-pill{font-size:.62rem;font-weight:950;color:var(--accent);background:var(--soft);padding:5px 8px;border-radius:9px}
+.item-pct{font-size:1.25rem;font-weight:950;color:#183149;letter-spacing:-.04em}
+.item-question{font-size:.66rem;line-height:1.35;color:#65768A;margin-top:10px;min-height:3.9em}
+.item-meter{height:6px;background:#E9EEF4;border-radius:99px;overflow:hidden;margin-top:11px}
+.item-meter span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),#2DD4BF)}
+.item-meta{display:flex;justify-content:space-between;gap:8px;margin-top:9px;font-size:.56rem;color:#8492A2}
+.item-meta b{color:#3B5067}
+
+.matrix-shell{padding:16px 16px 12px;border-radius:22px;background:linear-gradient(145deg,#FFFFFF,#F6F9FC);border:1px solid #E3E9F0;box-shadow:0 15px 34px rgba(35,55,81,.07),inset 0 1px 0 white}
+.matrix-kicker{font-size:.57rem;text-transform:uppercase;letter-spacing:.11em;font-weight:900;color:#5873E8}
+.matrix-title{font-size:.95rem;font-weight:950;color:#1C344B;margin-top:4px}
+.matrix-note{font-size:.65rem;color:#7B8999;margin-top:3px;line-height:1.4}
+
+div[data-testid="stExpander"]{border:1px solid #E2E9F0!important;border-radius:17px!important;background:rgba(255,255,255,.78)!important;box-shadow:0 8px 20px rgba(33,53,82,.045)!important}
+
+@media(max-width:1100px){
+  .command-hero{grid-template-columns:1fr}.hero-console{min-height:0}
+  .dimension-cockpit{grid-template-columns:1fr}.item-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  .command-hero{padding:17px;border-radius:22px;gap:12px}
+  .hero-left{padding:0}.hero-title{font-size:1.85rem}.hero-facts{grid-template-columns:1fr}.hero-fact{padding:8px 9px}.hero-console{padding:14px;border-radius:18px}
+  .console-foot{grid-template-columns:1fr 1fr}.explore-intro{grid-template-columns:1fr;padding:14px}.explore-badge{width:max-content}
+  .cockpit-main,.cockpit-side{padding:15px;border-radius:18px}.cockpit-score-row{grid-template-columns:1fr}.cockpit-stats{grid-template-columns:1fr 1fr}.cockpit-stats .cockpit-stat:last-child{grid-column:1/-1}
+  .item-grid{grid-template-columns:1fr}.item-question{min-height:0}
+}
+
 </style>
 """,
     unsafe_allow_html=True,
@@ -422,17 +540,37 @@ def section_header(kicker: str, title: str, note: str = "") -> None:
 
 
 def hero(n: int) -> None:
+    state = signal_state(PEI, REFERENCE_TARGET) if "PEI" in globals() else "off"
+    result = PEI if "PEI" in globals() else float("nan")
+    gap = max(0.0, REFERENCE_TARGET - result) if not pd.isna(result) else float("nan")
+    level_name, _, level_color, _ = institutional_level(result) if not pd.isna(result) else ("Sin dato", "—", "#A7B1BE", "none")
+    score = pct(result) if not pd.isna(result) else "—"
+    gap_txt = pp(gap) if not pd.isna(gap) else "—"
+    meter_width = min(100, max(0, result * 100)) if not pd.isna(result) else 0
     st.markdown(
-        f'''<div class="neo-hero">
-          <div class="neo-kicker">Universidad Nacional de Trujillo · tablero ejecutivo PEI</div>
-          <div class="neo-title">Satisfacción con el proceso de formación académica</div>
-          <div class="neo-sub">Lectura integral del IND. 01, diagnóstico de las cuatro dimensiones y contraste con la satisfacción general declarada en P17. Diseño responsive para computadora, tablet y celular.</div>
-          <div class="neo-chips">
-            <span class="neo-chip">IND. 01 · OEI.01</span>
-            <span class="neo-chip">👥 {n:,} estudiantes analizados</span>
-            <span class="neo-chip">◉ P1–P16 · medición integral propuesta</span>
-            <span class="neo-chip">P17 · percepción global complementaria</span>
-            <span class="neo-chip">🎯 Meta PEI 2027 · 60%</span>
+        f'''<div class="command-hero">
+          <div class="hero-left">
+            <div class="hero-brand"><span class="mark">✦</span><span class="txt">Universidad Nacional de Trujillo · Inteligencia PEI</span></div>
+            <div class="hero-eyebrow"><span>OEI.01</span><span>IND.01</span><span>PEI 2026–2030</span></div>
+            <div class="hero-title">Formación académica <span class="accent">integral</span></div>
+            <div class="hero-sub">Centro ejecutivo para leer el resultado institucional, detectar brechas en D1–D4 y profundizar hasta cada ítem sin perder el contexto metodológico.</div>
+            <div class="hero-facts">
+              <div class="hero-fact"><div class="k">Población analizada</div><div class="v">👥 {n:,} estudiantes</div></div>
+              <div class="hero-fact"><div class="k">Arquitectura del instrumento</div><div class="v">⬢ 4 dimensiones · 16 ítems</div></div>
+              <div class="hero-fact"><div class="k">Referencia estratégica</div><div class="v">🎯 Meta 2027 · 60%</div></div>
+            </div>
+          </div>
+          <div class="hero-console">
+            <div>
+              <div class="console-top"><div><div class="console-id">Panel de estado</div><div class="console-title">IND.01 · diagnóstico actual</div></div>{traffic_svg(state, 43)}</div>
+              <div class="console-score">{score}</div>
+              <div class="console-row"><div class="console-state" style="color:{signal_color(state)}">{escape(signal_label(result,REFERENCE_TARGET))}<small>Nivel de satisfacción: <span style="color:{level_color}">{escape(level_name)}</span></small></div></div>
+              <div class="console-meter"><span style="width:{meter_width:.1f}%;background:{signal_color(state)};color:{signal_color(state)}"></span></div>
+            </div>
+            <div class="console-foot">
+              <div class="console-mini"><div class="k">Brecha a 2027</div><div class="v">{gap_txt}</div></div>
+              <div class="console-mini"><div class="k">Ruta 2030</div><div class="v">60% → 75%</div></div>
+            </div>
           </div>
         </div>''',
         unsafe_allow_html=True,
@@ -614,6 +752,76 @@ def insight_cards() -> str:
     '''
 
 
+def overview_4d_html() -> str:
+    cells = []
+    for _, r in DIMS.sort_values("Código").iterrows():
+        code = r["Código"]
+        meta = DIMENSIONS[code]
+        sat = float(r["Satisfacción"])
+        state = signal_state(sat, REFERENCE_TARGET)
+        cells.append(f'''<div class="item-focus" style="--accent:{meta['accent']}">
+          <div class="tag">{meta['icon']} {code} · {', '.join(meta['items'])}</div>
+          <div class="name">{escape(meta['name'])}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px"><div class="value">{pct(sat)}</div>{traffic_svg(state,30)}</div>
+        </div>''')
+    return f'''<div class="dimension-cockpit">
+      <div class="glass cockpit-main" style="--accent:#5B7CFA;--soft:rgba(91,124,250,.10)">
+        <div class="cockpit-top"><div><div class="cockpit-code">⬢ MAPA 4D</div><div class="cockpit-title">Una lectura jerárquica: resultado → dimensión → ítem</div><div class="cockpit-range">D1–D4 explican dónde se concentra la fortaleza o la brecha; los 16 ítems permiten localizar el aspecto concreto.</div></div></div>
+        <div class="cockpit-score-row"><div><div class="cockpit-score">4D<small>estructura diagnóstica</small></div></div><div class="cockpit-stats">
+          <div class="cockpit-stat"><div class="k">Prioridad</div><div class="v">{PRIORITY_DIM['Código']} · {pct(float(PRIORITY_DIM['Satisfacción']))}</div></div>
+          <div class="cockpit-stat"><div class="k">Fortaleza</div><div class="v">{STRONG_DIM['Código']} · {pct(float(STRONG_DIM['Satisfacción']))}</div></div>
+          <div class="cockpit-stat"><div class="k">Ítem crítico</div><div class="v">{PRIORITY_ITEM['Ítem']} · {pct(float(PRIORITY_ITEM['Favorable']))}</div></div>
+        </div></div>
+      </div>
+      <div class="glass cockpit-side"><div class="side-title">Panel dimensional</div>{''.join(cells)}</div>
+    </div>'''
+
+
+def selected_dimension_html(code: str) -> str:
+    meta = DIMENSIONS[code]
+    row = DIMS[DIMS["Código"] == code].iloc[0]
+    sat = float(row["Satisfacción"])
+    avg = float(row["Promedio Likert"])
+    gap = max(0.0, REFERENCE_TARGET - sat)
+    state = signal_state(sat, REFERENCE_TARGET)
+    subset = ITEMS_SUM[ITEMS_SUM["Dimensión"] == code]
+    weak = subset.sort_values("Favorable").iloc[0]
+    strong = subset.sort_values("Favorable", ascending=False).iloc[0]
+    gap_label = "Meta alcanzada" if gap <= 0 else f"Brecha {pp(gap)}"
+    return f'''<div class="dimension-cockpit">
+      <div class="glass cockpit-main" style="--accent:{meta['accent']};--soft:{meta['accent']}18">
+        <div class="cockpit-top"><div><div class="cockpit-code">{meta['icon']} {code} · {', '.join(meta['items'])}</div><div class="cockpit-title">{escape(meta['name'])}</div><div class="cockpit-range">Diagnóstico de satisfacción de la dimensión y lectura detallada de sus cuatro ítems.</div></div>{traffic_svg(state,48)}</div>
+        <div class="cockpit-score-row"><div><div class="cockpit-score">{pct(sat)}<small>estudiantes satisfechos</small></div></div><div class="cockpit-stats">
+          <div class="cockpit-stat"><div class="k">Promedio Likert</div><div class="v">{avg:.2f} / 5</div></div>
+          <div class="cockpit-stat"><div class="k">Meta 2027</div><div class="v">60.0%</div></div>
+          <div class="cockpit-stat"><div class="k">Situación</div><div class="v" style="color:{signal_color(state)}">{escape(gap_label)}</div></div>
+        </div></div>
+      </div>
+      <div class="glass cockpit-side">
+        <div class="side-title">Lectura de foco</div>
+        <div class="item-focus" style="--accent:#FF5C6C"><div class="tag">Aspecto con menor valoración</div><div class="name">{weak['Ítem']} · {escape(weak['Pregunta'])}</div><div class="value">{pct(float(weak['Favorable']))}</div></div>
+        <div class="item-focus" style="--accent:#2AD49B"><div class="tag">Aspecto con mayor valoración</div><div class="name">{strong['Ítem']} · {escape(strong['Pregunta'])}</div><div class="value">{pct(float(strong['Favorable']))}</div></div>
+      </div>
+    </div>'''
+
+
+def item_tiles_html(code: str) -> str:
+    meta = DIMENSIONS[code]
+    d = ITEMS_SUM[ITEMS_SUM["Dimensión"] == code].copy()
+    d["_n"] = d["Ítem"].str.extract(r"(\d+)")[0].astype(int)
+    d = d.sort_values("_n")
+    tiles=[]
+    for _, r in d.iterrows():
+        fav=float(r["Favorable"]); avg=float(r["Promedio"])
+        tiles.append(f'''<div class="item-tile" style="--accent:{meta['accent']};--soft:{meta['accent']}14">
+          <div class="item-tile-head"><span class="item-pill">{r['Ítem']}</span><span class="item-pct">{pct(fav)}</span></div>
+          <div class="item-question">{escape(r['Pregunta'])}</div>
+          <div class="item-meter"><span style="width:{fav*100:.1f}%"></span></div>
+          <div class="item-meta"><span>Favorable 4–5</span><span>Promedio <b>{avg:.2f}</b></span></div>
+        </div>''')
+    return '<div class="item-grid">'+''.join(tiles)+'</div>'
+
+
 # ==============================================================
 # GRÁFICOS BLOQUEADOS (NO PAN / NO ZOOM)
 # ==============================================================
@@ -709,18 +917,42 @@ def likert_chart(selected_dim: str = "Todas") -> go.Figure:
     return lock_figure(fig, max(330, 34 * len(item_list) + 105))
 
 
+def heatmap_4d_chart() -> go.Figure:
+    z=[]; text=[]; custom=[]
+    for code, meta in DIMENSIONS.items():
+        rowz=[]; rowt=[]; rowc=[]
+        for item in meta["items"]:
+            r=ITEMS_SUM[ITEMS_SUM["Ítem"]==item].iloc[0]
+            fav=float(r["Favorable"])
+            rowz.append(fav)
+            rowt.append(f"{item}<br><b>{fav*100:.1f}%</b>")
+            rowc.append([item, r["Pregunta"], float(r["Promedio"]), code])
+        z.append(rowz); text.append(rowt); custom.append(rowc)
+    fig=go.Figure(go.Heatmap(
+        z=z,x=["Ítem 1","Ítem 2","Ítem 3","Ítem 4"],y=list(DIMENSIONS.keys()),
+        zmin=0,zmax=1,colorscale=[[0,"#EEF3F8"],[.45,"#A8B9FF"],[.72,"#5E82F7"],[1,"#28CFC2"]],
+        text=text,texttemplate="%{text}",textfont=dict(size=12,color="#102A43"),showscale=False,
+        customdata=custom,
+        hovertemplate="<b>%{customdata[3]} · %{customdata[0]}</b><br>%{customdata[1]}<br>Favorable: %{z:.1%}<br>Promedio: %{customdata[2]:.2f}<extra></extra>"
+    ))
+    fig.update_layout(showlegend=False)
+    fig.update_yaxes(autorange="reversed",tickfont=dict(size=12,color="#263F57"))
+    fig.update_xaxes(tickfont=dict(size=11,color="#718096"))
+    return lock_figure(fig,360)
+
+
 # ==============================================================
 # APP
 # ==============================================================
 hero(N_TOTAL)
 
-tab1, tab2, tab3 = st.tabs(["◉ Visión ejecutiva", "▦ Dimensiones e ítems", "ⓘ Método PEI"])
+tab1, tab2, tab3 = st.tabs(["◉ Centro ejecutivo", "⬢ Mapa 4D", "⌁ Método PEI"])
 
 with tab1:
-    section_header("Indicador principal", "Dos lecturas globales, claramente separadas", "El IND.01 integral se calcula con P1–P16; P17 permanece como percepción global complementaria.")
+    section_header("Núcleo institucional", "Resultado principal y contraste global", "El IND.01 integral y P17 se muestran como lecturas separadas para evitar mezclar diagnóstico agregado con percepción global directa.")
     st.markdown(core_cards(), unsafe_allow_html=True)
 
-    section_header("Diagnóstico 4D", "Satisfacción en las cuatro dimensiones", "Cada dimensión clasifica al estudiante como satisfecho si su promedio de cuatro ítems es ≥4.")
+    section_header("Arquitectura 4D", "Las cuatro dimensiones que explican el resultado", "Cada dimensión resume cuatro ítems y permite ubicar con precisión dónde se concentra la fortaleza o la brecha.")
     st.markdown(dimension_cards(), unsafe_allow_html=True)
     st.markdown(
         f'''<div class="glass legend-card"><div class="legend-lights">{traffic_svg('green',28)}{traffic_svg('amber',28)}{traffic_svg('red',28)}</div><div class="legend-text"><b>Dos lecturas distintas:</b> el semáforo conserva <b>3 luces</b> (verde, ámbar y rojo) porque representa el cumplimiento de la meta PEI. La <b>escala institucional</b> se muestra aparte con <b>4 categorías</b>: Insatisfactorio, Regular, Satisfactorio y Muy satisfactorio. Así no se mezclan meta y nivel de satisfacción.</div></div>''',
@@ -739,19 +971,39 @@ with tab1:
         st.plotly_chart(targets_chart(), use_container_width=True, config=LOCKED_PLOT_CONFIG)
 
 with tab2:
-    section_header("Explorador", "Dimensiones e ítems sin gráficos que se desplacen", "Los ejes están bloqueados: tocar o arrastrar no hace zoom ni mueve el gráfico.")
-    selected = st.selectbox(
-        "Dimensión a analizar",
-        ["Todas", "D1", "D2", "D3", "D4"],
-        format_func=lambda x: "Todas las dimensiones · P1–P16" if x == "Todas" else f"{x} · {DIMENSIONS[x]['name']}",
+    st.markdown('''<div class="explore-intro"><div class="left"><div class="k">Explorador inteligente del instrumento</div><div class="t">Mapa 4D · de la dimensión al ítem</div><div class="x">Selecciona una vista. La pantalla conserva el contexto de la dimensión, identifica el foco crítico y luego baja a los cuatro ítems específicos. Los gráficos permanecen bloqueados: sin zoom, pan ni desplazamiento accidental.</div></div><div class="explore-badge">⬢ 4 dimensiones · 16 ítems</div></div>''', unsafe_allow_html=True)
+
+    nav = st.pills(
+        "Vista del instrumento",
+        ["Vista 4D", "D1", "D2", "D3", "D4"],
+        default="Vista 4D",
+        selection_mode="single",
+        format_func=lambda x: "⬢ Vista 4D" if x == "Vista 4D" else f"{DIMENSIONS[x]['icon']} {x}",
         label_visibility="collapsed",
     )
+    selected = "Todas" if nav in (None, "Vista 4D") else nav
 
-    section_header("Valoración favorable", "Aspectos ordenados de menor a mayor", "En celular se muestran solo códigos P1–P16; el texto completo aparece al tocar el dato, sin mover el gráfico.")
-    st.plotly_chart(item_chart(selected), use_container_width=True, config=LOCKED_PLOT_CONFIG)
+    if selected == "Todas":
+        st.markdown(overview_4d_html(), unsafe_allow_html=True)
+        section_header("Mapa de intensidad", "Los 16 ítems en una sola matriz", "El color representa valoración favorable (4–5). No se aplica la escala institucional de D1–D4 a cada ítem.")
+        st.markdown('<div class="matrix-shell"><div class="matrix-kicker">Matriz de lectura rápida</div><div class="matrix-title">Mapa térmico 4D</div><div class="matrix-note">Cada fila es una dimensión y cada celda uno de sus cuatro ítems. Al consultar una celda aparece la pregunta completa.</div></div>', unsafe_allow_html=True)
+        st.plotly_chart(heatmap_4d_chart(), use_container_width=True, config=LOCKED_PLOT_CONFIG)
 
-    section_header("Distribución Likert", "Desfavorable · neutral · favorable")
-    st.plotly_chart(likert_chart(selected), use_container_width=True, config=LOCKED_PLOT_CONFIG)
+        section_header("Comparación dimensional", "Satisfacción D1–D4")
+        st.plotly_chart(dimension_chart(), use_container_width=True, config=LOCKED_PLOT_CONFIG)
+
+        section_header("Distribución general", "Patrón Likert de P1–P16")
+        st.plotly_chart(likert_chart("Todas"), use_container_width=True, config=LOCKED_PLOT_CONFIG)
+    else:
+        st.markdown(selected_dimension_html(selected), unsafe_allow_html=True)
+        section_header("Microlente", f"Los cuatro ítems de {selected}", "Tarjetas compactas para comparar valoración favorable y promedio sin perder el texto de cada pregunta.")
+        st.markdown(item_tiles_html(selected), unsafe_allow_html=True)
+
+        section_header("Ranking interno", f"Qué pesa más y qué pesa menos dentro de {selected}")
+        st.plotly_chart(item_chart(selected), use_container_width=True, config=LOCKED_PLOT_CONFIG)
+
+        section_header("Composición de respuesta", "Desfavorable · neutral · favorable")
+        st.plotly_chart(likert_chart(selected), use_container_width=True, config=LOCKED_PLOT_CONFIG)
 
     dshow = ITEMS_SUM.copy() if selected == "Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
     dshow = dshow.sort_values("Favorable")
@@ -760,7 +1012,8 @@ with tab2:
     table["Neutral"] = table["Neutral"].map(lambda x: f"{x*100:.1f}%")
     table["Desfavorable"] = table["Desfavorable"].map(lambda x: f"{x*100:.1f}%")
     table["Promedio"] = table["Promedio"].map(lambda x: f"{x:.2f}")
-    st.dataframe(table, use_container_width=True, hide_index=True, height=min(620, 45 + 36*len(table)))
+    with st.expander("▤ Ver detalle técnico de los ítems", expanded=False):
+        st.dataframe(table, use_container_width=True, hide_index=True, height=min(620, 45 + 36*len(table)))
 
 with tab3:
     section_header("Ficha PEI", "Cómo está interpretado el indicador en este dashboard")

@@ -1,18 +1,28 @@
-# UNT · Dashboard PEI de satisfacción
+# UNT · Dashboard PEI NEXUS
 
-## Qué cambia en esta versión
-- No existe botón para subir Excel: `basededatos.xlsx` se lee automáticamente.
-- Se separan dos resultados globales:
-  - **IND.01 integral propuesto**: promedio P1–P16 por estudiante; satisfecho si promedio >= 4; luego N/D x 100.
-  - **P17**: satisfacción general declarada, mostrada como medida complementaria.
-- D1, D2, D3 y D4 aparecen como diagnóstico dimensional.
-- Semáforos 3D vectoriales (SVG) sin archivos de imagen externos.
-- Diseño responsive para PC, tablet y celular.
+Versión rediseñada con una jerarquía visual más ejecutiva y menos parecida a Shiny.
+
+## Cambios de diseño
+- Cabecera convertida en **centro de control**: identidad UNT a la izquierda y estado del IND.01 a la derecha.
+- Navegación renombrada a **Centro ejecutivo / Mapa 4D / Método PEI**.
+- La antigua sección “Dimensiones e ítems” se reemplaza por **Mapa 4D**.
+- Selector moderno por botones tipo `pills`: Vista 4D, D1, D2, D3 y D4.
+- Vista general con **mapa térmico de los 16 ítems** y panel dimensional.
+- Al seleccionar D1–D4 aparece un **cockpit de dimensión**, semáforo, brecha, promedio, ítem crítico e ítem fuerte.
+- Los cuatro ítems de cada dimensión aparecen como tarjetas 3D compactas, con texto completo, favorable, promedio y barra visual.
+- La tabla técnica queda oculta en un desplegable para evitar saturar la pantalla.
+- Diseño responsive: escritorio, tablet y celular.
 - Gráficos Plotly bloqueados: sin zoom, pan ni desplazamiento al tocar.
-- Metas PEI mostradas: 2027 60%, 2028 65%, 2029 70%, 2030 75%.
+- `basededatos.xlsx` se carga automáticamente; no existe cargador de archivos.
 
-## Nota metodológica
-La ficha PEI compartida define el indicador N/D x 100 y el criterio “satisfecho”, pero la imagen no especifica el algoritmo exacto para agregar múltiples ítems. Por ello, la regla `promedio P1-P16 >= 4` se presenta como **operacionalización analítica propuesta** y debe validarse institucionalmente antes de usarla como resultado PEI oficial.
+## Lógica mantenida
+- D1: P1–P4
+- D2: P5–P8
+- D3: P9–P12
+- D4: P13–P16
+- Satisfacción dimensional: promedio individual de los 4 ítems >= 4.
+- P17 se conserva como satisfacción general declarada separada.
+- El IND.01 integral P1–P16 permanece identificado como operacionalización analítica propuesta.
 
 ## Ejecutar
 ```text
