@@ -261,10 +261,24 @@ section[data-testid="stSidebar"],[data-testid="stSidebarCollapsedControl"]{displ
 .method .i{font-size:1.18rem}.method .t{font-size:.86rem;font-weight:900;color:#1C334B;margin-top:7px}.method .x{font-size:.72rem;color:#68798C;line-height:1.5;margin-top:7px}
 .notice{padding:14px 16px;border-radius:18px;background:linear-gradient(145deg,#FFF9EC,#FFFDF8);border:1px solid #F3E5BE;color:#6F5A27;font-size:.72rem;line-height:1.48;box-shadow:0 10px 26px rgba(96,74,21,.06)}
 
-/* PLOTS */
-div[data-testid="stPlotlyChart"]{background:linear-gradient(145deg,#FFFFFF,#F7FAFC);border:1px solid #DCE6ED;border-radius:22px;padding:10px 8px 3px;box-shadow:0 16px 36px rgba(29,58,78,.075),inset 0 1px 0 #fff;overflow:hidden;touch-action:pan-y!important}
-div[data-testid="stDataFrame"]{border:1px solid #E5EAF0;border-radius:17px;overflow:hidden;box-shadow:0 10px 24px rgba(33,53,82,.055)}
+/* VISUALIZACIONES EJECUTIVAS — ESTÁTICAS, RESPONSIVE Y CON PROFUNDIDAD */
+.viz-deck{position:relative;overflow:hidden;border-radius:24px;padding:18px 18px 16px;background:radial-gradient(circle at 88% 12%,rgba(80,205,214,.15),transparent 22rem),radial-gradient(circle at 8% 112%,rgba(78,112,151,.22),transparent 24rem),linear-gradient(145deg,#0D2438 0%,#143A50 56%,#164A54 100%);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 48px rgba(18,41,59,.18),0 5px 14px rgba(18,41,59,.09),inset 0 1px 0 rgba(255,255,255,.12);color:#F6FBFC}
+.viz-deck:after{content:"";position:absolute;right:-100px;top:-145px;width:280px;height:280px;border-radius:50%;border:38px solid rgba(255,255,255,.035);pointer-events:none}
+.viz-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;position:relative;z-index:1}.viz-eyebrow{font-size:.58rem;text-transform:uppercase;letter-spacing:.14em;font-weight:900;color:#78D2D7}.viz-h{font-size:.94rem;font-weight:900;color:#FFFFFF;margin-top:3px;letter-spacing:-.015em}.viz-meta{font-size:.61rem;color:#BFD3DA;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 9px;white-space:nowrap}
 
+/* PERFIL 4D — TORRES 3D */
+.pillar-stage{position:relative;height:322px;padding:26px 12px 0;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));border:1px solid rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden}.pillar-gridline{position:absolute;left:12px;right:12px;height:1px;background:rgba(217,235,239,.09);z-index:0}.pillar-gridline span{position:absolute;left:0;top:-8px;font-size:.48rem;color:#8EACB7;background:#123347;padding-right:5px}.pillar-target{position:absolute;left:10px;right:10px;height:1px;border-top:1.5px dashed rgba(255,201,96,.95);z-index:3;filter:drop-shadow(0 0 5px rgba(255,183,72,.35))}.pillar-target b{position:absolute;right:3px;top:-19px;font-size:.55rem;color:#FFD27B;background:#15394A;padding:2px 6px;border-radius:999px;border:1px solid rgba(255,210,123,.22)}.pillar-grid{position:absolute;inset:34px 16px 14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end;z-index:2}.pillar-unit{height:100%;display:grid;grid-template-rows:36px 1fr 42px;align-items:end;justify-items:center;min-width:0}.pillar-score{font-size:.8rem;font-weight:950;color:#F7FFFF;text-shadow:0 2px 8px rgba(0,0,0,.22);align-self:end}.pillar-well{position:relative;width:min(70%,72px);height:100%;min-height:155px;display:flex;align-items:flex-end;justify-content:center;filter:drop-shadow(0 14px 14px rgba(0,0,0,.22))}.pillar-body{position:relative;width:100%;min-height:20px;border-radius:20px 20px 14px 14px;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 66%,#0E2232),var(--accent) 47%,color-mix(in srgb,var(--accent) 72%,#E6FFFF) 56%,var(--accent) 76%,color-mix(in srgb,var(--accent) 64%,#102A38));box-shadow:inset 9px 0 13px rgba(0,0,0,.13),inset -7px 0 11px rgba(255,255,255,.10),0 8px 17px rgba(0,0,0,.19)}.pillar-body:before{content:"";position:absolute;left:0;right:0;top:-8px;height:17px;border-radius:50%;background:radial-gradient(ellipse at 50% 38%,color-mix(in srgb,var(--accent) 60%,white),var(--accent) 62%,color-mix(in srgb,var(--accent) 62%,#071722));box-shadow:inset 0 3px 4px rgba(255,255,255,.24),0 3px 7px rgba(0,0,0,.18)}.pillar-body:after{content:"";position:absolute;left:7%;right:7%;bottom:-5px;height:11px;border-radius:50%;background:color-mix(in srgb,var(--accent) 65%,#0A1E2B);opacity:.95}.pillar-label{text-align:center;align-self:start;padding-top:8px;min-width:0}.pillar-code{font-size:.7rem;font-weight:950;color:#FFFFFF}.pillar-name{font-size:.51rem;color:#ABC2CA;line-height:1.15;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+
+/* RUTA PEI — ROADMAP */
+.roadmap{position:relative;min-height:322px;padding:18px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));border:1px solid rgba(255,255,255,.08);overflow:hidden}.road-current{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 12px;border-radius:15px;background:linear-gradient(135deg,rgba(255,92,108,.16),rgba(255,182,72,.08));border:1px solid rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}.road-current .big{font-size:1.55rem;font-weight:950;letter-spacing:-.045em;color:#FFF}.road-current .small{font-size:.59rem;color:#BFD0D7;line-height:1.35;text-align:right}.road-current .small b{color:#FFD0D5}.road-track{position:relative;margin-top:34px;padding:0 7px}.road-line{position:absolute;left:8%;right:8%;top:32px;height:7px;border-radius:999px;background:linear-gradient(90deg,#4C88A6,#5AB6B7,#68CDAA);box-shadow:0 0 18px rgba(93,195,191,.26),inset 0 1px 0 rgba(255,255,255,.35)}.road-points{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;z-index:2}.road-point{text-align:center}.road-orb{width:66px;height:66px;border-radius:50%;margin:0 auto;display:grid;place-items:center;background:radial-gradient(circle at 36% 28%,#F2FFFF 0 7%,#8DD7D7 8%,#347C8E 48%,#163D50 76%,#0D2638 100%);border:2px solid rgba(255,255,255,.28);box-shadow:0 13px 19px rgba(0,0,0,.25),0 0 20px rgba(85,191,194,.18),inset 0 2px 3px rgba(255,255,255,.35)}.road-orb b{font-size:.88rem;color:white;text-shadow:0 2px 6px rgba(0,0,0,.28)}.road-year{font-size:.63rem;font-weight:900;color:#DDEDEF;margin-top:9px}.road-gap{font-size:.52rem;color:#8FACB7;margin-top:2px}
+
+/* MURO 4D DE ÍTEMS */
+.item-wall{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.item-dim-panel{position:relative;padding:15px;border-radius:22px;background:linear-gradient(145deg,#FFFFFF,#F6FAFC);border:1px solid color-mix(in srgb,var(--accent) 18%,#DCE6EC);box-shadow:0 17px 34px rgba(29,58,78,.08),inset 0 1px 0 #fff;overflow:hidden}.item-dim-panel:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 42%,#8DD9DA))}.item-dim-panel:after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-70px;top:-80px;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 10%,transparent),transparent 68%);pointer-events:none}.item-dim-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.item-dim-title{font-size:.76rem;font-weight:950;color:#20384F}.item-dim-sub{font-size:.56rem;color:#7B8A99;margin-top:2px}.item-dim-score{font-size:.7rem;font-weight:900;color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,#fff);border:1px solid color-mix(in srgb,var(--accent) 14%,#fff);border-radius:999px;padding:5px 8px}.item-grid3d{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.item-cube{position:relative;min-height:128px;padding:11px;border-radius:16px;background:linear-gradient(145deg,#FFFFFF 0%,#F5F9FC 100%);border:1px solid #E2EAF0;box-shadow:7px 9px 18px rgba(28,52,73,.075),-4px -4px 12px rgba(255,255,255,.85),inset 0 1px 0 #fff;overflow:hidden}.item-cube:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}.item-top3d{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.item-code3d{font-size:.68rem;font-weight:950;color:var(--accent)}.item-pct3d{font-size:1.05rem;font-weight:950;color:#193149;letter-spacing:-.035em}.item-q3d{font-size:.59rem;color:#6C7D8F;line-height:1.34;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.7em}.item-meter3d{height:8px;border-radius:99px;background:#E8EEF3;margin-top:9px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(18,34,52,.08)}.item-meter3d span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 78%,#15334A),var(--accent),color-mix(in srgb,var(--accent) 55%,#8CE0DC));box-shadow:0 0 10px color-mix(in srgb,var(--accent) 28%,transparent)}.item-foot3d{display:flex;justify-content:space-between;gap:6px;margin-top:7px;font-size:.53rem;color:#8391A0}.item-foot3d b{color:#43596E}.item-badge{position:absolute;right:8px;bottom:8px;font-size:.47rem;font-weight:900;padding:3px 5px;border-radius:999px;border:1px solid #E7EDF2;background:#fff;color:#6D7E90}.item-badge.weak{color:#A84955;border-color:#F0CDD2;background:#FFF5F6}.item-badge.strong{color:#237C67;border-color:#C9EBDD;background:#F3FCF8}
+
+/* LIKERT 3D — CÁPSULAS */
+.likert-board{padding:14px;border-radius:22px;background:linear-gradient(145deg,#FFFFFF,#F5F9FC);border:1px solid #DDE7ED;box-shadow:0 18px 36px rgba(29,58,78,.075),inset 0 1px 0 #fff}.likert-legend3d{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.likert-pillkey{display:inline-flex;align-items:center;gap:6px;font-size:.57rem;color:#627488;font-weight:800;padding:5px 8px;border-radius:999px;background:#F7FAFC;border:1px solid #E2E9EF}.likert-pillkey i{width:9px;height:9px;border-radius:50%;display:inline-block;box-shadow:inset 0 1px 1px rgba(255,255,255,.7),0 2px 5px rgba(0,0,0,.12)}.likert-group{padding:12px 0 4px;border-top:1px solid #E8EEF3}.likert-group:first-of-type{border-top:0;padding-top:2px}.likert-group-title{font-size:.63rem;font-weight:950;color:var(--accent);margin:0 0 7px 2px}.likert-row3d{display:grid;grid-template-columns:44px minmax(0,1fr) 190px;gap:9px;align-items:center;padding:7px 6px;border-radius:12px}.likert-row3d:nth-child(even){background:rgba(239,245,248,.48)}.likert-code3d{font-size:.61rem;font-weight:950;color:#29435A}.likert-capsule{height:20px;display:flex;border-radius:999px;overflow:hidden;background:#E7EDF2;border:1px solid #D8E2E9;box-shadow:inset 0 3px 7px rgba(21,39,58,.13),0 5px 12px rgba(30,56,77,.06)}.likert-capsule span{height:100%;position:relative}.likert-capsule span:after{content:"";position:absolute;left:0;right:0;top:1px;height:38%;background:linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,0));pointer-events:none}.seg-bad{background:linear-gradient(180deg,#DF8891,#C45C68)}.seg-neu{background:linear-gradient(180deg,#C6D0D8,#A8B4BF)}.seg-good{background:linear-gradient(180deg,#5BB4A0,#378B79)}.likert-values3d{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;font-size:.51rem;color:#738497;text-align:right}.likert-values3d b{font-weight:950}.likert-values3d .bad b{color:#B94C59}.likert-values3d .neu b{color:#7C8B99}.likert-values3d .good b{color:#2E806F}.likert-question3d{grid-column:2/4;font-size:.5rem;color:#8A96A4;margin-top:-4px;padding-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+div[data-testid="stDataFrame"]{border:1px solid #E5EAF0;border-radius:17px;overflow:hidden;box-shadow:0 10px 24px rgba(33,53,82,.055)}
 
 /* EXPLORADOR / SELECTOR */
 div[data-baseweb="select"] > div{background:linear-gradient(145deg,#FFFFFF,#F6F9FB)!important;border:1px solid #D8E4EB!important;border-radius:14px!important;min-height:46px!important;box-shadow:0 8px 20px rgba(30,57,77,.06)!important}
@@ -296,6 +310,11 @@ div[data-baseweb="select"] span{color:#26445A!important;font-weight:750!importan
   .dim-name{min-height:0}
   .stTabs [data-baseweb="tab"]{font-size:.72rem;padding:0 12px}
   div[data-testid="stPlotlyChart"]{border-radius:16px;padding:3px 2px 0}
+  .viz-deck{padding:13px;border-radius:19px}.viz-head{display:block}.viz-meta{display:inline-flex;margin-top:7px}
+  .pillar-stage{height:280px;padding-left:4px;padding-right:4px}.pillar-grid{inset:34px 5px 10px;gap:4px}.pillar-well{width:64%;min-width:38px}.pillar-name{font-size:.45rem;max-width:76px}
+  .roadmap{min-height:0;padding:12px}.road-current{align-items:flex-start}.road-current .small{font-size:.52rem}.road-track{margin-top:24px}.road-line{display:none}.road-points{grid-template-columns:1fr 1fr;gap:14px 7px}.road-orb{width:58px;height:58px}
+  .item-wall{grid-template-columns:1fr}.item-grid3d{grid-template-columns:1fr 1fr}.item-cube{min-height:122px;padding:10px}
+  .likert-board{padding:9px}.likert-row3d{grid-template-columns:34px minmax(0,1fr);gap:6px;padding:7px 3px}.likert-values3d{grid-column:2;grid-template-columns:repeat(3,1fr);text-align:left;font-size:.48rem}.likert-question3d{grid-column:2;white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 }
 </style>
 """,
@@ -622,6 +641,75 @@ def insight_cards() -> str:
     '''
 
 
+
+# ==============================================================
+# VISUALIZACIONES 3D / EJECUTIVAS (HTML/CSS, SIN PAN NI ZOOM)
+# ==============================================================
+def dimension_3d_html() -> str:
+    d = DIMS.sort_values("Código")
+    pillars = []
+    for _, r in d.iterrows():
+        code = r["Código"]
+        meta = DIMENSIONS[code]
+        sat = float(r["Satisfacción"])
+        pillars.append(f'''<div class="pillar-unit"><div class="pillar-score">{pct(sat)}</div><div class="pillar-well"><div class="pillar-body" style="--accent:{meta['accent']};height:{max(5.0, sat*100):.1f}%"></div></div><div class="pillar-label"><div class="pillar-code">{code}</div><div class="pillar-name" title="{escape(meta['name'])}">{escape(meta['short'])}</div></div></div>''')
+    return f'''<div class="viz-deck"><div class="viz-head"><div><div class="viz-eyebrow">Perfil institucional 4D</div><div class="viz-h">Satisfacción por dimensión · vista de profundidad</div></div><div class="viz-meta">Meta PEI 2027 · 60%</div></div><div class="pillar-stage"><div class="pillar-gridline" style="top:25%"><span>75%</span></div><div class="pillar-gridline" style="top:50%"><span>50%</span></div><div class="pillar-gridline" style="top:75%"><span>25%</span></div><div class="pillar-target" style="top:40%"><b>60% · referencia</b></div><div class="pillar-grid">{''.join(pillars)}</div></div></div>'''
+
+
+def roadmap_3d_html() -> str:
+    gap = max(0.0, PEI_TARGETS[2027] - PEI)
+    points = []
+    for year, goal in PEI_TARGETS.items():
+        delta = goal - PEI
+        gap_txt = f"+{pp(delta)}" if delta > 0 else "alcanzada"
+        points.append(f'''<div class="road-point"><div class="road-orb"><b>{goal*100:.0f}%</b></div><div class="road-year">{year}</div><div class="road-gap">{gap_txt}</div></div>''')
+    return f'''<div class="viz-deck"><div class="viz-head"><div><div class="viz-eyebrow">Trayectoria PEI</div><div class="viz-h">Ruta de metas 2027–2030</div></div><div class="viz-meta">Sentido esperado · ascendente</div></div><div class="roadmap"><div class="road-current"><div><div class="viz-eyebrow" style="color:#FFAFB8">Diagnóstico integral actual</div><div class="big">{pct(PEI)}</div></div><div class="small">Primer hito: <b>60% en 2027</b><br>Brecha actual: <b>{pp(gap)}</b></div></div><div class="road-track"><div class="road-line"></div><div class="road-points">{''.join(points)}</div></div></div></div>'''
+
+
+def _item_badge(item: str) -> tuple[str, str]:
+    if item == str(PRIORITY_ITEM["Ítem"]):
+        return ("Menor valoración", "weak")
+    if item == str(STRONG_ITEM["Ítem"]):
+        return ("Mayor valoración", "strong")
+    return ("", "")
+
+
+def item_wall_html(selected_dim: str = "Todas") -> str:
+    codes = list(DIMENSIONS.keys()) if selected_dim == "Todas" else [selected_dim]
+    panels = []
+    for code in codes:
+        meta = DIMENSIONS[code]
+        dr = DIMS[DIMS["Código"] == code].iloc[0]
+        cards = []
+        ditems = ITEMS_SUM[ITEMS_SUM["Dimensión"] == code].copy()
+        ditems["_n"] = ditems["Ítem"].str.extract(r'(\d+)')[0].astype(int)
+        ditems = ditems.sort_values("_n")
+        for _, r in ditems.iterrows():
+            item = str(r["Ítem"])
+            fav = float(r["Favorable"])
+            badge, cls = _item_badge(item)
+            badge_html = f'<span class="item-badge {cls}">{badge}</span>' if badge else ''
+            cards.append(f'''<div class="item-cube" style="--accent:{meta['accent']}" title="{escape(str(r['Pregunta']))}"><div class="item-top3d"><span class="item-code3d">{item}</span><span class="item-pct3d">{pct(fav)}</span></div><div class="item-q3d">{escape(str(r['Pregunta']))}</div><div class="item-meter3d"><span style="width:{fav*100:.1f}%"></span></div><div class="item-foot3d"><span>Promedio <b>{float(r['Promedio']):.2f}/5</b></span><span>4–5 <b>{pct(fav)}</b></span></div>{badge_html}</div>''')
+        panels.append(f'''<div class="item-dim-panel" style="--accent:{meta['accent']}"><div class="item-dim-head"><div><div class="item-dim-title">{meta['icon']} {code} · {escape(meta['name'])}</div><div class="item-dim-sub">{', '.join(meta['items'])} · valoración favorable por ítem</div></div><div class="item-dim-score">Dimensión {pct(float(dr['Satisfacción']))}</div></div><div class="item-grid3d">{''.join(cards)}</div></div>''')
+    return '<div class="item-wall">' + ''.join(panels) + '</div>'
+
+
+def likert_3d_html(selected_dim: str = "Todas") -> str:
+    codes = list(DIMENSIONS.keys()) if selected_dim == "Todas" else [selected_dim]
+    groups = []
+    for code in codes:
+        meta = DIMENSIONS[code]
+        rows = []
+        ditems = ITEMS_SUM[ITEMS_SUM["Dimensión"] == code].copy()
+        ditems["_n"] = ditems["Ítem"].str.extract(r'(\d+)')[0].astype(int)
+        ditems = ditems.sort_values("_n")
+        for _, r in ditems.iterrows():
+            bad = float(r["Desfavorable"]); neu = float(r["Neutral"]); good = float(r["Favorable"])
+            rows.append(f'''<div class="likert-row3d"><div class="likert-code3d">{r['Ítem']}</div><div class="likert-capsule" title="{escape(str(r['Pregunta']))}"><span class="seg-bad" style="width:{bad*100:.2f}%"></span><span class="seg-neu" style="width:{neu*100:.2f}%"></span><span class="seg-good" style="width:{good*100:.2f}%"></span></div><div class="likert-values3d"><span class="bad">1–2 <b>{pct(bad)}</b></span><span class="neu">3 <b>{pct(neu)}</b></span><span class="good">4–5 <b>{pct(good)}</b></span></div><div class="likert-question3d">{escape(str(r['Pregunta']))}</div></div>''')
+        groups.append(f'''<div class="likert-group" style="--accent:{meta['accent']}"><div class="likert-group-title">{meta['icon']} {code} · {escape(meta['short'])}</div>{''.join(rows)}</div>''')
+    return f'''<div class="likert-board"><div class="likert-legend3d"><span class="likert-pillkey"><i style="background:#C45C68"></i>1–2 · desfavorable</span><span class="likert-pillkey"><i style="background:#A8B4BF"></i>3 · neutral</span><span class="likert-pillkey"><i style="background:#378B79"></i>4–5 · favorable</span></div>{''.join(groups)}</div>'''
+
+
 # ==============================================================
 # GRÁFICOS BLOQUEADOS (NO PAN / NO ZOOM)
 # ==============================================================
@@ -740,11 +828,11 @@ with tab1:
 
     c1, c2 = st.columns([1.08, .92], gap="medium")
     with c1:
-        section_header("Comparación", "Resultado por dimensión")
-        st.plotly_chart(dimension_chart(), use_container_width=True, config=LOCKED_PLOT_CONFIG)
+        section_header("Comparación", "Perfil 4D de satisfacción", "Torres 3D estáticas: altura = porcentaje de estudiantes satisfechos. La línea ámbar marca la referencia PEI 2027 de 60%.")
+        st.markdown(dimension_3d_html(), unsafe_allow_html=True)
     with c2:
-        section_header("Ruta estratégica", "Metas PEI 2027–2030")
-        st.plotly_chart(targets_chart(), use_container_width=True, config=LOCKED_PLOT_CONFIG)
+        section_header("Ruta estratégica", "Metas PEI 2027–2030", "Hitos de la ficha técnica presentados como una trayectoria visual, sin zoom ni desplazamiento.")
+        st.markdown(roadmap_3d_html(), unsafe_allow_html=True)
 
 with tab2:
     section_header("Explorador", "Dimensiones e ítems", "Seleccione una dimensión. Los gráficos permanecen fijos: tocar o arrastrar no hace zoom ni desplaza los ejes.")
@@ -755,11 +843,11 @@ with tab2:
         label_visibility="collapsed",
     )
 
-    section_header("Valoración favorable", "Aspectos ordenados de menor a mayor", "En celular se muestran solo códigos P1–P16; el texto completo aparece al tocar el dato, sin mover el gráfico.")
-    st.plotly_chart(item_chart(selected), use_container_width=True, config=LOCKED_PLOT_CONFIG)
+    section_header("Mapa de ítems", "Muro diagnóstico 4D", "Cada bloque conserva la estructura del instrumento: cuatro dimensiones con cuatro ítems. El porcentaje grande es la valoración favorable (4–5).")
+    st.markdown(item_wall_html(selected), unsafe_allow_html=True)
 
-    section_header("Distribución Likert", "Desfavorable · neutral · favorable")
-    st.plotly_chart(likert_chart(selected), use_container_width=True, config=LOCKED_PLOT_CONFIG)
+    section_header("Distribución de respuestas", "Cápsulas Likert 3D", "La longitud de cada segmento representa la proporción de respuestas 1–2, 3 y 4–5. Es una visualización estática: no se desplaza ni hace zoom.")
+    st.markdown(likert_3d_html(selected), unsafe_allow_html=True)
 
     dshow = ITEMS_SUM.copy() if selected == "Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
     dshow = dshow.sort_values("Favorable")
