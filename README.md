@@ -1,15 +1,19 @@
-# UNT PEI · Sistema Interpretado Pro
+# UNT | Tablero diagnóstico 2026 de satisfacción académica
 
-Versión del tablero con la misma estructura del diseño anterior, pero con el semáforo e interpretaciones alineados al instrumento y separados de la meta PEI.
+Versión final revisada con base en:
+- ficha técnica PEI compartida por el usuario;
+- propuesta del instrumento de satisfacción;
+- base `basededatos.xlsx`.
 
-## Semáforo institucional
-- 🔴 0–59%: Insatisfactorio
-- 🟠 60–74%: Regular
-- 🟢 75–100%: Satisfactorio / Muy satisfactorio
+## Criterios implementados
+- 2026 se muestra como diagnóstico / validación, no como medición oficial PEI.
+- P17 se usa como resultado global diagnóstico: 4 o 5 = satisfecho.
+- D1–D4: satisfecho si el promedio de sus 4 ítems es >= 4.
+- P1–P16 >=4 se muestra solo como análisis complementario, no como regla oficial del IND.01.
+- La escala 0–59 / 60–74 / 75–89 / 90–100 se rotula como propuesta, porque el documento indica que puede ajustarse.
+- El valor referencial PEI >=60% y las metas 2027–2030 se presentan como contexto estratégico, no como meta 2026.
 
-La cuarta categoría del instrumento, **Muy satisfactorio (90–100%)**, se mantiene como etiqueta específica dentro de la escala institucional, aunque visualmente comparte luz verde.
-
-## Meta PEI
-La meta PEI 2027 de 60% se informa aparte. Así se evita confundir **cumplir la meta anual (>=60%)** con **alcanzar el nivel Satisfactorio del instrumento (>=75%)**.
-
-El archivo `basededatos.xlsx` se carga automáticamente.
+## Ejecutar
+```bash
+python -m streamlit run app.py
+```
