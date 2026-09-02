@@ -177,7 +177,32 @@ section[data-testid="stSidebar"],[data-testid="stSidebarCollapsedControl"]{displ
 .ring-label{position:relative;z-index:1;font-size:.59rem;font-weight:800;color:#7A8797;text-transform:uppercase;letter-spacing:.06em;margin-top:-37px}
 .core-score{font-size:clamp(2.35rem,5vw,3.45rem);font-weight:950;letter-spacing:-.065em;color:#11253A;line-height:.95}
 .core-desc{font-size:.79rem;color:#68788C;line-height:1.5;margin-top:9px;max-width:650px}
-.core-formula{display:inline-flex;margin-top:12px;padding:8px 10px;border-radius:12px;background:#F2F5F9;border:1px solid #E4E9F0;font-size:.71rem;color:#526377;font-weight:750}
+/* FORMULA / ESCALA INSTITUCIONAL */
+.core-formula{display:none}
+.formula-panel{margin-top:14px;padding:15px 16px;border-radius:18px;background:linear-gradient(145deg,#F7FAFD,#EEF4F9);border:1px solid #DFE7EF;box-shadow:inset 0 1px 0 #fff,0 10px 22px rgba(32,54,82,.06)}
+.formula-kicker{font-size:.58rem;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:#76879A;margin-bottom:8px}
+.formula-equation{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#132A42;font-weight:900}
+.formula-id{font-size:.88rem;letter-spacing:.03em;color:#4E6380}
+.formula-eq{font-size:1.15rem;color:#60738A}
+.formula-frac{display:inline-grid;grid-template-rows:auto 1px auto;min-width:58px;text-align:center;align-items:center;font-size:1rem;line-height:1.1}
+.formula-frac .bar{height:1px;background:#243D59;margin:4px 0}
+.formula-times{font-size:1rem}
+.formula-result{font-size:1.24rem;color:#0B6572;background:linear-gradient(135deg,#E9FBFC,#F1FBFF);border:1px solid #CFECEF;border-radius:12px;padding:6px 10px;box-shadow:0 8px 18px rgba(23,105,119,.08)}
+.formula-defs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.formula-def{padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.78);border:1px solid #E4EAF0;font-size:.63rem;color:#6A7A8E;line-height:1.35}
+.formula-def b{color:#213951}
+.scale4-wrap{margin-top:14px;padding:13px 14px;border-radius:17px;background:#F8FAFC;border:1px solid #E5EAF1}
+.scale4-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.scale4-title .a{font-size:.59rem;text-transform:uppercase;letter-spacing:.1em;font-weight:900;color:#7A899A}
+.scale4-title .b{font-size:.68rem;font-weight:900;color:#233A52}
+.scale4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.scale4-step{position:relative;padding:8px 6px;border-radius:11px;text-align:center;border:1px solid transparent;opacity:.52;filter:saturate(.72);transition:.18s ease;background:#fff}
+.scale4-step .dot{width:10px;height:10px;border-radius:50%;margin:0 auto 5px;box-shadow:inset 0 1px 1px rgba(255,255,255,.8),0 3px 8px rgba(20,35,50,.14)}
+.scale4-step .name{font-size:.56rem;font-weight:900;line-height:1.15;color:#405168}
+.scale4-step .range{font-size:.52rem;color:#8794A3;margin-top:3px}
+.scale4-step.active{opacity:1;filter:none;transform:translateY(-2px);box-shadow:0 10px 20px rgba(34,52,76,.10)}
+.scale4-step.active:after{content:"";position:absolute;inset:-2px;border-radius:13px;border:2px solid var(--lvl);pointer-events:none}
+.signal-caption{font-size:.57rem;text-transform:uppercase;letter-spacing:.09em;font-weight:900;color:#8290A1;margin-bottom:5px}
 .core-mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:18px}
 .mini-stat{padding:12px;border-radius:15px;background:rgba(247,250,253,.86);border:1px solid #E6EBF1}
 .mini-stat .k{font-size:.58rem;color:#8090A1;font-weight:850;text-transform:uppercase;letter-spacing:.06em}
@@ -254,6 +279,9 @@ div[data-testid="stDataFrame"]{border:1px solid #E5EAF0;border-radius:17px;overf
   .core-main{grid-template-columns:1fr;justify-items:center;text-align:center;gap:13px}
   .core-top{display:block}.core-tag{display:inline-flex;margin-top:9px}
   .core-mini{grid-template-columns:1fr 1fr}.core-mini .mini-stat:last-child{grid-column:1/-1}
+  .formula-defs{grid-template-columns:1fr}
+  .scale4{grid-template-columns:1fr 1fr}
+  .formula-equation{justify-content:center}
   .primary-core,.secondary-core{padding:16px;border-radius:19px;min-height:0}
   .dim-grid,.insight-grid,.method-grid{grid-template-columns:1fr}
   .dim-card{min-height:0}
@@ -304,6 +332,57 @@ def signal_label(value: float, target: float) -> str:
 
 def signal_color(state: str) -> str:
     return {"green": "#22C997", "amber": "#FFB648", "red": "#FF5C6C", "off": "#A7B1BE"}[state]
+
+
+def institutional_level(value: float) -> tuple[str, str, str, str]:
+    """Clasificación institucional del instrumento: 4 niveles.
+
+    Los colores son una decisión visual del dashboard; los rangos provienen del instrumento.
+    """
+    if pd.isna(value):
+        return ("Sin dato", "—", "#A7B1BE", "none")
+    if value < 0.60:
+        return ("Insatisfactorio", "0–59%", "#FF5C6C", "low")
+    if value < 0.75:
+        return ("Regular", "60–74%", "#FFB648", "regular")
+    if value < 0.90:
+        return ("Satisfactorio", "75–89%", "#2AD49B", "good")
+    return ("Muy satisfactorio", "90–100%", "#22B8CF", "excellent")
+
+
+def institutional_scale_html(value: float) -> str:
+    name, interval, color, key = institutional_level(value)
+    levels = [
+        ("low", "Insatisfactorio", "0–59%", "#FF5C6C"),
+        ("regular", "Regular", "60–74%", "#FFB648"),
+        ("good", "Satisfactorio", "75–89%", "#2AD49B"),
+        ("excellent", "Muy satisfactorio", "90–100%", "#22B8CF"),
+    ]
+    boxes = []
+    for k, label, rng, c in levels:
+        active = " active" if k == key else ""
+        boxes.append(
+            f'<div class="scale4-step{active}" style="--lvl:{c}"><div class="dot" style="background:{c}"></div><div class="name">{label}</div><div class="range">{rng}</div></div>'
+        )
+    return f'<div class="scale4-wrap"><div class="scale4-title"><span class="a">Nivel institucional · 4 categorías</span><span class="b" style="color:{color}">{name} · {interval}</span></div><div class="scale4">{"".join(boxes)}</div></div>'
+
+
+def formula_html(n: int, d: int, result: float) -> str:
+    return f'''<div class="formula-panel">
+      <div class="formula-kicker">Fórmula del indicador</div>
+      <div class="formula-equation">
+        <span class="formula-id">IND.01</span><span class="formula-eq">=</span>
+        <span class="formula-frac"><span>N</span><span class="bar"></span><span>D</span></span>
+        <span class="formula-times">× 100</span><span class="formula-eq">=</span>
+        <span class="formula-frac"><span>{n:,}</span><span class="bar"></span><span>{d:,}</span></span>
+        <span class="formula-times">× 100</span><span class="formula-eq">=</span>
+        <span class="formula-result">{pct(result)}</span>
+      </div>
+      <div class="formula-defs">
+        <div class="formula-def"><b>N</b> = estudiantes clasificados como satisfechos.</div>
+        <div class="formula-def"><b>D</b> = total de estudiantes encuestados analizados.</div>
+      </div>
+    </div>'''
 
 
 def traffic_svg(state: str, size: int = 58) -> str:
@@ -476,9 +555,11 @@ def core_cards() -> str:
           <div class="ring" style="--p:{PEI*100:.2f};--ring:{signal_color(state)}"><div class="ring-value">{pct(PEI)}</div><div class="ring-label">satisfacción</div></div>
           <div>
             <div class="core-score">{pct(PEI)}</div>
+            <div class="signal-caption">Semáforo de cumplimiento de la meta PEI 2027</div>
             <div class="signal-badge">{traffic_svg(state, 44)} <span style="color:{signal_color(state)}">{escape(signal_label(PEI,REFERENCE_TARGET))}</span></div>
             <div class="core-desc">{N_PEI:,} de {N_TOTAL:,} estudiantes alcanzan un promedio integral P1–P16 de 4 o más. Frente a la meta PEI 2027 de 60%, la brecha es de <b>{pp(gap)}</b>.</div>
-            <div class="core-formula">IND.01 = N/D × 100 · N={N_PEI:,} · D={N_TOTAL:,}</div>
+            {formula_html(N_PEI, N_TOTAL, PEI)}
+            {institutional_scale_html(PEI)}
           </div>
         </div>
         <div class="core-mini">
@@ -490,7 +571,9 @@ def core_cards() -> str:
       <div class="glass secondary-core">
         <div class="secondary-head"><div><div class="core-label">medida complementaria</div><div class="secondary-title">P17 · satisfacción general declarada</div><div class="secondary-sub">Pregunta directa de percepción global. Se muestra separada del IND.01 integral.</div></div>{traffic_svg(p17_state, 52)}</div>
         <div class="secondary-value">{pct(P17)}</div>
+        <div class="signal-caption">Comparación visual frente a la meta 2027</div>
         <div class="signal-badge"><span style="color:{signal_color(p17_state)}">{escape(signal_label(P17,REFERENCE_TARGET))}</span></div>
+        {institutional_scale_html(P17)}
         <div class="delta-pill">↔ Diferencia frente al integral: {pp(abs(DELTA_P17))}</div>
         <div class="secondary-bottom"><b>Lectura:</b> P17 es {"mayor" if DELTA_P17>=0 else "menor"} que la medición integral. Esto sugiere distinguir la percepción global espontánea del desempeño conjunto de los 16 aspectos específicos.</div>
       </div>
@@ -640,7 +723,7 @@ with tab1:
     section_header("Diagnóstico 4D", "Satisfacción en las cuatro dimensiones", "Cada dimensión clasifica al estudiante como satisfecho si su promedio de cuatro ítems es ≥4.")
     st.markdown(dimension_cards(), unsafe_allow_html=True)
     st.markdown(
-        f'''<div class="glass legend-card"><div class="legend-lights">{traffic_svg('green',28)}{traffic_svg('amber',28)}{traffic_svg('red',28)}</div><div class="legend-text"><b>Semáforo operativo del dashboard:</b> verde = alcanza la referencia seleccionada; ámbar = queda a 5 puntos porcentuales o menos; rojo = la brecha supera 5 puntos. Esta regla visual facilita gestión y <b>no reemplaza una escala normativa del PEI</b>.</div></div>''',
+        f'''<div class="glass legend-card"><div class="legend-lights">{traffic_svg('green',28)}{traffic_svg('amber',28)}{traffic_svg('red',28)}</div><div class="legend-text"><b>Dos lecturas distintas:</b> el semáforo conserva <b>3 luces</b> (verde, ámbar y rojo) porque representa el cumplimiento de la meta PEI. La <b>escala institucional</b> se muestra aparte con <b>4 categorías</b>: Insatisfactorio, Regular, Satisfactorio y Muy satisfactorio. Así no se mezclan meta y nivel de satisfacción.</div></div>''',
         unsafe_allow_html=True,
     )
 
