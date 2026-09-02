@@ -3,6 +3,7 @@ from __future__ import annotations
 from html import escape
 from io import BytesIO
 from pathlib import Path
+from textwrap import dedent
 
 import pandas as pd
 import plotly.express as px
@@ -19,6 +20,15 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Los bloques HTML del dashboard se renderizan con st.html para evitar que
+# Markdown los muestre como código cuando hay sangría en cadenas multilínea.
+_original_markdown = st.markdown
+def _smart_markdown(body, *args, unsafe_allow_html=False, **kwargs):
+    if unsafe_allow_html:
+        return st.html(dedent(str(body)))
+    return _original_markdown(body, *args, **kwargs)
+st.markdown = _smart_markdown
 
 # Identidad visual: institucional, sobria y de alto contraste.
 NAVY = "#0B1F33"
@@ -464,6 +474,62 @@ st.markdown(
     .sidebar-brand .sb-title {{ color:#FFFFFF; font-size:1.15rem; font-weight:750; margin-top:4px; }}
     .sidebar-brand .sb-sub {{ color:#B9CBD4; font-size:.76rem; line-height:1.35; margin-top:4px; }}
 
+    /* ===== Capa visual PRO: profundidad 3D sobria ===== */
+    .kpi-card, .dim-card, .panel, .method-card, .level-card, .upload-intro {{
+        box-shadow:
+          0 18px 34px rgba(15, 23, 42, .075),
+          0 3px 8px rgba(15, 23, 42, .045),
+          inset 0 1px 0 rgba(255,255,255,.92);
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }}
+    .kpi-card:hover, .dim-card:hover, .panel:hover {{
+        transform: translateY(-3px);
+        box-shadow:
+          0 24px 44px rgba(15, 23, 42, .105),
+          0 6px 12px rgba(15, 23, 42, .055),
+          inset 0 1px 0 rgba(255,255,255,.96);
+        border-color:#D4DAE2;
+    }}
+    .kpi-card {{background:linear-gradient(145deg,#FFFFFF 0%,#FBFCFE 68%,#F2F6FA 100%);border-top:1px solid #FFFFFF;}}
+    .dim-card {{background:linear-gradient(145deg,#FFFFFF 0%,#FCFDFE 62%,#F2F5F8 100%);}}
+    .panel {{background:linear-gradient(150deg,#FFFFFF 0%,#FCFDFE 100%);}}
+
+    /* ===== Semáforo 3D dinámico ===== */
+    .signal-board {{
+        background:linear-gradient(145deg,#FFFFFF 0%,#F8FAFC 100%);border:1px solid #DCE3EA;border-radius:22px;padding:18px;
+        box-shadow:0 22px 44px rgba(15,23,42,.09), inset 0 1px 0 #fff;overflow:hidden;position:relative;
+    }}
+    .signal-board:before {{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-90px;top:-95px;background:radial-gradient(circle,rgba(37,99,235,.09),transparent 68%);pointer-events:none;}}
+    .signal-board-title {{font-size:.96rem;font-weight:800;color:#172B3A;margin-bottom:3px;}}
+    .signal-board-sub {{font-size:.76rem;color:#667085;margin-bottom:14px;line-height:1.35;}}
+    .signal-hero {{display:grid;grid-template-columns:82px minmax(0,1fr);gap:16px;align-items:center;background:linear-gradient(145deg,#0C2236,#173C55);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:15px 16px;margin-bottom:13px;box-shadow:0 14px 28px rgba(11,31,51,.20),inset 0 1px 0 rgba(255,255,255,.08);}}
+    .traffic-device {{width:62px;padding:9px 8px;border-radius:20px;margin:auto;background:linear-gradient(145deg,#17212B,#080D12);border:2px solid #273644;box-shadow:8px 11px 18px rgba(0,0,0,.28),inset 5px 5px 11px rgba(255,255,255,.045),inset -5px -6px 12px rgba(0,0,0,.44);}}
+    .lamp {{width:38px;height:38px;border-radius:50%;margin:7px auto;position:relative;opacity:.23;box-shadow:inset 7px 8px 12px rgba(255,255,255,.08),inset -8px -9px 14px rgba(0,0,0,.42),0 2px 4px rgba(0,0,0,.45);}}
+    .lamp:after {{content:"";position:absolute;width:11px;height:8px;border-radius:50%;left:8px;top:6px;background:rgba(255,255,255,.30);}}
+    .lamp.red {{background:#E5484D;}} .lamp.amber {{background:#F59E0B;}} .lamp.green {{background:#18A66A;}}
+    .lamp.active {{opacity:1;animation:signalPulse 2.2s ease-in-out infinite;}}
+    .lamp.red.active {{box-shadow:0 0 10px #E5484D,0 0 27px rgba(229,72,77,.72),inset 7px 8px 12px rgba(255,255,255,.30),inset -8px -9px 14px rgba(90,0,0,.35);}}
+    .lamp.amber.active {{box-shadow:0 0 10px #F59E0B,0 0 27px rgba(245,158,11,.72),inset 7px 8px 12px rgba(255,255,255,.30),inset -8px -9px 14px rgba(93,55,0,.35);}}
+    .lamp.green.active {{box-shadow:0 0 10px #18A66A,0 0 27px rgba(24,166,106,.70),inset 7px 8px 12px rgba(255,255,255,.30),inset -8px -9px 14px rgba(0,72,42,.35);}}
+    .lamp.green.super {{box-shadow:0 0 11px #10B981,0 0 34px rgba(20,184,166,.80),0 0 50px rgba(45,212,191,.30),inset 7px 8px 12px rgba(255,255,255,.34),inset -8px -9px 14px rgba(0,72,42,.30);}}
+    @keyframes signalPulse {{0%,100%{{filter:brightness(1)}}50%{{filter:brightness(1.18)}}}}
+    .signal-main-label {{color:#BFD4E0;font-size:.68rem;font-weight:800;letter-spacing:.10em;text-transform:uppercase;}}
+    .signal-main-score {{color:#FFFFFF;font-size:2.15rem;font-weight:820;letter-spacing:-.05em;line-height:1;margin:5px 0 7px;}}
+    .signal-main-level {{color:#FFFFFF;font-size:.88rem;font-weight:760;}} .signal-main-range {{color:#BFD4E0;font-size:.74rem;margin-top:3px;}}
+    .signal-list {{display:grid;gap:8px;}}
+    .signal-row {{display:grid;grid-template-columns:54px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px;border:1px solid #E7EBF0;border-radius:13px;background:rgba(255,255,255,.86);box-shadow:0 6px 14px rgba(15,23,42,.035),inset 0 1px 0 #fff;}}
+    .mini-signal {{display:flex;gap:4px;align-items:center;justify-content:center;background:linear-gradient(145deg,#27333D,#101820);border-radius:999px;padding:5px 6px;box-shadow:3px 5px 9px rgba(15,23,42,.15),inset 0 1px 0 rgba(255,255,255,.08);}}
+    .mini-lamp {{width:9px;height:9px;border-radius:50%;opacity:.22;box-shadow:inset 2px 2px 3px rgba(255,255,255,.15),inset -2px -2px 3px rgba(0,0,0,.35);}}
+    .mini-lamp.red{{background:#E5484D}} .mini-lamp.amber{{background:#F59E0B}} .mini-lamp.green{{background:#18A66A}} .mini-lamp.active{{opacity:1}}
+    .mini-lamp.red.active{{box-shadow:0 0 9px rgba(229,72,77,.95)}} .mini-lamp.amber.active{{box-shadow:0 0 9px rgba(245,158,11,.95)}} .mini-lamp.green.active{{box-shadow:0 0 9px rgba(24,166,106,.95)}}
+    .signal-row-name {{font-size:.78rem;font-weight:780;color:#344054;line-height:1.25;}} .signal-row-meta {{font-size:.69rem;color:#667085;margin-top:2px;}}
+    .signal-row-score {{text-align:right;font-size:.96rem;font-weight:820;color:#101828;white-space:nowrap;}} .signal-row-score small {{display:block;font-size:.64rem;font-weight:650;color:#667085;margin-top:2px;}}
+    .signal-scale {{margin-top:14px;padding-top:12px;border-top:1px solid #E7EBF0;}} .signal-track {{height:13px;border-radius:999px;display:grid;grid-template-columns:60fr 15fr 15fr 10fr;overflow:hidden;box-shadow:inset 0 2px 5px rgba(15,23,42,.16),0 1px 0 #fff;}}
+    .signal-track > span:nth-child(1){{background:linear-gradient(#F46C71,#D9363E)}} .signal-track > span:nth-child(2){{background:linear-gradient(#F9C34A,#E79A0B)}} .signal-track > span:nth-child(3){{background:linear-gradient(#47C98A,#15945D)}} .signal-track > span:nth-child(4){{background:linear-gradient(#2DD4BF,#0F8E7E)}}
+    .signal-scale-labels {{display:grid;grid-template-columns:60fr 15fr 15fr 10fr;font-size:.60rem;color:#667085;margin-top:6px;line-height:1.15;}}
+    .data-chip {{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:#ECFDF3;border:1px solid #ABEFC6;color:#067647;font-size:.73rem;font-weight:760;box-shadow:0 3px 10px rgba(2,122,72,.07);}}
+    .data-dot {{width:8px;height:8px;border-radius:50%;background:#12B76A;box-shadow:0 0 0 4px rgba(18,183,106,.12);}}
+
     #MainMenu {{visibility:hidden;}}
     footer {{visibility:hidden;}}
 
@@ -588,6 +654,12 @@ def load_uploaded_excel(file_bytes: bytes) -> pd.DataFrame:
     return prepare_data(read_excel(BytesIO(file_bytes)))
 
 
+@st.cache_data(show_spinner=False)
+def load_local_excel(path_text: str, modified_at: float) -> pd.DataFrame:
+    # modified_at entra en la clave del caché para refrescar si cambia el Excel.
+    return prepare_data(read_excel(path_text))
+
+
 def dimension_summary(df: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for code, info in DIMENSIONS.items():
@@ -707,53 +779,69 @@ def semaforo_scale() -> str:
     """
 
 
+def _light_state(level: str) -> tuple[str, str, str, str]:
+    red = " active" if level == "Insatisfactorio" else ""
+    amber = " active" if level == "Regular" else ""
+    green = " active" if level in {"Satisfactorio", "Muy satisfactorio"} else ""
+    super_cls = " super" if level == "Muy satisfactorio" else ""
+    return red, amber, green, super_cls
+
+
 def traffic_panel(summary_dim: pd.DataFrame, global_sat: float) -> None:
+    global_level = nivel_inst(global_sat)
+    gm = LEVEL_META[global_level]
+    gr, ga, gg, gs = _light_state(global_level)
+
     rows = []
     for _, r in summary_dim.sort_values("Código").iterrows():
         level = r["Nivel"]
         meta = LEVEL_META[level]
+        rr, ra, rg, _ = _light_state(level)
         rows.append(
-            f"""
-            <div class="traffic-row">
-              <div class="traffic-left">
-                <span class="status-dot" style="--status-color:{meta['color']};margin-top:5px"></span>
-                <div>
-                  <div class="traffic-name">{r['Código']} · {escape(r['Dimensión'])}</div>
-                  <div class="traffic-desc">{escape(level)} · {meta['interval']}</div>
+            f'''<div class="signal-row">
+                <div class="mini-signal" aria-label="Semáforo {escape(level)}">
+                    <span class="mini-lamp red{rr}"></span>
+                    <span class="mini-lamp amber{ra}"></span>
+                    <span class="mini-lamp green{rg}"></span>
                 </div>
-              </div>
-              <div class="traffic-value"><strong>{pct(r['Satisfacción'])}</strong><span>{meta['short']}</span></div>
-            </div>
-            """
+                <div>
+                    <div class="signal-row-name">{r['Código']} · {escape(r['Dimensión'])}</div>
+                    <div class="signal-row-meta">{escape(level)} · intervalo {meta['interval']}</div>
+                </div>
+                <div class="signal-row-score">{pct(r['Satisfacción'])}<small>{meta['short']}</small></div>
+            </div>'''
         )
 
-    global_level = nivel_inst(global_sat)
-    gm = LEVEL_META[global_level]
-    rows.append(
-        f"""
-        <div class="traffic-row">
-          <div class="traffic-left">
-            <span class="status-dot" style="--status-color:{gm['color']};margin-top:5px"></span>
-            <div>
-              <div class="traffic-name">P17 · Satisfacción general</div>
-              <div class="traffic-desc">{escape(global_level)} · {gm['interval']}</div>
-            </div>
-          </div>
-          <div class="traffic-value"><strong>{pct(global_sat)}</strong><span>{gm['short']}</span></div>
-        </div>
-        """
-    )
-
-    st.markdown(
-        f"""
-        <div class="panel">
-          <div class="panel-title">Semáforo institucional</div>
-          <div class="panel-sub">Color + texto + intervalo para una lectura ejecutiva rápida.</div>
-          {''.join(rows)}
-          {semaforo_scale()}
-        </div>
-        """,
-        unsafe_allow_html=True,
+    st.html(
+        dedent(
+            f'''<div class="signal-board">
+                <div class="signal-board-title">Semáforo institucional dinámico</div>
+                <div class="signal-board-sub">La luz activa cambia automáticamente según el resultado. El intervalo siempre aparece escrito.</div>
+                <div class="signal-hero">
+                    <div class="traffic-device" aria-label="Semáforo P17 {escape(global_level)}">
+                        <div class="lamp red{gr}"></div>
+                        <div class="lamp amber{ga}"></div>
+                        <div class="lamp green{gg}{gs}"></div>
+                    </div>
+                    <div>
+                        <div class="signal-main-label">Satisfacción general · P17</div>
+                        <div class="signal-main-score">{pct(global_sat)}</div>
+                        <div class="signal-main-level">{escape(global_level)}</div>
+                        <div class="signal-main-range">Intervalo institucional: {gm['interval']} · {gm['short']}</div>
+                    </div>
+                </div>
+                <div class="signal-list">{''.join(rows)}</div>
+                <div class="signal-scale">
+                    <div class="signal-track"><span></span><span></span><span></span><span></span></div>
+                    <div class="signal-scale-labels">
+                        <div><b>0–&lt;60%</b><br>Insatisf.</div>
+                        <div><b>60–&lt;75%</b><br>Regular</div>
+                        <div><b>75–&lt;90%</b><br>Satisf.</div>
+                        <div><b>90–100%</b><br>Muy satisf.</div>
+                    </div>
+                </div>
+            </div>'''
+        )
     )
 
 
@@ -819,6 +907,8 @@ def dimension_bar_chart(summary_dim: pd.DataFrame) -> go.Figure:
 # ==============================================================
 # SIDEBAR + CARGA DEL EXCEL
 # ==============================================================
+DATA_FILE = Path(__file__).resolve().parent / "basededatos.xlsx"
+
 with st.sidebar:
     st.markdown(
         """
@@ -832,20 +922,22 @@ with st.sidebar:
     )
     st.markdown("---")
 
-    uploaded = st.file_uploader(
-        "Archivo de datos",
-        type=["xlsx"],
-        help="Selecciona el Excel que contiene la hoja Base_Encuesta.",
-    )
-
-    use_local = False
-    local_file = Path("basededatos.xlsx")
-    if local_file.exists():
-        use_local = st.checkbox(
-            "Usar basededatos.xlsx de esta carpeta",
-            value=False,
-            help="Útil al ejecutar la app localmente.",
+    if DATA_FILE.exists():
+        st.markdown(
+            '<div class="data-chip"><span class="data-dot"></span>Base incluida · carga automática</div>',
+            unsafe_allow_html=True,
         )
+        st.caption("Al publicar la carpeta completa, el dashboard abre con los datos sin pedir Excel.")
+    else:
+        st.warning("No se encontró basededatos.xlsx junto a app.py.")
+
+    with st.expander("Actualizar base de datos (opcional)", expanded=False):
+        uploaded = st.file_uploader(
+            "Reemplazar temporalmente el Excel",
+            type=["xlsx"],
+            help="Si cargas otro archivo, se usa durante esta sesión. El archivo base del proyecto no se modifica.",
+        )
+        st.caption("Úsalo solo cuando quieras analizar una versión nueva del Excel.")
 
     st.markdown("---")
     page = st.radio(
@@ -859,52 +951,21 @@ with st.sidebar:
     )
 
 
-if uploaded is None and not use_local:
+if uploaded is None and not DATA_FILE.exists():
     hero(
         "Dashboard de satisfacción estudiantil",
-        "Carga el archivo Excel para generar automáticamente los indicadores institucionales, el semáforo D1–D4 y P17, y el ranking de prioridades.",
+        "Para iniciar, coloca basededatos.xlsx en la misma carpeta que app.py o carga un Excel desde la barra lateral.",
     )
-    st.markdown(
-        """
-        <div class="upload-intro">
-          <h3 style="margin-top:0">Carga de datos</h3>
-          <p style="color:#475467;line-height:1.55;margin-bottom:6px">
-            Usa <b>Archivo de datos</b> en la barra izquierda y selecciona <code>basededatos.xlsx</code>.
-            El archivo no se pega dentro del código: se selecciona desde esta misma aplicación.
-          </p>
-          <p style="color:#667085;font-size:.82rem;margin-bottom:0">
-            Requisito: hoja <b>Base_Encuesta</b> y columnas P1 a P17. D1–D4 se recalculan automáticamente.
-          </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    section_title("Qué verás", "Diseño ejecutivo con lectura por nivel e intervalo")
-    c1, c2, c3, c4 = st.columns(4)
-    preview = [
-        ("D1", "Calidad del proceso académico"),
-        ("D2", "Desempeño docente"),
-        ("D3", "Servicios y gestión"),
-        ("D4", "Formación integral"),
-    ]
-    for col, (code, name) in zip([c1, c2, c3, c4], preview):
-        with col:
-            st.markdown(
-                f'<div class="dim-card" style="--dim-color:{COLORS_DIM[code]};min-height:120px">'
-                f'<div class="dim-code">{code}</div><div class="dim-name" style="margin-top:13px"><b>{escape(name)}</b></div>'
-                f'<div class="dim-foot"><span class="interval-label">Se calcula al cargar el Excel</span></div></div>',
-                unsafe_allow_html=True,
-            )
+    st.info("Estructura esperada: hoja Base_Encuesta y columnas P1 a P17.")
     st.stop()
-
 
 try:
     if uploaded is not None:
         df = load_uploaded_excel(uploaded.getvalue())
-        source_name = uploaded.name
+        source_name = f"{uploaded.name} · carga temporal"
     else:
-        df = prepare_data(read_excel(local_file))
-        source_name = local_file.name
+        df = load_local_excel(str(DATA_FILE), DATA_FILE.stat().st_mtime)
+        source_name = "basededatos.xlsx · base del proyecto"
 except Exception as exc:
     st.error(f"No pude leer el archivo: {exc}")
     st.stop()
@@ -915,7 +976,8 @@ global_sat = df["Global_Satisfecho"].mean()
 
 with st.sidebar:
     st.markdown("---")
-    st.success(f"Datos cargados · {source_name}")
+    st.success("Datos listos")
+    st.caption(source_name)
     st.caption(f"{len(df):,} registros analizados")
 
 
@@ -950,14 +1012,14 @@ if page == "Panorama institucional":
         wm = LEVEL_META[worst["Nivel"]]
         kpi_card("Prioridad dimensional", worst["Código"], f'{escape(worst["Dimensión"])} · <b>{pct(worst["Satisfacción"])}</b>', wm["color"])
 
-    section_title("Satisfacción por dimensión", "Cada tarjeta muestra nivel + intervalo institucional")
+    section_title("Satisfacción de las cuatro dimensiones", "Resultado, nivel e intervalo institucional visibles de inmediato")
     cols = st.columns(4)
     for col, code in zip(cols, ["D1", "D2", "D3", "D4"]):
         with col:
             value = float(summary_dim.loc[summary_dim["Código"] == code, "Satisfacción"].iloc[0])
             render_dim_card(code, value)
 
-    section_title("Comparación D1–D4", "Bandas de fondo = semáforo institucional")
+    section_title("Comparación D1–D4", "Gráfico ejecutivo + semáforo 3D que responde al resultado")
     left, right = st.columns([1.62, 1])
     with left:
         st.plotly_chart(dimension_bar_chart(summary_dim), use_container_width=True)
