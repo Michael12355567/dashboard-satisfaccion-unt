@@ -79,9 +79,11 @@ ITEM_TEXT = {
 PEI_TARGETS = {2027: 0.60, 2028: 0.65, 2029: 0.70, 2030: 0.75}
 REFERENCE_TARGET = PEI_TARGETS[2027]
 
-# Semáforo VISUAL de gestión (no es una escala normativa del PEI):
-# verde = cumple la meta seleccionada; ámbar = queda a <=5 pp; rojo = >5 pp por debajo.
-WATCH_BAND_PP = 0.05
+# Semáforo de interpretación del instrumento (3 luces):
+# rojo = 0–59% Insatisfactorio; ámbar = 60–74% Regular;
+# verde = 75–100% Satisfactorio o Muy satisfactorio.
+# La meta PEI anual se muestra APARTE, porque alcanzar 60% en 2027
+# no equivale a alcanzar el nivel institucional “Satisfactorio” (>=75%).
 
 LOCKED_PLOT_CONFIG = {
     "displayModeBar": False,
@@ -316,30 +318,57 @@ def pp(x: float, digits: int = 1) -> str:
     return f"{x * 100:.{digits}f} pp"
 
 
-def signal_state(value: float, target: float) -> str:
-    """Semáforo operativo: cumple / cerca (<=5 pp) / lejos (>5 pp)."""
+def signal_state(value: float, target: float | None = None) -> str:
+    """Semáforo de 3 luces basado en la escala de interpretación del instrumento.
+
+    Rojo: 0–59% (Insatisfactorio)
+    Ámbar: 60–74% (Regular)
+    Verde: 75–100% (Satisfactorio / Muy satisfactorio)
+
+    `target` se conserva en la firma para compatibilidad con llamadas anteriores.
+    La meta PEI se evalúa por separado.
+    """
     if pd.isna(value):
         return "off"
-    gap = target - value
-    if gap <= 0:
-        return "green"
-    if gap <= WATCH_BAND_PP:
+    if value < 0.60:
+        return "red"
+    if value < 0.75:
         return "amber"
-    return "red"
+    return "green"
 
 
-def signal_label(value: float, target: float) -> str:
-    state = signal_state(value, target)
-    return {
-        "green": "Cumple la meta",
-        "amber": "En vigilancia",
-        "red": "Brecha prioritaria",
-        "off": "Sin dato",
-    }[state]
+def signal_label(value: float, target: float | None = None) -> str:
+    if pd.isna(value):
+        return "Sin dato"
+    if value < 0.60:
+        return "Insatisfactorio"
+    if value < 0.75:
+        return "Regular"
+    if value < 0.90:
+        return "Satisfactorio"
+    return "Muy satisfactorio"
 
 
 def signal_color(state: str) -> str:
-    return {"green": "#22C997", "amber": "#FFB648", "red": "#FF5C6C", "off": "#A7B1BE"}[state]
+    return {"green": "#12A96B", "amber": "#F4A62A", "red": "#E55363", "off": "#A7B1BE"}[state]
+
+
+def pei_target_status(value: float, target: float = REFERENCE_TARGET) -> tuple[bool, str, str]:
+    """Cumplimiento de la meta PEI anual, separado del nivel institucional."""
+    if pd.isna(value):
+        return False, "Sin dato", "—"
+    delta = value - target
+    if delta >= 0:
+        return True, "Meta PEI 2027 alcanzada", f"+{delta*100:.1f} pp sobre 60%"
+    return False, "Meta PEI 2027 no alcanzada", f"{abs(delta)*100:.1f} pp por debajo de 60%"
+
+
+def target_status_html(value: float, compact: bool = False) -> str:
+    ok, label, detail = pei_target_status(value)
+    cls = "ok" if ok else "miss"
+    icon = "✓" if ok else "!"
+    compact_cls = " target-compact" if compact else ""
+    return f'<div class="target-pill {cls}{compact_cls}"><span class="target-icon">{icon}</span><span><b>{label}</b><small>{detail}</small></span></div>'
 
 
 def institutional_level(value: float) -> tuple[str, str, str, str]:
@@ -497,8 +526,8 @@ def dimension_summary(df: pd.DataFrame) -> pd.DataFrame:
             "Satisfacción": sat,
             "Promedio Likert": avg,
             "Brecha a 60%": max(0.0, REFERENCE_TARGET - sat),
-            "Estado": signal_label(sat, REFERENCE_TARGET),
-            "Semáforo": signal_state(sat, REFERENCE_TARGET),
+            "Estado": signal_label(sat),
+            "Semáforo": signal_state(sat),
         })
     return pd.DataFrame(out)
 
@@ -612,14 +641,29 @@ def dimension_cards() -> str:
 
 def insight_cards() -> str:
     priority = PRIORITY_DIM
-    strong = STRONG_DIM
+    dims_meet_pei = int((DIMS["Satisfacción"] >= REFERENCE_TARGET).sum())
+    dims_satisfactory = int((DIMS["Satisfacción"] >= 0.75).sum())
+    p17_level, _, _, _ = institutional_level(P17)
+    pei_level, _, _, _ = institutional_level(PEI)
     return f'''
-    <div class="insight-grid">
-      <div class="glass insight" style="--accent:#FF5C6C"><div class="k">Prioridad dimensional</div><div class="t">{priority['Código']} · {escape(priority['Dimensión'])}</div><div class="x">Registra {pct(float(priority['Satisfacción']))}. Es la dimensión con menor proporción de estudiantes satisfechos.</div></div>
-      <div class="glass insight" style="--accent:#2AD49B"><div class="k">Fortaleza relativa</div><div class="t">{strong['Código']} · {escape(strong['Dimensión'])}</div><div class="x">Obtiene {pct(float(strong['Satisfacción']))}, el resultado dimensional más alto del conjunto.</div></div>
-      <div class="glass insight" style="--accent:#5B7CFA"><div class="k">Aspecto crítico</div><div class="t">{PRIORITY_ITEM['Ítem']} · {escape(PRIORITY_ITEM['Dimensión'])}</div><div class="x">{escape(PRIORITY_ITEM['Pregunta'])}<br><b>{pct(float(PRIORITY_ITEM['Favorable']))}</b> de valoración favorable.</div></div>
+    <div class="interpret-grid">
+      <div class="interpret-card" style="--accent:#E55363"><div class="interpret-k">Resultado integral</div><div class="interpret-t">IND.01 · {pct(PEI)} · {escape(pei_level)}</div><div class="interpret-x">El resultado integral está <b>{pp(max(0.0, REFERENCE_TARGET-PEI))}</b> por debajo de la meta PEI 2027 de 60%. En la escala del instrumento permanece en nivel <b>Insatisfactorio</b>.</div></div>
+      <div class="interpret-card" style="--accent:#F4A62A"><div class="interpret-k">Dimensiones vs PEI</div><div class="interpret-t">{dims_meet_pei} de 4 alcanzan 60%</div><div class="interpret-x">D2 y D4 alcanzan la referencia PEI 2027. Sin embargo, por la escala del instrumento continúan en <b>Regular</b> porque todavía no llegan a 75%.</div></div>
+      <div class="interpret-card" style="--accent:#B97A50"><div class="interpret-k">Prioridad estratégica</div><div class="interpret-t">{priority['Código']} · {pct(float(priority['Satisfacción']))}</div><div class="interpret-x"><b>{escape(priority['Dimensión'])}</b> es la dimensión más crítica. Su lectura orienta la revisión de servicios académicos, información, infraestructura y aseguramiento de la calidad.</div></div>
+      <div class="interpret-card" style="--accent:#3E8076"><div class="interpret-k">Contraste global</div><div class="interpret-t">P17 · {pct(P17)} · {escape(p17_level)}</div><div class="interpret-x">P17 supera al resultado integral en <b>{pp(abs(DELTA_P17))}</b>. La percepción global es más favorable que el criterio integral P1–P16; no deben tratarse como medidas idénticas.</div></div>
+    </div>
+    <div class="logic-banner">
+      <div class="logic-title">Cómo leer correctamente el semáforo y la meta PEI</div>
+      <div class="logic-row">
+        <div class="logic-step"><span class="logic-dot" style="background:#E55363"></span><span><b>Rojo · 0–59%</b><br>Insatisfactorio</span></div>
+        <div class="logic-step"><span class="logic-dot" style="background:#F4A62A"></span><span><b>Ámbar · 60–74%</b><br>Regular</span></div>
+        <div class="logic-step"><span class="logic-dot" style="background:#12A96B"></span><span><b>Verde · 75–100%</b><br>Satisfactorio / Muy satisfactorio</span></div>
+      </div>
+      <div class="logic-note"><b>No confundir:</b> la <b>meta PEI 2027 es 60%</b>, mientras que el nivel <b>Satisfactorio del instrumento empieza en 75%</b>. Por eso una dimensión puede <b>cumplir la meta PEI</b> y seguir clasificada como <b>Regular</b>. Actualmente, {dims_meet_pei}/4 dimensiones alcanzan 60% y {dims_satisfactory}/4 alcanzan 75%.</div>
     </div>
     '''
+
+
 
 
 # ==============================================================
@@ -756,6 +800,13 @@ st.markdown(
 .formula-panel{background:linear-gradient(145deg,#F8FBFF,#FFFFFF)!important;border-color:#DFE8F4!important}.formula-result{color:#2558BF!important}.scale4-step.active{transform:translateY(-2px);box-shadow:0 9px 18px color-mix(in srgb,var(--lvl) 18%,transparent)!important}
 @media(max-width:1100px){.control-hero{grid-template-columns:1fr}.control-right{border-left:0;border-top:1px solid rgba(255,255,255,.16);padding-left:0;padding-top:14px}.sys-kpi-grid{grid-template-columns:repeat(3,1fr)}.dim-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.item-system-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.route-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.block-container{padding:.35rem .55rem 2rem!important}.sys-topbar{height:auto;min-height:54px;padding:9px 11px}.sys-brand-image{height:38px;max-width:185px;padding:3px 6px}.sys-brand-title{font-size:.68rem}.sys-brand-sub{display:none}.sys-meta{display:none}.sys-pagehead{padding:14px 2px 10px;align-items:flex-start}.sys-date{display:none}.control-hero{padding:16px;border-radius:16px}.control-left{grid-template-columns:56px 1fr;gap:11px}.control-icon{width:56px;height:56px;border-radius:15px;font-size:1.3rem}.control-right{grid-template-columns:1fr auto}.control-mini{grid-template-columns:1fr 1fr}.control-mini>div:last-child{grid-column:1/-1}.sys-kpi-grid{grid-template-columns:1fr 1fr}.dim-grid,.item-system-grid{grid-template-columns:1fr!important}.dim-card{min-height:0!important}.route-grid{grid-template-columns:1fr 1fr}.compare-row{grid-template-columns:95px minmax(0,1fr) 54px 30px;gap:7px}.compare-name span{display:none}.likert-row{grid-template-columns:36px minmax(0,1fr)}.likert-pill{height:22px}.likert-seg{font-size:.40rem}.section-note{display:none}.stTabs [data-baseweb="tab"]{padding:0 10px!important;font-size:.68rem!important}}
+
+/* INTERPRETACIÓN INSTITUCIONAL + META PEI */
+.target-pill{display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:7px 10px;border-radius:11px;border:1px solid;font-size:.60rem;line-height:1.2;max-width:100%;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+.target-pill.ok{background:#EAF8F1;border-color:#CBECDD;color:#14734E}.target-pill.miss{background:#FFF1F2;border-color:#F5D3D8;color:#A93C49}.target-icon{display:grid;place-items:center;width:19px;height:19px;border-radius:7px;background:currentColor;color:#fff;font-size:.68rem;font-weight:950}.target-pill small{display:block;font-size:.52rem;opacity:.72;margin-top:2px;font-weight:650}.target-compact{padding:5px 7px;margin-top:5px}.target-compact .target-icon{width:16px;height:16px}.interpret-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.interpret-card{padding:15px 16px;border-radius:17px;background:#fff;border:1px solid #E2EAF3;box-shadow:0 10px 25px rgba(24,60,104,.07);position:relative;overflow:hidden}.interpret-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}.interpret-k{font-size:.55rem;letter-spacing:.11em;text-transform:uppercase;font-weight:950;color:#8090A4}.interpret-t{font-size:.83rem;font-weight:950;color:#17324F;margin-top:5px;line-height:1.25}.interpret-x{font-size:.64rem;color:#687B90;line-height:1.48;margin-top:6px}.logic-banner{margin-top:12px;padding:13px 15px;border-radius:17px;background:linear-gradient(135deg,#F7FAFE,#EEF4FB);border:1px solid #DDE7F2;box-shadow:inset 0 1px 0 #fff}.logic-title{font-size:.66rem;font-weight:950;color:#173552}.logic-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:9px}.logic-step{display:flex;gap:8px;align-items:center;padding:9px 10px;border-radius:12px;background:#fff;border:1px solid #E4EBF3;font-size:.59rem;color:#60758C}.logic-dot{width:13px;height:13px;border-radius:50%;flex:0 0 auto;box-shadow:0 3px 8px rgba(20,35,50,.15),inset 0 1px 2px rgba(255,255,255,.7)}.logic-note{font-size:.58rem;color:#71849A;line-height:1.45;margin-top:9px}.dim-health-interpret{margin-top:9px;padding-top:8px;border-top:1px dashed #E1E8F0;font-size:.58rem;color:#667A91;line-height:1.42}.dim-health-interpret b{color:#203C58}.compare-status{font-size:.52rem;color:#6D8094;text-align:right;line-height:1.25;min-width:92px}.method-alert{padding:15px 16px;border-radius:17px;background:linear-gradient(135deg,#FFF9EA,#FFFDF7);border:1px solid #F1E2B9;color:#6D5720;font-size:.68rem;line-height:1.5;box-shadow:0 10px 24px rgba(85,69,22,.06)}
+.dim-card{min-height:292px!important}.compare-row{grid-template-columns:175px minmax(0,1fr) 70px 38px 102px!important}
+@media(max-width:980px){.interpret-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.interpret-grid,.logic-row{grid-template-columns:1fr}.compare-row{grid-template-columns:82px minmax(0,1fr) 48px 28px!important}.compare-status{grid-column:1/-1;text-align:left;min-width:0;padding-left:0;margin-top:-2px}}
 </style>
 """,
     unsafe_allow_html=True,
@@ -785,46 +836,65 @@ def hero(n: int) -> None:
 
 
 def core_cards() -> str:
-    state = signal_state(PEI, REFERENCE_TARGET)
-    p17_state = signal_state(P17, REFERENCE_TARGET)
+    state = signal_state(PEI)
+    p17_state = signal_state(P17)
     gap = max(0.0, REFERENCE_TARGET - PEI)
+    level, interval, _, _ = institutional_level(PEI)
+    p17_level, _, _, _ = institutional_level(P17)
     kpis = [
         ("Estudiantes analizados", f"{N_TOTAL:,}", "Base consolidada", "👥", "#3568D4", "#EAF1FF"),
         ("Satisfechos IND.01", f"{N_PEI:,}", "Numerador N", "✓", "#12A96B", "#E9F8F1"),
         ("Promedio integral", f"{PEI_AVG:.2f} / 5", "Media P1–P16", "∑", "#7C5CE7", "#F1ECFF"),
         ("Meta PEI 2027", "60.0%", "Referencia anual", "◎", "#2F66D8", "#EAF1FF"),
-        ("Brecha actual", pp(gap), "Distancia a la meta", "!", signal_color(state), "#FFF0F2" if state=='red' else "#FFF7E8"),
-        ("P17 global", pct(P17), "Percepción directa", "◉", signal_color(p17_state), "#EAF7F3"),
+        ("Brecha a meta", pp(gap), "Contra 60% PEI", "!", "#E55363" if gap > 0 else "#12A96B", "#FFF0F2" if gap > 0 else "#E9F8F1"),
+        ("P17 global", pct(P17), f"Nivel: {p17_level}", "◉", signal_color(p17_state), "#EAF7F3"),
     ]
     cards = []
-    for i,(label,val,foot,icon,accent,soft) in enumerate(kpis):
-        cards.append(f'''<div class="sys-kpi" style="--accent:{accent};--soft:{soft}"><div class="sys-kpi-head"><div class="sys-kpi-label">{escape(label)}</div><div class="sys-kpi-icon">{icon}</div></div><div class="sys-kpi-value">{escape(val)}</div><div class="sys-kpi-foot">{escape(foot)}</div><div class="spark">{_spark_svg(accent,i)}</div></div>''')
+    for i, (label, val, foot, icon, accent, soft) in enumerate(kpis):
+        cards.append(f'''<div class="sys-kpi" style="--accent:{accent};--soft:{soft}"><div class="sys-kpi-head"><div class="sys-kpi-label">{escape(label)}</div><div class="sys-kpi-icon">{icon}</div></div><div class="sys-kpi-value">{escape(val)}</div><div class="sys-kpi-foot">{escape(foot)}</div><div class="spark">{_spark_svg(accent, i)}</div></div>''')
     return f'''
       <div class="control-hero">
-        <div class="control-left"><div class="control-icon">▥</div><div><div class="control-eyebrow">Indicador estratégico institucional</div><div class="control-title">IND.01 · Porcentaje de estudiantes satisfechos con su proceso de formación académica</div><div class="control-text">Cálculo operativo integral sobre P1–P16. El semáforo muestra el cumplimiento de la meta PEI 2027; P17 permanece como medida global complementaria.</div></div></div>
-        <div class="control-right"><div><div class="control-score">{pct(PEI)}</div><div class="control-state" style="color:#fff">{escape(signal_label(PEI,REFERENCE_TARGET))}</div><div class="control-mini"><div><div class="k">N</div><div class="v">{N_PEI:,}</div></div><div><div class="k">Meta</div><div class="v">60.0%</div></div><div><div class="k">Brecha</div><div class="v">{pp(gap)}</div></div></div></div>{traffic_svg(state,54)}</div>
+        <div class="control-left"><div class="control-icon">▥</div><div><div class="control-eyebrow">Indicador estratégico institucional</div><div class="control-title">IND.01 · Porcentaje de estudiantes satisfechos con su proceso de formación académica</div><div class="control-text">Cálculo operativo integral sobre P1–P16. El <b>semáforo interpreta el nivel de satisfacción del instrumento</b>; la <b>meta PEI 2027 de 60%</b> se verifica por separado. P17 permanece como medida global complementaria.</div></div></div>
+        <div class="control-right"><div><div class="control-score">{pct(PEI)}</div><div class="control-state" style="color:#fff">{escape(level)} · {escape(interval)}</div><div class="control-mini"><div><div class="k">N</div><div class="v">{N_PEI:,}</div></div><div><div class="k">Meta</div><div class="v">60.0%</div></div><div><div class="k">Brecha</div><div class="v">{pp(gap)}</div></div></div>{target_status_html(PEI, compact=True)}</div>{traffic_svg(state, 54)}</div>
       </div>
       <div class="sys-kpi-grid">{''.join(cards)}</div>
-      <div style="margin-top:12px">{formula_html(N_PEI,N_TOTAL,PEI)}</div>
+      <div style="margin-top:12px">{formula_html(N_PEI, N_TOTAL, PEI)}</div>
       <div style="margin-top:10px">{institutional_scale_html(PEI)}</div>
     '''
 
 
 def dimension_cards() -> str:
-    cards=[]
-    softs={"D1":"#EAF1FF","D2":"#F1ECFF","D3":"#FFF0E9","D4":"#E8F8F3"}
-    for _,r in DIMS.sort_values("Código").iterrows():
-        code=r["Código"]; meta=DIMENSIONS[code]; sat=float(r["Satisfacción"]); avg=float(r["Promedio Likert"]); gap=max(0.0,REFERENCE_TARGET-sat); state=signal_state(sat,REFERENCE_TARGET)
-        cards.append(f'''<div class="dim-card" style="--accent:{meta['accent']};--soft:{softs[code]}"><div class="dim-health-head"><div><div class="dim-health-code">{meta['icon']} {code}</div><div class="dim-health-name">{escape(meta['name'])}</div></div>{traffic_svg(state,30)}</div><div class="dim-health-body"><div class="dim-donut" style="--p:{sat*100:.2f};--accent:{meta['accent']}"><b>{pct(sat)}</b></div><div><div class="dim-health-state" style="color:{signal_color(state)}">{escape(signal_label(sat,REFERENCE_TARGET))}</div><div class="dim-health-meta">Promedio: <b>{avg:.2f}/5</b><br>{'Referencia 60% alcanzada' if gap<=0 else 'Brecha: '+pp(gap)}</div></div></div><div class="dim-health-foot"><span>Satisfacción dimensional</span><b>{', '.join(meta['items'])}</b></div></div>''')
-    return '<div class="dim-grid">'+''.join(cards)+'</div>'
+    cards = []
+    softs = {"D1": "#EAF1FF", "D2": "#F1ECFF", "D3": "#FFF0E9", "D4": "#E8F8F3"}
+    interpretation = {
+        "D1": "Pertinencia curricular, plan de estudios, carga académica y coherencia del proceso formativo.",
+        "D2": "Dominio docente, metodologías, participación estudiantil y retroalimentación pedagógica.",
+        "D3": "Trámites, información académica, infraestructura y aseguramiento de la calidad educativa.",
+        "D4": "Competencias profesionales, valores, desarrollo personal y preparación para el ejercicio profesional.",
+    }
+    for _, r in DIMS.sort_values("Código").iterrows():
+        code = r["Código"]
+        meta = DIMENSIONS[code]
+        sat = float(r["Satisfacción"])
+        avg = float(r["Promedio Likert"])
+        state = signal_state(sat)
+        level, interval, _, _ = institutional_level(sat)
+        cards.append(f'''<div class="dim-card" style="--accent:{meta['accent']};--soft:{softs[code]}"><div class="dim-health-head"><div><div class="dim-health-code">{meta['icon']} {code}</div><div class="dim-health-name">{escape(meta['name'])}</div></div>{traffic_svg(state, 30)}</div><div class="dim-health-body"><div class="dim-donut" style="--p:{sat*100:.2f};--accent:{meta['accent']}"><b>{pct(sat)}</b></div><div><div class="dim-health-state" style="color:{signal_color(state)}">{escape(level)}</div><div class="dim-health-meta"><b>{interval}</b><br>Promedio: <b>{avg:.2f}/5</b>{target_status_html(sat, compact=True)}</div></div></div><div class="dim-health-interpret"><b>Qué significa:</b> {escape(interpretation[code])}</div><div class="dim-health-foot"><span>Satisfacción dimensional</span><b>{', '.join(meta['items'])}</b></div></div>''')
+    return '<div class="dim-grid">' + ''.join(cards) + '</div>'
 
 
 def dimension_comparison_html() -> str:
-    rows=[]
-    for _,r in DIMS.sort_values("Código").iterrows():
-        code=r["Código"]; meta=DIMENSIONS[code]; sat=float(r["Satisfacción"]); state=signal_state(sat,REFERENCE_TARGET)
-        rows.append(f'''<div class="compare-row"><div class="compare-name"><b>{code} · {escape(meta['short'])}</b><span>{escape(meta['name'])}</span></div><div class="compare-track"><div class="compare-fill" style="--accent:{meta['accent']};width:{sat*100:.1f}%"></div></div><div class="compare-value">{pct(sat)}</div>{traffic_svg(state,24)}</div>''')
-    return '<div class="panel-sys compare-card">'+''.join(rows)+'</div>'
+    rows = []
+    for _, r in DIMS.sort_values("Código").iterrows():
+        code = r["Código"]
+        meta = DIMENSIONS[code]
+        sat = float(r["Satisfacción"])
+        state = signal_state(sat)
+        level, _, _, _ = institutional_level(sat)
+        ok, _, _ = pei_target_status(sat)
+        target_txt = "Meta 2027 ✓" if ok else "Meta 2027 pendiente"
+        rows.append(f'''<div class="compare-row"><div class="compare-name"><b>{code} · {escape(meta['short'])}</b><span>{escape(meta['name'])}</span></div><div class="compare-track"><div class="compare-fill" style="--accent:{meta['accent']};width:{sat*100:.1f}%"></div></div><div class="compare-value">{pct(sat)}</div>{traffic_svg(state, 24)}<div class="compare-status"><b>{escape(level)}</b><br>{escape(target_txt)}</div></div>''')
+    return '<div class="panel-sys compare-card">' + ''.join(rows) + '</div>'
 
 
 def route_html() -> str:
@@ -872,16 +942,16 @@ with tab1:
     section_header("Diagnóstico 4D", "Satisfacción en las cuatro dimensiones", "Cada dimensión clasifica al estudiante como satisfecho si su promedio de cuatro ítems es ≥4.")
     st.markdown(dimension_cards(), unsafe_allow_html=True)
     st.markdown(
-        f'''<div class="glass legend-card"><div class="legend-lights">{traffic_svg('green',28)}{traffic_svg('amber',28)}{traffic_svg('red',28)}</div><div class="legend-text"><b>Dos lecturas distintas:</b> el semáforo conserva <b>3 luces</b> (verde, ámbar y rojo) porque representa el cumplimiento de la meta PEI. La <b>escala institucional</b> se muestra aparte con <b>4 categorías</b>: Insatisfactorio, Regular, Satisfactorio y Muy satisfactorio. Así no se mezclan meta y nivel de satisfacción.</div></div>''',
+        f'''<div class="glass legend-card"><div class="legend-lights">{traffic_svg('red',28)}{traffic_svg('amber',28)}{traffic_svg('green',28)}</div><div class="legend-text"><b>Semáforo según la escala del instrumento:</b> <b>rojo</b> 0–59% = Insatisfactorio; <b>ámbar</b> 60–74% = Regular; <b>verde</b> 75–100% = Satisfactorio o Muy satisfactorio. La categoría <b>Muy satisfactorio (90–100%)</b> se conserva en la escala detallada. La <b>meta PEI 2027 de 60%</b> se informa aparte.</div></div>''',
         unsafe_allow_html=True,
     )
 
-    section_header("Lectura automática", "Qué requiere atención y qué funciona mejor")
+    section_header("Interpretación ejecutiva", "Qué significan los resultados para el PEI y el instrumento", "Lectura automática basada en la escala institucional, la meta PEI 2027 y el contenido de las dimensiones.")
     st.markdown(insight_cards(), unsafe_allow_html=True)
 
     c1, c2 = st.columns([1.08, .92], gap="medium")
     with c1:
-        section_header("Comparación", "Resultado por dimensión", "Lectura fija con referencia visual de 60% y semáforo de cumplimiento.")
+        section_header("Comparación", "Resultado por dimensión", "El semáforo sigue la escala del instrumento; el cumplimiento de 60% PEI se muestra aparte.")
         st.markdown(dimension_comparison_html(), unsafe_allow_html=True)
     with c2:
         section_header("Ruta estratégica", "Metas PEI 2027–2030", "Hitos anuales de la ficha PEI.")
@@ -915,15 +985,15 @@ with tab3:
     section_header("Ficha PEI", "Cómo está interpretado el indicador en este dashboard")
     st.markdown(
         '''<div class="method-grid">
-          <div class="glass method"><div class="i">◎</div><div class="t">Definición oficial</div><div class="x">IND. 01: porcentaje de estudiantes de pregrado satisfechos con su proceso de formación académica. Fórmula: <b>(N/D) × 100</b>.</div></div>
-          <div class="glass method"><div class="i">∑</div><div class="t">Operacionalización propuesta</div><div class="x">Para convertir P1–P16 en N, el dashboard calcula el promedio integral de los 16 ítems por estudiante y lo clasifica como satisfecho cuando el promedio es <b>≥4</b>.</div></div>
-          <div class="glass method"><div class="i">↔</div><div class="t">P17 queda separado</div><div class="x">P17 es una pregunta directa de satisfacción general. Se usa para contraste y validación de percepción, no se mezcla automáticamente con el IND.01 integral.</div></div>
+          <div class="glass method"><div class="i">◎</div><div class="t">Indicador y fórmula</div><div class="x">El indicador expresa el <b>porcentaje de estudiantes satisfechos</b> y se presenta como <b>(N/D) × 100</b>. N corresponde a estudiantes satisfechos y D al total analizado.</div></div>
+          <div class="glass method"><div class="i">🚦</div><div class="t">Escala institucional</div><div class="x"><b>0–59%</b> Insatisfactorio · <b>60–74%</b> Regular · <b>75–89%</b> Satisfactorio · <b>90–100%</b> Muy satisfactorio. El semáforo comprime los cuatro niveles en tres luces: rojo, ámbar y verde.</div></div>
+          <div class="glass method"><div class="i">◎</div><div class="t">Meta PEI ≠ nivel de satisfacción</div><div class="x">La meta 2027 es <b>60%</b>. Alcanzarla significa cumplir el hito PEI anual, pero <b>60–74%</b> todavía corresponde a nivel <b>Regular</b> en la escala del instrumento.</div></div>
         </div>''',
         unsafe_allow_html=True,
     )
     st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
     st.markdown(
-        '''<div class="notice"><b>Importante metodológicamente:</b> la ficha técnica compartida define N, D y el nivel “satisfecho”, pero no especifica en la imagen el algoritmo exacto para combinar varios ítems de la encuesta. Por eso, <b>promedio P1–P16 ≥4</b> se presenta aquí como una <b>operacionalización analítica propuesta</b>. Antes de reportarlo como resultado PEI oficial, conviene dejar este criterio aprobado en el protocolo, resolución o ficha metodológica del instrumento.</div>''',
+        '''<div class="method-alert"><b>Consistencia metodológica a validar:</b> el documento del instrumento establece que cada dimensión clasifica al estudiante como satisfecho cuando su promedio de cuatro ítems es <b>≥4</b>, y que P17 es la satisfacción general (4–5 = satisfecho). Además, el sustento describe la satisfacción general como un <b>indicador sintético</b> de la percepción global. Por eso, para un reporte PEI oficial debe quedar aprobado si el IND.01 final se calculará con el agregado integral P1–P16, con P17, o con otra regla institucional. Este dashboard mantiene <b>IND.01 integral y P17 separados</b> para no ocultar esa diferencia.</div>''',
         unsafe_allow_html=True,
     )
 
