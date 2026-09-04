@@ -1,49 +1,38 @@
-# Análisis estadístico y metodológico — Encuesta UNT 2026
+# Sustento estadístico del tablero UNT 2026
 
-## Regla central
+## Resultado principal P1–P16
 
-El tablero separa tres capas: (1) estadística observada, (2) escala interpretativa propuesta del instrumento y (3) referencia documental PEI. No se mezclan.
+Se calcula el promedio individual de P1 a P16 y se clasifica como satisfecho al estudiante con promedio >= 4.
 
-## Resultado global P17
+- D = 7,677 estudiantes
+- N = 3,425 estudiantes con promedio P1–P16 >= 4
+- Satisfacción integral = 44.6%
+- IC 95% aproximado de Wilson = 43.5% a 45.7%
+- Promedio P1–P16 = 3.75/5
 
-- 5,482 de 7,677 estudiantes respondieron 4 o 5.
-- Proporción observada: 71.4%.
-- IC 95% aproximado de Wilson: 70.4% a 72.4%.
-- El IC solo permite inferencia poblacional estricta si el diseño fue probabilístico o equivalente.
+Interpretación: aproximadamente 45 de cada 100 estudiantes alcanzan el criterio integral de promedio >=4 en el conjunto de los 16 aspectos.
+
+## P17 como contraste
+
+- 5,482 de 7,677 responden 4 o 5
+- 71.4%
+- IC 95% aproximado = 70.4% a 72.4%
+- Spearman P17 vs promedio P1–P16 = 0.812
+
+P17 se muestra como contraste global, no como sustituto del resultado integral P1–P16.
 
 ## Dimensiones
 
-- D1: 55.0% (IC 95% aprox. 53.9%–56.1%).
-- D2: 60.5% (59.4%–61.6%).
-- D3: 41.4% (40.4%–42.6%).
-- D4: 65.0% (63.9%–66.0%).
+- D1: 55.0% (IC 95% aprox. 53.9%–56.1%)
+- D2: 60.5% (IC 95% aprox. 59.4%–61.6%)
+- D3: 41.4% (IC 95% aprox. 40.4%–42.6%)
+- D4: 65.0% (IC 95% aprox. 63.9%–66.0%)
 
-La regla documental por dimensión es: promedio de cuatro ítems >=4 = estudiante satisfecho.
+D3 es la principal debilidad diagnóstica; D4 presenta el mayor resultado dimensional.
 
-## Escala propuesta
+## Precauciones
 
-Los rangos 0–59, 60–74, 75–89 y 90–100 vienen de la propuesta del instrumento. No fueron estimados con la base y el documento dice que pueden ajustarse. El semáforo es solo una ayuda visual.
-
-## Referencia PEI >=60%
-
-El 60% proviene de la ficha técnica PEI como valor referencial documental. No es un punto de corte estadístico y no debe justificarse porque el nivel Regular empiece en 60%. Son conceptos distintos.
-
-## Confiabilidad y coherencia
-
-- Alfa P1–P16: 0.968.
-- D1: 0.917; D2: 0.942; D3: 0.913; D4: 0.942.
-- Spearman P17 vs promedio P1–P16: 0.812.
-
-La consistencia interna es muy alta, pero no demuestra validez. El alfa alto también puede reflejar redundancia o patrones homogéneos.
-
-## Control de calidad
-
-Se detectaron 1,616 respuestas (21.0%) con la misma alternativa en P1–P17. No deben eliminarse automáticamente; se recomienda revisar tiempos, duplicidad y patrón por fecha/escuela antes de cualquier exclusión.
-
-## Qué NO afirmar
-
-- No llamar 71.4% “IND.01 oficial 2026”.
-- No decir que 60% es un umbral estadístico.
-- No decir que “Regular” es una conclusión estadística; es una categoría propuesta.
-- No presentar el IC 95% como prueba de representatividad si el muestreo no fue probabilístico.
-- No usar alfa de Cronbach como prueba de validez.
+- La escala 0–59 / 60–74 / 75–89 / 90–100 es una propuesta del instrumento, no un corte estadístico derivado de la base.
+- El valor referencial PEI >=60% es documental, no estadístico.
+- Los IC 95% solo permiten inferencia estricta si el diseño de selección es probabilístico o razonablemente equivalente.
+- Alfa de Cronbach mide consistencia interna, no validez.

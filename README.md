@@ -1,12 +1,9 @@
-# Tablero UNT — versión estadística profesional 2026
+# Tablero UNT — Exposición profesional 2026
 
-Incluye:
-- proporciones observadas y N/D;
-- IC 95% aproximados de Wilson;
-- diagnóstico D1–D4;
-- semáforo basado únicamente en la escala propuesta;
-- referencia PEI separada;
-- confiabilidad y control de calidad;
-- diseño responsive.
+- P1–P16 como resultado principal.
+- P17 como contraste complementario.
+- Fondo blanco y tipografía mayor.
+- Interpretaciones humanizadas.
+- IC 95% aproximados y control de calidad.
 
 Ejecutar: `python -m streamlit run app.py`

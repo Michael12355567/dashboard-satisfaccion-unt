@@ -207,6 +207,94 @@ div[data-testid="stDataFrame"]{border:1px solid #E5EAF0;border-radius:15px;overf
 
 
 # ==============================================================
+# AJUSTE VISUAL FINAL — FONDO BLANCO / MAYOR LEGIBILIDAD
+# ==============================================================
+st.markdown(
+    r"""
+<style>
+:root{--bg:#FFFFFF!important;--line:#DDE6F0!important;--shadow:0 10px 28px rgba(25,55,95,.08),0 2px 6px rgba(25,55,95,.035)!important}
+.stApp{background:#FFFFFF!important}
+header[data-testid="stHeader"]{background:rgba(255,255,255,.96)!important}
+.block-container{max-width:1580px!important;padding:.65rem 1.15rem 3rem!important}
+.pagehead{background:#FFFFFF!important}
+.topbar{background:linear-gradient(100deg,#123B78 0%,#1D52A2 58%,#2865C5 100%)!important}
+.title{font-size:clamp(1.75rem,3vw,2.35rem)!important}.sub{font-size:.84rem!important;line-height:1.58!important;max-width:1120px!important}
+.kicker{font-size:.68rem!important}.chip{font-size:.66rem!important;padding:7px 11px!important}.basebox{font-size:.64rem!important}.basebox b{font-size:.88rem!important}
+.stTabs [data-baseweb="tab"]{font-size:.86rem!important;height:50px!important}
+.section-title{font-size:clamp(1.25rem,2.2vw,1.55rem)!important}.section-kicker{font-size:.66rem!important}.section-note{font-size:.77rem!important;max-width:680px!important}
+.panel{background:#FFFFFF!important;border-color:#DDE6F0!important}
+.main-reading-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,.55fr);gap:16px;align-items:stretch}
+.integral-hero{border-radius:22px;background:linear-gradient(128deg,#0E3268 0%,#164A96 52%,#1F5DB6 100%);color:#fff;padding:25px 26px;box-shadow:0 18px 38px rgba(24,72,145,.18);position:relative;overflow:hidden}
+.integral-hero:after{content:"";position:absolute;width:360px;height:360px;border:42px solid rgba(255,255,255,.055);border-radius:50%;right:-120px;top:-210px}
+.integral-top,.integral-core,.integral-bottom{position:relative;z-index:1}.integral-top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.integral-eyebrow,.side-kicker{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;font-weight:900}.integral-eyebrow{color:#C9D9FA}.integral-title{font-size:clamp(1.55rem,2.7vw,2.2rem);font-weight:950;letter-spacing:-.04em;margin-top:5px}.integral-text{font-size:.82rem;line-height:1.58;color:#E7EEFC;max-width:980px;margin-top:9px}.integral-core{display:grid;grid-template-columns:250px minmax(0,1fr);gap:20px;align-items:center;margin-top:18px}.integral-score{font-size:clamp(3.3rem,6.3vw,5.2rem);font-weight:950;letter-spacing:-.07em;line-height:.92}.integral-level{font-size:.88rem;font-weight:900;margin-top:8px}.integral-level span{font-size:.70rem;color:#DDE7F8;font-weight:700;margin-left:4px}.integral-formula .formula{margin-top:0;background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.17)}.integral-bottom{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.integral-bottom>div{padding:11px 12px;border-radius:13px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14)}.integral-bottom b{display:block;font-size:.64rem;color:#C8D8F6}.integral-bottom span{display:block;font-size:.89rem;font-weight:900;margin-top:3px}.integral-signal{position:relative;z-index:1}
+.formula-k{font-size:.62rem!important}.formula-eq{font-size:.91rem!important;gap:10px!important}.formula-result{font-size:1.35rem!important}.diag-pill,.ref-badge{font-size:.66rem!important;line-height:1.45!important}
+.side-stack{display:grid;grid-template-rows:auto auto;gap:12px}.p17-card,.pei-mini{padding:18px 19px}.p17-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.side-kicker{color:#6C7D91}.p17-title,.pei-mini-title{font-size:1.05rem;font-weight:950;color:#183651;line-height:1.25;margin-top:5px}.p17-score{font-size:2.9rem;font-weight:950;color:#183651;letter-spacing:-.06em;margin-top:14px}.p17-level{font-size:.78rem;font-weight:900}.p17-copy,.pei-mini-note{font-size:.72rem;line-height:1.52;color:#66798E;margin-top:9px}.pei-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.pei-mini-grid>div{padding:10px 11px;border-radius:12px;background:#F7F9FC;border:1px solid #E5EBF2}.pei-mini-grid b{display:block;font-size:.86rem;color:#1D3D60}.pei-mini-grid span{display:block;font-size:.60rem;color:#8491A0;margin-top:3px}.pei-mini-note{border-top:1px solid #E8EDF3;padding-top:10px}
+.kpi{min-height:128px!important;padding:14px!important}.kpi-label{font-size:.66rem!important}.kpi-icon{width:36px!important;height:36px!important;font-size:.95rem!important}.kpi-v{font-size:1.42rem!important}.kpi-f{font-size:.60rem!important}.stat-footnote{font-size:.64rem;color:#7C8998;line-height:1.5;margin-top:8px}
+.dim-card{min-height:285px!important;padding:17px!important}.dim-code{font-size:.72rem!important}.dim-name{font-size:.70rem!important;min-height:2.35em!important}.donut{width:102px!important;height:102px!important}.donut b{font-size:1.18rem!important}.dim-level{font-size:.72rem!important}.dim-meta{font-size:.61rem!important}.dim-meaning{font-size:.64rem!important}.dim-foot{font-size:.58rem!important}.scale-title{font-size:.72rem!important}.scale-name{font-size:.66rem!important}.scale-range,.scale-note{font-size:.60rem!important}
+.insight-k{font-size:.62rem!important}.insight-t{font-size:.92rem!important}.insight-x{font-size:.70rem!important}.interpret-banner{font-size:.70rem!important}.method-t{font-size:.90rem!important}.method-x,.method-alert{font-size:.70rem!important}.quality-k{font-size:.60rem!important}.quality-v{font-size:1.42rem!important}.quality-x,.quality-warning{font-size:.68rem!important}
+div[data-testid="stDataFrame"]{font-size:.78rem!important}
+@media(max-width:1050px){.main-reading-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr;grid-template-rows:auto}.integral-core{grid-template-columns:220px 1fr}}
+@media(max-width:700px){.block-container{padding:.45rem .65rem 2rem!important}.title{font-size:1.62rem!important}.sub{font-size:.78rem!important}.main-reading-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr}.integral-hero{padding:19px 17px;border-radius:18px}.integral-top{display:grid;grid-template-columns:1fr auto}.integral-title{font-size:1.52rem}.integral-text{font-size:.76rem}.integral-core{grid-template-columns:1fr;gap:12px}.integral-score{font-size:3.25rem}.integral-bottom{grid-template-columns:1fr 1fr}.integral-bottom>div:last-child{grid-column:1/-1}.p17-score{font-size:2.45rem}.kpi-grid{grid-template-columns:1fr 1fr!important}.section-title{font-size:1.26rem!important}.section-kicker{font-size:.60rem!important}.formula-eq{justify-content:flex-start!important}}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+# ==============================================================
+# CAPA VISUAL PARA EXPOSICIÓN — BLANCO / JERARQUÍA / LETRA MAYOR
+# ==============================================================
+st.markdown(
+    r"""
+<style>
+:root{
+  --page:#FFFFFF;--navy:#12345B;--navy2:#1B4E87;--blue:#2F66C8;--blue-soft:#EEF4FC;
+  --ink:#152D47;--muted:#63768A;--line:#DCE5EF;--soft:#F7F9FC;
+  --shadow:0 12px 32px rgba(25,55,90,.08),0 2px 7px rgba(25,55,90,.035);
+}
+.stApp{background:#FFFFFF!important;color:var(--ink)!important}
+header[data-testid="stHeader"]{background:rgba(255,255,255,.97)!important}
+.block-container{max-width:1600px!important;padding:.65rem 1.2rem 3.2rem!important}
+.pagehead{padding:22px 4px 15px!important}
+.title{font-size:clamp(1.95rem,3.2vw,2.7rem)!important;color:#102D4C!important}
+.sub{font-size:.95rem!important;line-height:1.62!important;color:#60758B!important;max-width:1180px!important}
+.kicker{font-size:.72rem!important}.chip{font-size:.72rem!important;padding:8px 12px!important}
+.section-title{font-size:clamp(1.35rem,2.35vw,1.72rem)!important}.section-kicker{font-size:.70rem!important}
+.section-note{font-size:.82rem!important;line-height:1.5!important;max-width:720px!important}
+.stTabs [data-baseweb="tab"]{font-size:.92rem!important;height:52px!important}
+.panel{background:#FFFFFF!important;border:1px solid var(--line)!important;box-shadow:var(--shadow)!important}
+.main-reading-grid{display:grid!important;grid-template-columns:minmax(0,1.62fr) minmax(315px,.48fr)!important;gap:16px!important;align-items:stretch!important}
+.integral-hero{background:#FFFFFF!important;color:var(--ink)!important;border:1px solid #D8E4F0!important;border-radius:22px!important;padding:26px 28px!important;box-shadow:0 18px 42px rgba(21,56,95,.10)!important;position:relative!important;overflow:hidden!important}
+.integral-hero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:linear-gradient(180deg,#173E72,#2F6CC8)}
+.integral-hero:after{content:"";position:absolute;width:330px;height:330px;border-radius:50%;right:-150px;top:-200px;background:radial-gradient(circle,rgba(47,102,200,.09),transparent 70%);border:0!important}
+.integral-eyebrow{color:#2F66C8!important;font-size:.76rem!important}.integral-title{color:#122F50!important;font-size:clamp(1.7rem,2.8vw,2.35rem)!important;line-height:1.08!important}
+.integral-text{color:#5D7288!important;font-size:.92rem!important;line-height:1.62!important;max-width:1080px!important}
+.integral-core{grid-template-columns:265px minmax(0,1fr)!important;gap:24px!important;margin-top:20px!important}.integral-score{color:#184D91!important;font-size:clamp(4rem,7vw,6.1rem)!important}
+.integral-level{font-size:1rem!important}.integral-level span{color:#75879A!important;font-size:.78rem!important}
+.integral-formula .formula{background:#F4F8FD!important;border:1px solid #D9E6F4!important;color:#173A60!important;box-shadow:inset 0 1px 0 #fff!important}
+.integral-formula .formula-k{color:#668099!important}.integral-formula .formula-eq{color:#173A60!important;font-size:1rem!important}.integral-formula .formula-result{background:#FFFFFF!important;color:#215DB0!important;border:1px solid #D8E4F1!important}
+.integral-bottom>div{background:#F7F9FC!important;border:1px solid #E1E8F0!important}.integral-bottom b{font-size:.72rem!important;color:#718196!important}.integral-bottom span{font-size:1rem!important;color:#173650!important}
+.integral-signal{padding:7px 12px;border-radius:15px;background:#F7F9FC;border:1px solid #E2E9F0}
+.human-box{margin-top:16px;padding:14px 16px;border-radius:15px;background:linear-gradient(135deg,#F5F9FE,#FBFCFE);border:1px solid #DDE8F4;color:#4F667D;font-size:.84rem;line-height:1.58}
+.human-box b{color:#173B62}.human-box .headline{font-size:.92rem;font-weight:950;color:#163A60;margin-bottom:4px}
+.side-stack{grid-template-rows:auto auto!important}.p17-card,.pei-mini{padding:17px 18px!important}.p17-card{background:#FAFBFD!important}.side-kicker{font-size:.66rem!important;color:#7B8998!important}
+.p17-title,.pei-mini-title{font-size:1.02rem!important}.p17-score{font-size:2.35rem!important;color:#425469!important;margin-top:10px!important}.p17-level{font-size:.76rem!important}.p17-copy,.pei-mini-note{font-size:.73rem!important;line-height:1.55!important}
+.pei-mini{background:#FCFDFE!important}.pei-mini-grid b{font-size:.84rem!important}
+.kpi{min-height:132px!important}.kpi-label{font-size:.70rem!important}.kpi-v{font-size:1.48rem!important}.kpi-f{font-size:.65rem!important}
+.dim-card{min-height:300px!important;padding:18px!important}.dim-code{font-size:.77rem!important}.dim-name{font-size:.76rem!important}.dim-level{font-size:.78rem!important}.dim-meta{font-size:.67rem!important;line-height:1.55!important}.dim-meaning{font-size:.70rem!important;line-height:1.52!important}.dim-foot{font-size:.64rem!important}
+.insight-k{font-size:.68rem!important}.insight-t{font-size:1rem!important}.insight-x{font-size:.77rem!important;line-height:1.56!important}.interpret-banner{font-size:.78rem!important;line-height:1.55!important}
+.scale-title{font-size:.80rem!important}.scale-name{font-size:.72rem!important}.scale-range,.scale-note{font-size:.66rem!important}.method-t{font-size:.96rem!important}.method-x,.method-alert{font-size:.76rem!important;line-height:1.58!important}
+.quality-k{font-size:.66rem!important}.quality-v{font-size:1.48rem!important}.quality-x,.quality-warning{font-size:.73rem!important}.item-q{font-size:.66rem!important;line-height:1.52!important}.item-code{font-size:.66rem!important}.item-score{font-size:1.12rem!important}
+.item-meta .k{font-size:.50rem!important}.item-meta .v{font-size:.63rem!important}
+@media(max-width:1080px){.main-reading-grid{grid-template-columns:1fr!important}.side-stack{grid-template-columns:1fr 1fr!important;grid-template-rows:auto!important}.integral-core{grid-template-columns:230px 1fr!important}}
+@media(max-width:700px){.block-container{padding:.48rem .68rem 2.2rem!important}.title{font-size:1.72rem!important}.sub{font-size:.84rem!important}.main-reading-grid{grid-template-columns:1fr!important}.side-stack{grid-template-columns:1fr!important}.integral-hero{padding:20px 18px!important}.integral-top{display:grid!important;grid-template-columns:1fr auto!important}.integral-title{font-size:1.55rem!important}.integral-text{font-size:.80rem!important}.integral-core{grid-template-columns:1fr!important}.integral-score{font-size:3.65rem!important}.integral-bottom{grid-template-columns:1fr 1fr!important}.integral-bottom>div:last-child{grid-column:1/-1!important}.p17-score{font-size:2.1rem!important}.section-title{font-size:1.35rem!important}.section-note{display:none!important}.kpi-grid{grid-template-columns:1fr 1fr!important}}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+# ==============================================================
 # UTILIDADES
 # ==============================================================
 def pct(x: float, digits: int = 1) -> str:
@@ -292,7 +380,16 @@ def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
         df[f"{code}_Prom"] = df[meta["items"]].mean(axis=1)
         df[f"{code}_Sat"] = (df[f"{code}_Prom"] >= 4).astype(float)
 
+    # Estimación integral P1-P16 para seguimiento analítico del IND.01:
+    # se extiende al conjunto de los 16 ítems la misma lógica usada en las dimensiones:
+    # promedio individual >= 4 => estudiante satisfecho.
+    # Esta operacionalización NO aparece formulada de manera literal en la ficha PEI;
+    # debe validarse institucionalmente antes de usarla como regla oficial del IND.01.
+    df["Integral_P1P16_Prom"] = df[ITEMS_16].mean(axis=1)
+    df["Integral_P1P16_Sat"] = (df["Integral_P1P16_Prom"] >= 4).astype(float)
+
     # P17: 4 o 5 = satisfecho; 1, 2 o 3 = no satisfecho.
+    # Se conserva como percepción global directa y medida complementaria.
     df["P17_Sat"] = (df["P17"] >= 4).astype(float)
     return df
 
@@ -314,6 +411,13 @@ except Exception as exc:
     st.stop()
 
 N_TOTAL = int(len(df))
+
+# Resultado integral P1-P16 (operacionalización analítica para seguimiento).
+INTEGRAL = float(df["Integral_P1P16_Sat"].mean())
+N_INTEGRAL = int(df["Integral_P1P16_Sat"].sum())
+INTEGRAL_MEAN = float(df["Integral_P1P16_Prom"].mean())
+
+# P17: percepción global directa, complementaria al análisis integral.
 GLOBAL = float(df["P17_Sat"].mean())
 N_GLOBAL = int(df["P17_Sat"].sum())
 GLOBAL_MEAN = float(df["P17"].mean())
@@ -361,6 +465,7 @@ def cronbach_alpha(cols: list[str]) -> float:
 
 ALPHA_P1_P16 = cronbach_alpha(ITEMS_16)
 ALPHA_DIMS = {code: cronbach_alpha(meta["items"]) for code, meta in DIMENSIONS.items()}
+INTEGRAL_CI_LOW, INTEGRAL_CI_HIGH = wilson_interval(N_INTEGRAL, N_TOTAL)
 GLOBAL_CI_LOW, GLOBAL_CI_HIGH = wilson_interval(N_GLOBAL, N_TOTAL)
 P1P16_MEAN = df[ITEMS_16].mean(axis=1)
 RHO_P17_P1P16 = spearman_corr(df["P17"], P1P16_MEAN)
@@ -417,6 +522,7 @@ PRIORITY_DIM = DIMS.sort_values("Satisfacción").iloc[0]
 STRONG_DIM = DIMS.sort_values("Satisfacción", ascending=False).iloc[0]
 PRIORITY_ITEM = ITEMS_SUM.sort_values("Favorable").iloc[0]
 STRONG_ITEM = ITEMS_SUM.sort_values("Favorable", ascending=False).iloc[0]
+INTEGRAL_LEVEL, INTEGRAL_INTERVAL, INTEGRAL_COLOR, INTEGRAL_STATE = institutional_level(INTEGRAL)
 GLOBAL_LEVEL, GLOBAL_INTERVAL, GLOBAL_COLOR, GLOBAL_STATE = institutional_level(GLOBAL)
 
 
@@ -428,15 +534,15 @@ def top_header() -> None:
     st.markdown(
         f'''<div class="topbar">
           <div class="brand"><div class="brand-img"><img src="https://i.ibb.co/V0hydyyH/Whats-App-Image-2026-09-02-at-1-58-16-PM.jpg" alt="Identidad institucional UNT"></div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · OEI.01 · IND.01</div></div></div>
-          <div class="top-meta"><div class="meta-box">Periodo de encuesta<b>{period}</b></div><div class="meta-box">Base analizada<b>{N_TOTAL:,} estudiantes</b></div><div class="meta-box">PEI 2026<b>Instrumento en validación</b></div></div>
+          <div class="top-meta"><div class="meta-box">Periodo de encuesta<b>{period}</b></div><div class="meta-box">Base analizada<b>{N_TOTAL:,} estudiantes</b></div><div class="meta-box">Instrumento<b>17 ítems · 4 dimensiones</b></div></div>
         </div>
-        <div class="pagehead"><div><div class="kicker">Centro de control institucional</div><div class="title">Satisfacción con el proceso de formación académica</div><div class="sub">Tablero diagnóstico de la encuesta 2026. Separa tres niveles de lectura: <b>ficha PEI oficial</b>, <b>resultado diagnóstico del instrumento propuesto</b> y <b>análisis de las cuatro dimensiones</b>. No presenta un valor oficial del IND.01 para 2026.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} respuestas analizadas</span><span class="chip warn">⚠ IND.01 PEI 2026: sin valor oficial</span><span class="chip">P17: resultado diagnóstico</span><span class="chip">D1–D4: diagnóstico dimensional</span></div></div><div class="basebox">Base analizada<b>{N_TOTAL:,} estudiantes</b></div></div>''',
+        <div class="pagehead"><div><div class="kicker">Tablero ejecutivo · análisis estadístico 2026</div><div class="title">Indicador de satisfacción con el proceso de formación académica</div><div class="sub"><b>P1–P16 constituye la lectura principal del tablero</b>: reúne las cuatro dimensiones que describen el proceso de formación académica. <b>P17 se muestra en segundo plano</b> como una pregunta global de contraste. La estadística observada, la escala interpretativa propuesta y la ficha PEI se presentan por separado para evitar conclusiones confusas.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} estudiantes</span><span class="chip">▦ P1–P16 · indicador integral</span><span class="chip">D1–D4 · diagnóstico explicativo</span><span class="chip">◉ P17 · contraste complementario</span></div></div><div class="basebox">Encuesta 2026<b>{period}</b></div></div>''',
         unsafe_allow_html=True,
     )
 
 
-def formula_html(n: int, d: int, result: float) -> str:
-    return f'''<div class="formula"><div class="formula-k">Aplicación diagnóstica de la fórmula al ítem global P17</div><div class="formula-eq"><span>Porcentaje =</span><span class="frac"><span>N</span><span class="bar"></span><span>D</span></span><span>× 100 =</span><span class="frac"><span>{n:,}</span><span class="bar"></span><span>{d:,}</span></span><span>× 100 =</span><span class="formula-result">{pct(result)}</span></div></div>'''
+def formula_html(n: int, d: int, result: float, caption: str = "Fórmula diagnóstica") -> str:
+    return f'''<div class="formula"><div class="formula-k">{escape(caption)}</div><div class="formula-eq"><span>Porcentaje =</span><span class="frac"><span>N</span><span class="bar"></span><span>D</span></span><span>× 100 =</span><span class="frac"><span>{n:,}</span><span class="bar"></span><span>{d:,}</span></span><span>× 100 =</span><span class="formula-result">{pct(result)}</span></div></div>'''
 
 
 def scale_html(value: float) -> str:
@@ -450,26 +556,45 @@ def scale_html(value: float) -> str:
 
 
 def primary_cards_html() -> str:
-    ci_txt = f"{pct(GLOBAL_CI_LOW)} – {pct(GLOBAL_CI_HIGH)}"
+    integral_ci = f"{pct(INTEGRAL_CI_LOW)} – {pct(INTEGRAL_CI_HIGH)}"
+    p17_ci = f"{pct(GLOBAL_CI_LOW)} – {pct(GLOBAL_CI_HIGH)}"
+    every100 = round(INTEGRAL * 100)
+    delta = GLOBAL - INTEGRAL
+
     kpis = [
-        ("Estudiantes analizados", f"{N_TOTAL:,}", "Denominador observado", "👥", "#3568D4", "#EAF1FF"),
-        ("Satisfechos P17", f"{N_GLOBAL:,}", "Respuesta 4 o 5", "✓", "#16A878", "#E9F8F1"),
-        ("Satisfacción observada", pct(GLOBAL), "Proporción observada", "◉", "#2F66D8", "#EAF1FF"),
-        ("IC 95% aprox.*", ci_txt, "Wilson binomial", "↔", "#18A9C0", "#EAF8FA"),
-        ("Promedio P17", f"{GLOBAL_MEAN:.2f} / 5", "Media descriptiva", "∑", "#7C5CE7", "#F1ECFF"),
-        ("Nivel propuesto", GLOBAL_LEVEL, GLOBAL_INTERVAL, "🚦", GLOBAL_COLOR, "#FFF6E8"),
+        ("Estudiantes analizados", f"{N_TOTAL:,}", "Denominador del análisis", "👥", "#2457B8", "#EEF4FF"),
+        ("Satisfechos P1–P16", f"{N_INTEGRAL:,}", "Promedio individual ≥4", "✓", "#14846C", "#EDF8F5"),
+        ("Satisfacción integral", pct(INTEGRAL), "Resultado principal", "▦", "#2457B8", "#EEF4FF"),
+        ("IC 95% aprox.*", integral_ci, "Precisión estadística", "↔", "#0F7D92", "#EEF9FB"),
+        ("Promedio P1–P16", f"{INTEGRAL_MEAN:.2f} / 5", "Media de los 16 ítems", "∑", "#5A6475", "#F3F5F7"),
+        ("P17 · contraste", pct(GLOBAL), "Pregunta global directa", "◉", "#7A8490", "#F5F6F8"),
     ]
     kpi_html=[]
     for i,(label,val,foot,icon,accent,soft) in enumerate(kpis):
         kpi_html.append(f'<div class="kpi" style="--accent:{accent};--soft:{soft}"><div class="kpi-head"><div class="kpi-label">{escape(label)}</div><div class="kpi-icon">{icon}</div></div><div class="kpi-v">{escape(val)}</div><div class="kpi-f">{escape(foot)}</div><div class="spark">{spark_svg(accent,i)}</div></div>')
-    return f'''<div class="hero-grid">
-      <div class="result-hero"><div class="result-layout">
-        <div class="result-icon">◉</div>
-        <div><div class="result-eyebrow">Resultado estadístico observado · encuesta 2026</div><div class="result-title">P17 · satisfacción general con la formación académica</div><div class="result-text">El instrumento define P17 como satisfacción general y clasifica como satisfecho a quien responde 4 o 5. Por ello, el dato principal que puede afirmarse directamente con esta base es la <b>proporción observada de estudiantes satisfechos en P17</b>. No se rotula como IND.01 oficial 2026.</div>{formula_html(N_GLOBAL,N_TOTAL,GLOBAL)}<div class="ref-badge">Precisión estadística: <b>IC 95% aprox. {ci_txt}</b>*</div><div class="diag-pill">* El intervalo supone un esquema equivalente a muestreo aleatorio simple. Si la encuesta fue censal entre respondentes o no probabilística, debe interpretarse como referencia de precisión y no como inferencia estricta a toda la población.</div></div>
-        <div><div class="result-score">{pct(GLOBAL)}</div><div class="result-level" style="color:#fff">Nivel propuesto: {escape(GLOBAL_LEVEL)} · {escape(GLOBAL_INTERVAL)}</div><div class="signal-row"><div class="signal-copy">Semáforo visual<br><span style="color:#FFE6A9">escala propuesta, no prueba estadística</span></div>{traffic_svg(GLOBAL_STATE,48)}</div></div>
-      </div></div>
-      <div class="panel pei-official"><div class="pei-official-head"><div><div class="pei-official-k">Contexto documental PEI</div><div class="pei-official-t">IND.01 · Porcentaje de estudiantes de pregrado satisfechos con su proceso de formación académica</div></div><div style="font-size:1.35rem">▦</div></div><div class="pei-official-status"><div class="big">2026 · SIN VALOR OFICIAL PROGRAMADO</div><div class="small">La ficha técnica indica que durante 2026 se diseña, estandariza y valida el instrumento; la medición efectiva se inicia en 2027.</div></div><div class="pei-official-grid"><div class="pei-official-mini"><div class="k">Fórmula documental</div><div class="v">(N / D) × 100</div></div><div class="pei-official-mini"><div class="k">Valor referencial documental</div><div class="v">≥ 60%</div></div><div class="pei-official-mini"><div class="k">Inicio de medición</div><div class="v">2027</div></div><div class="pei-official-mini"><div class="k">Sentido esperado</div><div class="v">Ascendente</div></div></div><div class="pei-official-note"><b>Clave metodológica:</b> el 60% es un criterio del documento PEI. <b>No se deriva estadísticamente</b> de estas 7,677 respuestas y no debe usarse para justificar que un resultado sea “Regular”. La clasificación Regular proviene, por separado, de la escala propuesta del instrumento.</div></div>
-    </div><div class="kpi-grid">{"".join(kpi_html)}</div>'''
+
+    return f'''<div class="main-reading-grid">
+      <div class="integral-hero">
+        <div class="integral-top">
+          <div>
+            <div class="integral-eyebrow">IND.01 · estimación integral para el análisis 2026</div>
+            <div class="integral-title">Satisfacción integral de las 16 preguntas · P1–P16</div>
+            <div class="integral-text">La lectura principal reúne las cuatro dimensiones del instrumento. Para cada estudiante se calcula su promedio en P1–P16 y se clasifica como satisfecho cuando ese promedio es <b>≥4</b>. Con esta operacionalización integral, <b>{N_INTEGRAL:,} de {N_TOTAL:,}</b> estudiantes cumplen el criterio.</div>
+          </div>
+          <div class="integral-signal">{traffic_svg(INTEGRAL_STATE,56)}</div>
+        </div>
+        <div class="integral-core">
+          <div><div class="integral-score">{pct(INTEGRAL)}</div><div class="integral-level" style="color:{INTEGRAL_COLOR}">{escape(INTEGRAL_LEVEL)} · {escape(INTEGRAL_INTERVAL)} <span>escala interpretativa propuesta</span></div></div>
+          <div class="integral-formula">{formula_html(N_INTEGRAL,N_TOTAL,INTEGRAL,"Cálculo integral P1–P16")}</div>
+        </div>
+        <div class="human-box"><div class="headline">¿Cómo explicarlo en una exposición?</div>En términos sencillos, <b>aproximadamente {every100} de cada 100 estudiantes</b> alcanzan un promedio de 4 o más cuando se evalúan conjuntamente los 16 aspectos de la formación académica. El resultado no significa que el resto esté “totalmente insatisfecho”; significa que <b>no alcanzó el criterio integral exigente de promedio ≥4 en el conjunto P1–P16</b>. Por eso las cuatro dimensiones sirven para identificar dónde se concentran las principales brechas.</div>
+        <div class="integral-bottom"><div><b>IC 95% aprox.*</b><span>{integral_ci}</span></div><div><b>Promedio P1–P16</b><span>{INTEGRAL_MEAN:.2f}/5</span></div><div><b>Estructura</b><span>D1 · D2 · D3 · D4</span></div></div>
+      </div>
+      <div class="side-stack">
+        <div class="panel p17-card"><div class="p17-head"><div><div class="side-kicker">Contraste complementario</div><div class="p17-title">P17 · satisfacción general declarada</div></div>{traffic_svg(GLOBAL_STATE,29)}</div><div class="p17-score">{pct(GLOBAL)}</div><div class="p17-level" style="color:{GLOBAL_COLOR}">{escape(GLOBAL_LEVEL)} · {escape(GLOBAL_INTERVAL)}</div><div class="p17-copy"><b>{N_GLOBAL:,} de {N_TOTAL:,}</b> estudiantes respondieron 4 o 5. IC 95% aprox.: <b>{p17_ci}</b>. P17 es una sola pregunta global y se usa aquí <b>como contraste</b>, no como sustituto de la lectura integral P1–P16.</div></div>
+        <div class="panel pei-mini"><div class="side-kicker">Cómo interpretar la diferencia</div><div class="pei-mini-title">P17 es {pp(delta)} mayor que P1–P16</div><div class="pei-mini-note">Esto no es una contradicción. Una pregunta global recoge una valoración general, mientras que el criterio P1–P16 exige desempeño favorable sostenido en 16 aspectos. En esta base ambas medidas están fuertemente asociadas (<b>ρ de Spearman = {RHO_P17_P1P16:.3f}</b>), pero no son equivalentes.</div></div>
+      </div>
+    </div><div class="kpi-grid">{"".join(kpi_html)}</div><div class="stat-footnote">* IC 95% de Wilson. Se interpreta como inferencia poblacional estricta solo si el diseño de selección de estudiantes es probabilístico o razonablemente equivalente; de lo contrario, funciona como referencia de precisión de la proporción observada.</div>'''
 
 def dimension_cards_html() -> str:
     cards=[]
@@ -481,14 +606,14 @@ def dimension_cards_html() -> str:
     return '<div class="dim-grid">'+''.join(cards)+'</div>'
 
 def insights_html() -> str:
-    pri=PRIORITY_DIM; pitem=PRIORITY_ITEM; strong_dim=STRONG_DIM
-    spread=float(strong_dim["Satisfacción"]-pri["Satisfacción"])
+    pri=PRIORITY_DIM; pitem=PRIORITY_ITEM; strong_dim=STRONG_DIM; strong_item=STRONG_ITEM
+    delta_p17 = GLOBAL - INTEGRAL
     return f'''<div class="insight-grid">
-      <div class="panel insight" style="--accent:#2F66D8"><div class="insight-k">Resultado global observado</div><div class="insight-t">P17 · {pct(GLOBAL)}</div><div class="insight-x"><b>{N_GLOBAL:,} de {N_TOTAL:,}</b> estudiantes respondieron 4 o 5. IC 95% aproximado: <b>{pct(GLOBAL_CI_LOW)}–{pct(GLOBAL_CI_HIGH)}</b>*. Según la escala propuesta se ubica en <b>{escape(GLOBAL_LEVEL)}</b>; esa etiqueta no proviene de una prueba estadística.</div></div>
-      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Principal debilidad diagnóstica</div><div class="insight-t">{pri['Código']} · {pct(float(pri['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta la menor proporción de estudiantes satisfechos. Dentro de esa dimensión, <b>{pitem['Ítem']}</b> es el ítem menos favorable ({pct(float(pitem['Favorable']))}), orientando la revisión de infraestructura y recursos educativos.</div></div>
-      <div class="panel insight" style="--accent:{DIMENSIONS[str(strong_dim['Código'])]['accent']}"><div class="insight-k">Mayor desempeño dimensional</div><div class="insight-t">{strong_dim['Código']} · {pct(float(strong_dim['Satisfacción']))}</div><div class="insight-x">{escape(str(strong_dim['Dimensión']))} es la dimensión con mayor satisfacción. La distancia descriptiva frente a {pri['Código']} es de <b>{pp(spread)}</b>. Es una comparación descriptiva, no una prueba de diferencia.</div></div>
-      <div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Coherencia entre mediciones</div><div class="insight-t">ρ Spearman = {RHO_P17_P1P16:.3f}</div><div class="insight-x">P17 mantiene una asociación monotónica alta con el promedio P1–P16. Es evidencia exploratoria de coherencia convergente, pero <b>no demuestra validez</b> ni define por sí sola el numerador oficial del IND.01.</div></div>
-    </div><div class="interpret-banner"><b>Interpretación de conjunto:</b> el análisis estadístico describe lo observado en las 7,677 respuestas. La clasificación por semáforo usa los rangos <b>propuestos</b> en el instrumento; el valor referencial PEI de 60% es un criterio documental independiente. Ninguno de los dos debe presentarse como un umbral “descubierto” por los datos.</div>'''
+      <div class="panel insight" style="--accent:#2457B8"><div class="insight-k">Qué significa el resultado integral</div><div class="insight-t">{pct(INTEGRAL)} · {N_INTEGRAL:,} estudiantes</div><div class="insight-x">El criterio integral exige que el promedio personal de las 16 respuestas sea ≥4. Por ello, el {pct(INTEGRAL)} debe leerse como la proporción que alcanza un nivel favorable <b>de manera conjunta</b> en el proceso formativo, no como el promedio simple de porcentajes favorables de cada pregunta.</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Dónde está la principal dificultad</div><div class="insight-t">{pri['Código']} · {pct(float(pri['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> es la dimensión con menor satisfacción. Dentro de ella, <b>{pitem['Ítem']}</b> registra {pct(float(pitem['Favorable']))} de valoración favorable. Esto señala como prioridad revisar los aspectos vinculados a <b>infraestructura y recursos educativos</b>, junto con los demás componentes de D3.</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(strong_dim['Código'])]['accent']}"><div class="insight-k">Dónde aparece la mayor fortaleza</div><div class="insight-t">{strong_dim['Código']} · {pct(float(strong_dim['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(strong_dim['Dimensión']))}</b> presenta el mejor resultado dimensional. Además, <b>{strong_item['Ítem']}</b> es el ítem con mayor valoración favorable ({pct(float(strong_item['Favorable']))}). Conviene conservar estas fortalezas mientras se atienden las brechas de D3.</div></div>
+      <div class="panel insight" style="--accent:#6C7583"><div class="insight-k">Por qué P17 es más alto</div><div class="insight-t">P17 {pct(GLOBAL)} · diferencia {pp(delta_p17)}</div><div class="insight-x">La pregunta P17 recoge una impresión global y resulta más favorable que el criterio integral P1–P16. La asociación entre ambas es alta (<b>ρ={RHO_P17_P1P16:.3f}</b>), por lo que se mueven en la misma dirección, pero la diferencia muestra que <b>una percepción general positiva no implica que todos los componentes específicos alcancen el mismo nivel</b>.</div></div>
+    </div><div class="interpret-banner"><b>Mensaje para la toma de decisiones:</b> el tablero no busca reducir la satisfacción a un solo número. El {pct(INTEGRAL)} resume la lectura integral; D1–D4 muestran <b>en qué parte del proceso</b> se originan las brechas; y P17 funciona como una comprobación de la percepción global. Esta combinación permite explicar el resultado de forma más útil y defendible.</div>'''
 
 def pei_route_html() -> str:
     nodes=[f'''<div class="node diag" style="--accent:#D7A53B"><div class="node-y">2026</div><div class="node-v">Diseño · estandarización · validación</div><div class="node-c">La ficha PEI indica que no se generan todavía valores medibles oficiales del indicador.</div></div>''']
@@ -551,13 +676,13 @@ tab1, tab2, tab3 = st.tabs(["◉ Visión ejecutiva", "▦ Dimensiones e ítems",
 
 with tab1:
     section_header(
-        "Lectura principal",
-        "Separar PEI oficial y diagnóstico de encuesta 2026",
-        "Primero se presenta la estadística observada; después, por separado, la escala propuesta del instrumento y el contexto documental PEI.",
+        "Indicador principal",
+        "Satisfacción integral P1–P16",
+        "Resultado principal construido con las 16 preguntas de las cuatro dimensiones; P17 se presenta únicamente como contraste complementario.",
     )
     st.markdown(primary_cards_html(), unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    st.markdown(scale_html(GLOBAL), unsafe_allow_html=True)
+    st.markdown(scale_html(INTEGRAL), unsafe_allow_html=True)
 
     section_header(
         "Diagnóstico 4D",
@@ -574,9 +699,9 @@ with tab1:
     st.markdown(insights_html(), unsafe_allow_html=True)
 
     section_header(
-        "Contexto estratégico",
-        "Ruta PEI 2026–2030",
-        "2026 es fase de instrumento; 2027 inicia la medición efectiva con logro esperado de 60%.",
+        "Marco documental",
+        "Referencia de la ficha PEI",
+        "Esta sección contextualiza el indicador; no modifica ni determina estadísticamente los resultados observados de la encuesta.",
     )
     st.markdown(pei_route_html(), unsafe_allow_html=True)
 
@@ -615,19 +740,20 @@ with tab3:
     section_header("Instrumento propuesto", "Qué reglas de cálculo están explícitamente definidas")
     st.markdown(
         '''<div class="method-grid">
-          <div class="panel method"><div class="method-i">▦</div><div class="method-t">D1–D4</div><div class="method-x">Cada dimensión contiene 4 ítems. Un estudiante se clasifica como satisfecho en la dimensión si el <b>promedio de sus cuatro respuestas es ≥4</b>.</div></div>
-          <div class="panel method"><div class="method-i">◉</div><div class="method-t">P17 · satisfacción general</div><div class="method-x">P17: respuesta <b>4 o 5 = satisfecho</b>; 1, 2 o 3 = no satisfecho. El sustento lo describe como <b>indicador sintético de la percepción global</b>.</div></div>
-          <div class="panel method"><div class="method-i">🚦</div><div class="method-t">Escala propuesta, no clasificación estadística</div><div class="method-x"><b>0–59%</b> Insatisfactorio · <b>60–74%</b> Regular · <b>75–89%</b> Satisfactorio · <b>90–100%</b> Muy satisfactorio. Estos rangos provienen de la propuesta del instrumento, que además indica que pueden ajustarse; por ello el semáforo es una ayuda visual, no una prueba estadística.</div></div>
+          <div class="panel method"><div class="method-i">▦</div><div class="method-t">Cómo se obtiene el resultado integral P1–P16</div><div class="method-x">Cada dimensión contiene cuatro preguntas y el documento usa <b>promedio ≥4</b> para clasificar al estudiante como satisfecho en esa dimensión. Para obtener una lectura integral del conjunto P1–P16, este tablero aplica la misma lógica al promedio de las 16 preguntas. Así se obtiene un único estado por estudiante y luego se calcula <b>N/D × 100</b>. La adopción oficial de esta regla global debe formalizarse institucionalmente.</div></div>
+          <div class="panel method"><div class="method-i">◉</div><div class="method-t">P17 · contraste global</div><div class="method-x">P17: respuesta <b>4 o 5 = satisfecho</b>; 1, 2 o 3 = no satisfecho. Se muestra como percepción global directa y complementaria para contrastar la lectura integral P1–P16.</div></div>
+          <div class="panel method"><div class="method-i">🚦</div><div class="method-t">Escala propuesta, no clasificación estadística</div><div class="method-x"><b>0–59%</b> Insatisfactorio · <b>60–74%</b> Regular · <b>75–89%</b> Satisfactorio · <b>90–100%</b> Muy satisfactorio. Estos rangos provienen de la propuesta del instrumento y pueden ajustarse; el semáforo es solo una ayuda visual.</div></div>
         </div>''', unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    st.markdown('''<div class="method-alert"><b>Criterio estadístico usado en este tablero:</b> se reporta primero la <b>proporción observada</b>, el numerador/denominador y un <b>IC 95% aproximado de Wilson</b>. El IC solo permite inferencia poblacional estricta si el diseño de selección es probabilístico o razonablemente equivalente. Luego se muestran, por separado, la <b>escala interpretativa propuesta</b> y la <b>referencia documental PEI</b>. El tablero no publica un IND.01 oficial 2026.</div>''', unsafe_allow_html=True)
+    st.markdown('''<div class="method-alert"><b>Criterio estadístico usado en este tablero:</b> la lectura principal P1–P16 es una <b>estimación operativa integral</b> construida aplicando promedio individual ≥4; P17 se presenta como contraste global. Ambas proporciones se acompañan de IC 95% aproximados de Wilson. La ficha PEI y su valor referencial se mantienen separados. <b>La regla global P1–P16 debe validarse institucionalmente antes de utilizarse como cálculo oficial del IND.01.</b></div>''', unsafe_allow_html=True)
 
     section_header("Calidad de datos", "Controles que conviene revisar antes del informe oficial")
     st.markdown(quality_html(), unsafe_allow_html=True)
 
     section_header("Resultados diagnósticos 2026", "Resumen técnico de la base actual")
     summary = pd.DataFrame([
-        ["P17 · satisfacción general", pct(GLOBAL), f"{pct(GLOBAL_CI_LOW)}–{pct(GLOBAL_CI_HIGH)}", GLOBAL_LEVEL, f"{N_GLOBAL:,} / {N_TOTAL:,}", "P17 = 4 o 5"],
+        ["Integral P1–P16 · estimación operativa", pct(INTEGRAL), f"{pct(INTEGRAL_CI_LOW)}–{pct(INTEGRAL_CI_HIGH)}", INTEGRAL_LEVEL, f"{N_INTEGRAL:,} / {N_TOTAL:,}", "Promedio P1–P16 ≥4 (regla analítica)"],
+        ["P17 · satisfacción general directa", pct(GLOBAL), f"{pct(GLOBAL_CI_LOW)}–{pct(GLOBAL_CI_HIGH)}", GLOBAL_LEVEL, f"{N_GLOBAL:,} / {N_TOTAL:,}", "P17 = 4 o 5"],
         *[[f"{r['Código']} · {r['Dimensión']}", pct(float(r['Satisfacción'])), f"{pct(float(r['IC95 inferior']))}–{pct(float(r['IC95 superior']))}", str(r['Nivel']), f"{int(r['N satisfechos']):,} / {N_TOTAL:,}", "Promedio de 4 ítems ≥4"] for _,r in DIMS.sort_values('Código').iterrows()],
     ], columns=["Medida", "Resultado", "IC 95% aprox.*", "Escala propuesta", "N / D", "Regla"])
     st.dataframe(summary, use_container_width=True, hide_index=True)
