@@ -177,6 +177,29 @@ div[data-testid="stDataFrame"]{border:1px solid #E5EAF0;border-radius:15px;overf
 @media(max-width:700px){
   .block-container{padding:.35rem .55rem 2rem}.topbar{height:auto;min-height:54px;padding:9px 11px}.brand-img{height:38px;max-width:165px}.brand-title{font-size:.66rem}.brand-sub,.top-meta{display:none}.pagehead{padding:13px 2px 9px;align-items:flex-start}.basebox{display:none}.title{font-size:1.45rem}.chips{gap:5px}.chip{font-size:.49rem;padding:5px 7px}.section-note{display:none}.result-layout{grid-template-columns:55px 1fr;gap:10px}.result-icon{width:55px;height:55px;border-radius:14px;font-size:1.25rem}.result-layout>div:last-child{grid-column:1/-1}.result-score{text-align:left;font-size:2.35rem}.result-level{text-align:left}.signal-row{justify-content:flex-start}.formula-eq{justify-content:center}.kpi-grid{grid-template-columns:1fr 1fr}.dim-grid,.item-grid,.insight-grid,.method-grid{grid-template-columns:1fr}.dim-card{min-height:0}.scale4{grid-template-columns:1fr 1fr}.route{grid-template-columns:1fr 1fr}.route .diag{grid-column:1/-1}.likert-row{grid-template-columns:36px minmax(0,1fr)}.likert-pill{height:22px}.seg{font-size:.39rem}.stTabs [data-baseweb="tab"]{padding:0 10px;font-size:.67rem}
 }
+
+/* === CAPA METODOLÓGICA FINAL 2026 === */
+.pei-official{padding:18px;display:flex;flex-direction:column;min-height:100%;background:linear-gradient(155deg,#FFFFFF 0%,#F7FAFE 100%)}
+.pei-official-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.pei-official-k{font-size:.52rem;letter-spacing:.11em;text-transform:uppercase;color:#7D8DA1;font-weight:950}
+.pei-official-t{font-size:.94rem;color:#17334F;font-weight:950;line-height:1.22;margin-top:5px}
+.pei-official-status{margin-top:14px;padding:12px 13px;border-radius:14px;background:linear-gradient(135deg,#EEF4FF,#F8FBFF);border:1px solid #DCE7FA}
+.pei-official-status .big{font-size:1.22rem;font-weight:950;color:#2B5EC7;letter-spacing:-.03em}
+.pei-official-status .small{font-size:.58rem;color:#6E8095;line-height:1.45;margin-top:4px}
+.pei-official-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.pei-official-mini{padding:9px 10px;border-radius:11px;background:#fff;border:1px solid #E7EDF5}
+.pei-official-mini .k{font-size:.45rem;text-transform:uppercase;letter-spacing:.07em;color:#8795A6;font-weight:900}
+.pei-official-mini .v{font-size:.72rem;color:#203C58;font-weight:950;margin-top:2px}
+.pei-official-note{margin-top:auto;padding-top:11px;border-top:1px solid #E8EEF5;font-size:.57rem;color:#76889B;line-height:1.45}
+.ref-badge{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.19);font-size:.54rem;font-weight:850;color:#ECF4FF}
+.ref-badge b{color:#BFF3DC}
+.quality-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.quality-card{padding:14px 15px;position:relative;overflow:hidden}.quality-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
+.quality-k{font-size:.50rem;letter-spacing:.10em;text-transform:uppercase;color:#8392A4;font-weight:950}.quality-v{font-size:1.22rem;color:#173550;font-weight:950;letter-spacing:-.04em;margin-top:5px}.quality-x{font-size:.58rem;color:#6C7F94;line-height:1.46;margin-top:5px}
+.quality-warning{margin-top:10px;padding:12px 13px;border-radius:14px;background:linear-gradient(135deg,#FFF8E9,#FFFDF7);border:1px solid #F0E0B7;color:#705A24;font-size:.59rem;line-height:1.5}
+.interpret-banner{padding:13px 15px;border-radius:16px;background:linear-gradient(135deg,#EDF4FF,#F8FBFF);border:1px solid #DCE7F6;color:#31516F;font-size:.60rem;line-height:1.5;margin-top:10px}.interpret-banner b{color:#173C5C}
+@media(max-width:980px){.quality-grid{grid-template-columns:1fr 1fr}}@media(max-width:700px){.pei-official-grid,.quality-grid{grid-template-columns:1fr}.ref-badge{font-size:.50rem}}
+
 </style>
 """,
     unsafe_allow_html=True,
@@ -264,19 +287,13 @@ def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
     for c in ALL_ITEMS:
         df[c] = pd.to_numeric(df[c], errors="coerce")
 
-    # Reglas explícitas del documento del instrumento:
-    # D1-D4: satisfecho si el promedio de sus cuatro ítems >= 4.
+    # Reglas explícitas de la propuesta del instrumento.
     for code, meta in DIMENSIONS.items():
         df[f"{code}_Prom"] = df[meta["items"]].mean(axis=1)
         df[f"{code}_Sat"] = (df[f"{code}_Prom"] >= 4).astype(float)
 
-    # Satisfacción general: P17 = 4 o 5 => satisfecho.
+    # P17: 4 o 5 = satisfecho; 1, 2 o 3 = no satisfecho.
     df["P17_Sat"] = (df["P17"] >= 4).astype(float)
-
-    # Análisis complementario P1-P16: NO está definido como IND.01 global en los documentos.
-    # Se conserva solo para contraste analítico y se etiqueta como no oficial.
-    df["P1P16_Prom"] = df[ITEMS_16].mean(axis=1)
-    df["P1P16_Sat_Analitico"] = (df["P1P16_Prom"] >= 4).astype(float)
     return df
 
 
@@ -300,10 +317,55 @@ N_TOTAL = int(len(df))
 GLOBAL = float(df["P17_Sat"].mean())
 N_GLOBAL = int(df["P17_Sat"].sum())
 GLOBAL_MEAN = float(df["P17"].mean())
-INTEGRAL16 = float(df["P1P16_Sat_Analitico"].mean())
-N_INTEGRAL16 = int(df["P1P16_Sat_Analitico"].sum())
-INTEGRAL16_MEAN = float(df["P1P16_Prom"].mean())
-DELTA_GLOBAL_INTEGRAL = GLOBAL - INTEGRAL16
+REFERENCE_DELTA = GLOBAL - PEI_REFERENCE
+GAP_TO_SATISFACTORY = max(0.0, 0.75 - GLOBAL)
+
+MISSING_RESPONSES = int(df[ALL_ITEMS].isna().sum().sum())
+INVALID_RESPONSES = int((~df[ALL_ITEMS].isin([1, 2, 3, 4, 5]) & df[ALL_ITEMS].notna()).sum().sum())
+UNIFORM_MASK = df[ALL_ITEMS].nunique(axis=1, dropna=True) == 1
+UNIFORM_N = int(UNIFORM_MASK.sum())
+UNIFORM_PCT = UNIFORM_N / N_TOTAL if N_TOTAL else float("nan")
+
+def wilson_interval(k: int, n: int, z: float = 1.959963984540054) -> tuple[float, float]:
+    """IC de Wilson para una proporción binomial.
+
+    Solo debe interpretarse como inferencia poblacional estricta cuando el diseño
+    de selección sea probabilístico o razonablemente equivalente.
+    """
+    if n <= 0:
+        return (float("nan"), float("nan"))
+    p = k / n
+    den = 1 + (z**2) / n
+    center = (p + (z**2)/(2*n)) / den
+    half = z * math.sqrt((p*(1-p)/n) + (z**2)/(4*n*n)) / den
+    return (center-half, center+half)
+
+
+def spearman_corr(a: pd.Series, b: pd.Series) -> float:
+    x = pd.concat([pd.to_numeric(a, errors="coerce"), pd.to_numeric(b, errors="coerce")], axis=1).dropna()
+    if len(x) < 3:
+        return float("nan")
+    return float(x.iloc[:,0].rank(method="average").corr(x.iloc[:,1].rank(method="average")))
+
+
+def cronbach_alpha(cols: list[str]) -> float:
+    x = df[cols].dropna()
+    k = len(cols)
+    if k < 2 or len(x) < 2:
+        return float("nan")
+    item_var = x.var(axis=0, ddof=1).sum()
+    total_var = x.sum(axis=1).var(ddof=1)
+    if total_var == 0:
+        return float("nan")
+    return float((k / (k - 1)) * (1 - item_var / total_var))
+
+ALPHA_P1_P16 = cronbach_alpha(ITEMS_16)
+ALPHA_DIMS = {code: cronbach_alpha(meta["items"]) for code, meta in DIMENSIONS.items()}
+GLOBAL_CI_LOW, GLOBAL_CI_HIGH = wilson_interval(N_GLOBAL, N_TOTAL)
+P1P16_MEAN = df[ITEMS_16].mean(axis=1)
+RHO_P17_P1P16 = spearman_corr(df["P17"], P1P16_MEAN)
+DATE_START = pd.to_datetime(df["Fecha"], errors="coerce").min() if "Fecha" in df.columns else pd.NaT
+DATE_END = pd.to_datetime(df["Fecha"], errors="coerce").max() if "Fecha" in df.columns else pd.NaT
 
 
 def dimension_summary() -> pd.DataFrame:
@@ -313,12 +375,15 @@ def dimension_summary() -> pd.DataFrame:
         avg = float(df[f"{code}_Prom"].mean())
         n_sat = int(df[f"{code}_Sat"].sum())
         level, interval, color, state = institutional_level(sat)
+        ci_low, ci_high = wilson_interval(n_sat, N_TOTAL)
         rows.append({
             "Código": code,
             "Dimensión": meta["name"],
             "Satisfacción": sat,
             "Promedio": avg,
             "N satisfechos": n_sat,
+            "IC95 inferior": ci_low,
+            "IC95 superior": ci_high,
             "Nivel": level,
             "Intervalo": interval,
             "Color": color,
@@ -359,84 +424,71 @@ GLOBAL_LEVEL, GLOBAL_INTERVAL, GLOBAL_COLOR, GLOBAL_STATE = institutional_level(
 # HTML COMPONENTS
 # ==============================================================
 def top_header() -> None:
+    period = "11–31 ago 2026" if pd.notna(DATE_START) and pd.notna(DATE_END) else "2026"
     st.markdown(
         f'''<div class="topbar">
-          <div class="brand"><div class="brand-img"><img src="https://i.ibb.co/V0hydyyH/Whats-App-Image-2026-09-02-at-1-58-16-PM.jpg" alt="Identidad institucional UNT"></div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · OEI.01</div></div></div>
-          <div class="top-meta"><div class="meta-box">Periodo analizado<b>2026</b></div><div class="meta-box">Estado PEI 2026<b>Diagnóstico / validación</b></div><div class="meta-box">Valor referencial<b>≥ 60%</b></div></div>
+          <div class="brand"><div class="brand-img"><img src="https://i.ibb.co/V0hydyyH/Whats-App-Image-2026-09-02-at-1-58-16-PM.jpg" alt="Identidad institucional UNT"></div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · OEI.01 · IND.01</div></div></div>
+          <div class="top-meta"><div class="meta-box">Periodo de encuesta<b>{period}</b></div><div class="meta-box">Base analizada<b>{N_TOTAL:,} estudiantes</b></div><div class="meta-box">PEI 2026<b>Instrumento en validación</b></div></div>
         </div>
-        <div class="pagehead"><div><div class="kicker">Centro de control institucional</div><div class="title">Satisfacción con el proceso de formación académica</div><div class="sub">Lectura diagnóstica 2026 de la satisfacción general, análisis de las cuatro dimensiones y detalle de P1–P16. La ficha PEI señala que la medición oficial del indicador inicia a partir de 2027.</div><div class="chips"><span class="chip">IND.01 · OEI.01</span><span class="chip">👥 {N_TOTAL:,} respuestas 2026</span><span class="chip warn">⚠ 2026 no es año de medición oficial PEI</span><span class="chip">Referencia PEI: ≥60%</span></div></div><div class="basebox">Base consolidada<b>{N_TOTAL:,} estudiantes</b></div></div>''',
+        <div class="pagehead"><div><div class="kicker">Centro de control institucional</div><div class="title">Satisfacción con el proceso de formación académica</div><div class="sub">Tablero diagnóstico de la encuesta 2026. Separa tres niveles de lectura: <b>ficha PEI oficial</b>, <b>resultado diagnóstico del instrumento propuesto</b> y <b>análisis de las cuatro dimensiones</b>. No presenta un valor oficial del IND.01 para 2026.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} respuestas analizadas</span><span class="chip warn">⚠ IND.01 PEI 2026: sin valor oficial</span><span class="chip">P17: resultado diagnóstico</span><span class="chip">D1–D4: diagnóstico dimensional</span></div></div><div class="basebox">Base analizada<b>{N_TOTAL:,} estudiantes</b></div></div>''',
         unsafe_allow_html=True,
     )
 
 
 def formula_html(n: int, d: int, result: float) -> str:
-    return f'''<div class="formula"><div class="formula-k">Fórmula del resultado diagnóstico 2026</div><div class="formula-eq"><span>Porcentaje =</span><span class="frac"><span>N</span><span class="bar"></span><span>D</span></span><span>× 100 =</span><span class="frac"><span>{n:,}</span><span class="bar"></span><span>{d:,}</span></span><span>× 100 =</span><span class="formula-result">{pct(result)}</span></div></div>'''
+    return f'''<div class="formula"><div class="formula-k">Aplicación diagnóstica de la fórmula al ítem global P17</div><div class="formula-eq"><span>Porcentaje =</span><span class="frac"><span>N</span><span class="bar"></span><span>D</span></span><span>× 100 =</span><span class="frac"><span>{n:,}</span><span class="bar"></span><span>{d:,}</span></span><span>× 100 =</span><span class="formula-result">{pct(result)}</span></div></div>'''
 
 
 def scale_html(value: float) -> str:
-    level, interval, _, _ = institutional_level(value)
-    levels = [
-        ("Insatisfactorio", "0–59%", "#E25B68"),
-        ("Regular", "60–74%", "#F2A62C"),
-        ("Satisfactorio", "75–89%", "#16A878"),
-        ("Muy satisfactorio", "90–100%", "#20AABD"),
-    ]
+    level, interval, color_now, _ = institutional_level(value)
+    levels = [("Insatisfactorio", "0–59%", "#E25B68"), ("Regular", "60–74%", "#F2A62C"), ("Satisfactorio", "75–89%", "#16A878"), ("Muy satisfactorio", "90–100%", "#20AABD")]
     cards = []
     for name, rng, color in levels:
         active = " active" if name == level else ""
-        cards.append(f'''<div class="scale-step{active}" style="--lvl:{color}"><div class="scale-dot" style="background:{color}"></div><div class="scale-name">{name}</div><div class="scale-range">{rng}</div></div>''')
-    return f'''<div class="panel scale-wrap"><div class="scale-title">Escala de interpretación propuesta del instrumento · Resultado actual: <span style="color:{GLOBAL_COLOR}">{escape(level)} ({escape(interval)})</span></div><div class="scale4">{''.join(cards)}</div><div class="scale-note"><b>Importante:</b> el propio documento señala que estos rangos pueden ajustarse según lineamientos de la UNT o SUNEDU; por eso el dashboard los presenta como escala propuesta, no como norma institucional definitiva.</div></div>'''
+        cards.append(f'<div class="scale-step{active}" style="--lvl:{color}"><div class="scale-dot" style="background:{color}"></div><div class="scale-name">{name}</div><div class="scale-range">{rng}</div></div>')
+    return f'''<div class="panel scale-wrap"><div class="scale-title">Escala interpretativa PROPUESTA del instrumento · Resultado actual: <span style="color:{color_now}">{escape(level)} ({escape(interval)})</span></div><div class="scale4">{"".join(cards)}</div><div class="scale-note"><b>No confundir con el PEI:</b> la ficha técnica oficial fija un <b>valor referencial ≥60%</b>, pero no establece estas cuatro categorías. Los rangos provienen de la propuesta del instrumento y pueden ajustarse según lineamientos institucionales.</div></div>'''
 
 
 def primary_cards_html() -> str:
-    ref_delta = GLOBAL - PEI_REFERENCE
-    ref_text = f"{pp(abs(ref_delta))} {'sobre' if ref_delta >= 0 else 'por debajo de'} la referencia de 60%"
-    analytical_level, _, analytical_color, analytical_state = institutional_level(INTEGRAL16)
+    ci_txt = f"{pct(GLOBAL_CI_LOW)} – {pct(GLOBAL_CI_HIGH)}"
     kpis = [
-        ("Estudiantes encuestados", f"{N_TOTAL:,}", "Denominador D", "👥", "#3568D4", "#EAF1FF"),
-        ("Satisfechos P17", f"{N_GLOBAL:,}", "Numerador N · respuesta 4 o 5", "✓", "#16A878", "#E9F8F1"),
-        ("Promedio P17", f"{GLOBAL_MEAN:.2f} / 5", "Media de satisfacción general", "◉", "#7C5CE7", "#F1ECFF"),
-        ("Referencia PEI", "≥ 60%", "Valor referencial de satisfacción", "◎", "#2F66D8", "#EAF1FF"),
-        ("P1–P16 analítico", pct(INTEGRAL16), "Complementario, no definido como IND.01", "∑", "#B9794E", "#FFF1E8"),
-        ("Promedio P1–P16", f"{INTEGRAL16_MEAN:.2f} / 5", "Perfil conjunto de 16 ítems", "▦", "#348675", "#E9F7F3"),
+        ("Estudiantes analizados", f"{N_TOTAL:,}", "Denominador observado", "👥", "#3568D4", "#EAF1FF"),
+        ("Satisfechos P17", f"{N_GLOBAL:,}", "Respuesta 4 o 5", "✓", "#16A878", "#E9F8F1"),
+        ("Satisfacción observada", pct(GLOBAL), "Proporción observada", "◉", "#2F66D8", "#EAF1FF"),
+        ("IC 95% aprox.*", ci_txt, "Wilson binomial", "↔", "#18A9C0", "#EAF8FA"),
+        ("Promedio P17", f"{GLOBAL_MEAN:.2f} / 5", "Media descriptiva", "∑", "#7C5CE7", "#F1ECFF"),
+        ("Nivel propuesto", GLOBAL_LEVEL, GLOBAL_INTERVAL, "🚦", GLOBAL_COLOR, "#FFF6E8"),
     ]
     kpi_html=[]
     for i,(label,val,foot,icon,accent,soft) in enumerate(kpis):
-        kpi_html.append(f'''<div class="kpi" style="--accent:{accent};--soft:{soft}"><div class="kpi-head"><div class="kpi-label">{escape(label)}</div><div class="kpi-icon">{icon}</div></div><div class="kpi-v">{escape(val)}</div><div class="kpi-f">{escape(foot)}</div><div class="spark">{spark_svg(accent,i)}</div></div>''')
-
+        kpi_html.append(f'<div class="kpi" style="--accent:{accent};--soft:{soft}"><div class="kpi-head"><div class="kpi-label">{escape(label)}</div><div class="kpi-icon">{icon}</div></div><div class="kpi-v">{escape(val)}</div><div class="kpi-f">{escape(foot)}</div><div class="spark">{spark_svg(accent,i)}</div></div>')
     return f'''<div class="hero-grid">
-      <div class="result-hero">
-        <div class="result-layout">
-          <div class="result-icon">◉</div>
-          <div><div class="result-eyebrow">Resultado diagnóstico 2026 · satisfacción general</div><div class="result-title">P17 · percepción global del proceso de formación académica</div><div class="result-text">El documento del instrumento define P17 como satisfacción general y clasifica como satisfecho al estudiante que responde 4 o 5. El mismo sustento describe esta satisfacción general como el indicador sintético de la percepción global.</div>{formula_html(N_GLOBAL,N_TOTAL,GLOBAL)}<div class="diag-pill">⚠ Lectura diagnóstica 2026 · no constituye medición oficial PEI del año</div></div>
-          <div><div class="result-score">{pct(GLOBAL)}</div><div class="result-level" style="color:#fff">{escape(GLOBAL_LEVEL)} · {escape(GLOBAL_INTERVAL)}</div><div class="signal-row"><div class="signal-copy">Escala propuesta<br><span style="color:#FFE6A9">{escape(ref_text)}</span></div>{traffic_svg(GLOBAL_STATE,48)}</div></div>
-        </div>
-      </div>
-      <div class="panel secondary"><div class="secondary-top"><div><div class="secondary-k">Análisis complementario</div><div class="secondary-t">Perfil integral P1–P16 con promedio ≥4</div></div>{traffic_svg(analytical_state,38)}</div><div class="secondary-v">{pct(INTEGRAL16)}</div><div class="secondary-x"><b>{N_INTEGRAL16:,}</b> estudiantes alcanzan promedio P1–P16 ≥4. Este criterio es útil para contraste analítico, pero <b>los documentos compartidos no lo definen expresamente como la fórmula global oficial del IND.01</b>.</div><div class="secondary-note">Diferencia frente a P17: <b>{pp(abs(DELTA_GLOBAL_INTEGRAL))}</b>. No se interpretan como medidas idénticas: P17 es percepción global directa y P1–P16 resume 16 aspectos específicos.</div></div>
-    </div><div class="kpi-grid">{''.join(kpi_html)}</div>'''
-
+      <div class="result-hero"><div class="result-layout">
+        <div class="result-icon">◉</div>
+        <div><div class="result-eyebrow">Resultado estadístico observado · encuesta 2026</div><div class="result-title">P17 · satisfacción general con la formación académica</div><div class="result-text">El instrumento define P17 como satisfacción general y clasifica como satisfecho a quien responde 4 o 5. Por ello, el dato principal que puede afirmarse directamente con esta base es la <b>proporción observada de estudiantes satisfechos en P17</b>. No se rotula como IND.01 oficial 2026.</div>{formula_html(N_GLOBAL,N_TOTAL,GLOBAL)}<div class="ref-badge">Precisión estadística: <b>IC 95% aprox. {ci_txt}</b>*</div><div class="diag-pill">* El intervalo supone un esquema equivalente a muestreo aleatorio simple. Si la encuesta fue censal entre respondentes o no probabilística, debe interpretarse como referencia de precisión y no como inferencia estricta a toda la población.</div></div>
+        <div><div class="result-score">{pct(GLOBAL)}</div><div class="result-level" style="color:#fff">Nivel propuesto: {escape(GLOBAL_LEVEL)} · {escape(GLOBAL_INTERVAL)}</div><div class="signal-row"><div class="signal-copy">Semáforo visual<br><span style="color:#FFE6A9">escala propuesta, no prueba estadística</span></div>{traffic_svg(GLOBAL_STATE,48)}</div></div>
+      </div></div>
+      <div class="panel pei-official"><div class="pei-official-head"><div><div class="pei-official-k">Contexto documental PEI</div><div class="pei-official-t">IND.01 · Porcentaje de estudiantes de pregrado satisfechos con su proceso de formación académica</div></div><div style="font-size:1.35rem">▦</div></div><div class="pei-official-status"><div class="big">2026 · SIN VALOR OFICIAL PROGRAMADO</div><div class="small">La ficha técnica indica que durante 2026 se diseña, estandariza y valida el instrumento; la medición efectiva se inicia en 2027.</div></div><div class="pei-official-grid"><div class="pei-official-mini"><div class="k">Fórmula documental</div><div class="v">(N / D) × 100</div></div><div class="pei-official-mini"><div class="k">Valor referencial documental</div><div class="v">≥ 60%</div></div><div class="pei-official-mini"><div class="k">Inicio de medición</div><div class="v">2027</div></div><div class="pei-official-mini"><div class="k">Sentido esperado</div><div class="v">Ascendente</div></div></div><div class="pei-official-note"><b>Clave metodológica:</b> el 60% es un criterio del documento PEI. <b>No se deriva estadísticamente</b> de estas 7,677 respuestas y no debe usarse para justificar que un resultado sea “Regular”. La clasificación Regular proviene, por separado, de la escala propuesta del instrumento.</div></div>
+    </div><div class="kpi-grid">{"".join(kpi_html)}</div>'''
 
 def dimension_cards_html() -> str:
     cards=[]
     for _,r in DIMS.sort_values("Código").iterrows():
         code=r["Código"]; meta=DIMENSIONS[code]; sat=float(r["Satisfacción"]); avg=float(r["Promedio"])
         level,interval,color,state=institutional_level(sat)
-        gap75=max(0,.75-sat)
-        gap_text="Ya está en nivel Satisfactorio" if gap75<=0 else f"A {pp(gap75)} del 75%"
-        cards.append(f'''<div class="panel dim-card" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="dim-head"><div><div class="dim-code">{meta['icon']} {code}</div><div class="dim-name">{escape(meta['name'])}</div></div>{traffic_svg(state,30)}</div><div class="dim-body"><div class="donut" style="--p:{sat*100:.2f};--accent:{meta['accent']}"><b>{pct(sat)}</b></div><div><div class="dim-level" style="color:{color}">{escape(level)}</div><div class="dim-meta"><b>{escape(interval)}</b><br>{int(r['N satisfechos']):,} estudiantes satisfechos<br>Promedio: <b>{avg:.2f}/5</b><br>{escape(gap_text)} <span style="color:#8996A5">(escala propuesta)</span></div></div></div><div class="dim-meaning"><b>Qué evalúa:</b> {escape(meta['meaning'])}</div><div class="dim-foot"><span>Criterio: promedio de 4 ítems ≥4</span><b>{', '.join(meta['items'])}</b></div></div>''')
+        ci_low=float(r["IC95 inferior"]); ci_high=float(r["IC95 superior"])
+        cards.append(f'''<div class="panel dim-card" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="dim-head"><div><div class="dim-code">{meta['icon']} {code}</div><div class="dim-name">{escape(meta['name'])}</div></div>{traffic_svg(state,30)}</div><div class="dim-body"><div class="donut" style="--p:{sat*100:.2f};--accent:{meta['accent']}"><b>{pct(sat)}</b></div><div><div class="dim-level" style="color:{color}">{escape(level)}</div><div class="dim-meta"><b>{escape(interval)}</b> · escala propuesta<br>{int(r['N satisfechos']):,} de {N_TOTAL:,} estudiantes<br>IC 95% aprox.*: <b>{pct(ci_low)}–{pct(ci_high)}</b><br>Promedio: <b>{avg:.2f}/5</b></div></div></div><div class="dim-meaning"><b>Qué evalúa:</b> {escape(meta['meaning'])}</div><div class="dim-foot"><span>Regla documental: promedio de 4 ítems ≥4</span><b>{', '.join(meta['items'])}</b></div></div>''')
     return '<div class="dim-grid">'+''.join(cards)+'</div>'
 
-
 def insights_html() -> str:
-    pri=PRIORITY_DIM; strong=STRONG_DIM; pitem=PRIORITY_ITEM; sitem=STRONG_ITEM
-    none_sat = int((DIMS["Satisfacción"] >= .75).sum())
+    pri=PRIORITY_DIM; pitem=PRIORITY_ITEM; strong_dim=STRONG_DIM
+    spread=float(strong_dim["Satisfacción"]-pri["Satisfacción"])
     return f'''<div class="insight-grid">
-      <div class="panel insight" style="--accent:#F2A62C"><div class="insight-k">Lectura global 2026</div><div class="insight-t">P17 · {pct(GLOBAL)} · {escape(GLOBAL_LEVEL)}</div><div class="insight-x">La satisfacción global directa se ubica en <b>Regular</b> según la escala propuesta. Supera el valor referencial PEI de 60% en <b>{pp(max(0,GLOBAL-PEI_REFERENCE))}</b>, pero la ficha PEI establece que 2026 aún corresponde al diseño, estandarización y validación del instrumento.</div></div>
-      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Prioridad dimensional</div><div class="insight-t">{pri['Código']} · {pct(float(pri['Satisfacción']))} · {escape(str(pri['Nivel']))}</div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta el menor resultado. La evidencia concentra la atención en servicios académicos, información, infraestructura y aseguramiento de la calidad.</div></div>
-      <div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Ítem crítico</div><div class="insight-t">{pitem['Ítem']} · {pct(float(pitem['Favorable']))} favorable</div><div class="insight-x">{escape(str(pitem['Pregunta']))} Registra <b>{pct(float(pitem['Desfavorable']))}</b> desfavorable y promedio <b>{float(pitem['Promedio']):.2f}/5</b>.</div></div>
-      <div class="panel insight" style="--accent:#16A878"><div class="insight-k">Fortaleza relativa</div><div class="insight-t">{sitem['Ítem']} · {pct(float(sitem['Favorable']))} favorable</div><div class="insight-x">{escape(str(sitem['Pregunta']))} Es el aspecto con mayor valoración favorable. Aun así, <b>{none_sat} de 4</b> dimensiones alcanzan 75%, por lo que ninguna se ubica todavía en nivel Satisfactorio bajo la escala propuesta.</div></div>
-    </div>'''
-
+      <div class="panel insight" style="--accent:#2F66D8"><div class="insight-k">Resultado global observado</div><div class="insight-t">P17 · {pct(GLOBAL)}</div><div class="insight-x"><b>{N_GLOBAL:,} de {N_TOTAL:,}</b> estudiantes respondieron 4 o 5. IC 95% aproximado: <b>{pct(GLOBAL_CI_LOW)}–{pct(GLOBAL_CI_HIGH)}</b>*. Según la escala propuesta se ubica en <b>{escape(GLOBAL_LEVEL)}</b>; esa etiqueta no proviene de una prueba estadística.</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Principal debilidad diagnóstica</div><div class="insight-t">{pri['Código']} · {pct(float(pri['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta la menor proporción de estudiantes satisfechos. Dentro de esa dimensión, <b>{pitem['Ítem']}</b> es el ítem menos favorable ({pct(float(pitem['Favorable']))}), orientando la revisión de infraestructura y recursos educativos.</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(strong_dim['Código'])]['accent']}"><div class="insight-k">Mayor desempeño dimensional</div><div class="insight-t">{strong_dim['Código']} · {pct(float(strong_dim['Satisfacción']))}</div><div class="insight-x">{escape(str(strong_dim['Dimensión']))} es la dimensión con mayor satisfacción. La distancia descriptiva frente a {pri['Código']} es de <b>{pp(spread)}</b>. Es una comparación descriptiva, no una prueba de diferencia.</div></div>
+      <div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Coherencia entre mediciones</div><div class="insight-t">ρ Spearman = {RHO_P17_P1P16:.3f}</div><div class="insight-x">P17 mantiene una asociación monotónica alta con el promedio P1–P16. Es evidencia exploratoria de coherencia convergente, pero <b>no demuestra validez</b> ni define por sí sola el numerador oficial del IND.01.</div></div>
+    </div><div class="interpret-banner"><b>Interpretación de conjunto:</b> el análisis estadístico describe lo observado en las 7,677 respuestas. La clasificación por semáforo usa los rangos <b>propuestos</b> en el instrumento; el valor referencial PEI de 60% es un criterio documental independiente. Ninguno de los dos debe presentarse como un umbral “descubierto” por los datos.</div>'''
 
 def pei_route_html() -> str:
     nodes=[f'''<div class="node diag" style="--accent:#D7A53B"><div class="node-y">2026</div><div class="node-v">Diseño · estandarización · validación</div><div class="node-c">La ficha PEI indica que no se generan todavía valores medibles oficiales del indicador.</div></div>''']
@@ -470,10 +522,24 @@ def selected_insights_html(selected: str) -> str:
     d=ITEMS_SUM.copy() if selected=="Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"]==selected].copy()
     weak=d.sort_values("Favorable").iloc[0]; strong=d.sort_values("Favorable",ascending=False).iloc[0]
     if selected=="Todas":
-        context="El análisis cubre los 16 ítems del instrumento."
+        context="El análisis cubre P1–P16 y permite localizar fortalezas y cuellos de botella del instrumento."
+        action="Priorizar los ítems con menor valoración favorable y leerlos dentro de su dimensión; no convertir porcentajes por ítem en el indicador PEI."
     else:
-        context=f"El análisis se concentra en {selected}: {DIMENSIONS[selected]['name']}."
-    return f'''<div class="insight-grid" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Bloque analizado</div><div class="insight-t">{escape(selected)}</div><div class="insight-x">{escape(context)}</div></div><div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Menor valoración favorable</div><div class="insight-t">{weak['Ítem']} · {pct(float(weak['Favorable']))}</div><div class="insight-x">{escape(str(weak['Pregunta']))}</div></div><div class="panel insight" style="--accent:#16A878"><div class="insight-k">Mayor valoración favorable</div><div class="insight-t">{strong['Ítem']} · {pct(float(strong['Favorable']))}</div><div class="insight-x">{escape(str(strong['Pregunta']))}</div></div></div>'''
+        context=f"{selected} evalúa {DIMENSIONS[selected]['meaning'].lower()}"
+        action=f"Usar estos cuatro ítems para explicar el resultado de {selected}; la clasificación dimensional se obtiene con el promedio de los cuatro ítems por estudiante."
+    return f'''<div class="insight-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))"><div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Bloque analizado</div><div class="insight-t">{escape(selected)}</div><div class="insight-x">{escape(context)}</div></div><div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Aspecto prioritario</div><div class="insight-t">{weak['Ítem']} · {pct(float(weak['Favorable']))} favorable</div><div class="insight-x">{escape(str(weak['Pregunta']))}<br><b>{pct(float(weak['Desfavorable']))}</b> desfavorable · promedio <b>{float(weak['Promedio']):.2f}/5</b>.</div></div><div class="panel insight" style="--accent:#16A878"><div class="insight-k">Fortaleza del bloque</div><div class="insight-t">{strong['Ítem']} · {pct(float(strong['Favorable']))} favorable</div><div class="insight-x">{escape(str(strong['Pregunta']))}<br>Promedio <b>{float(strong['Promedio']):.2f}/5</b>.</div></div><div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Cómo usarlo</div><div class="insight-t">Lectura para decisión</div><div class="insight-x">{escape(action)}</div></div></div>'''
+
+
+def quality_html() -> str:
+    completeness = 1 - (MISSING_RESPONSES / (N_TOTAL * len(ALL_ITEMS))) if N_TOTAL else float("nan")
+    valid_pct = 1 - (INVALID_RESPONSES / (N_TOTAL * len(ALL_ITEMS))) if N_TOTAL else float("nan")
+    alpha_dims = " · ".join([f"{k} {v:.3f}" for k,v in ALPHA_DIMS.items()])
+    return f'''<div class="quality-grid">
+      <div class="panel quality-card" style="--accent:#16A878"><div class="quality-k">Completitud P1–P17</div><div class="quality-v">{pct(completeness)}</div><div class="quality-x">{MISSING_RESPONSES:,} valores faltantes en los 17 ítems.</div></div>
+      <div class="panel quality-card" style="--accent:#2F66D8"><div class="quality-k">Rango de respuestas</div><div class="quality-v">{pct(valid_pct)}</div><div class="quality-x">{INVALID_RESPONSES:,} respuestas fuera de la escala 1–5.</div></div>
+      <div class="panel quality-card" style="--accent:#7C5CE7"><div class="quality-k">Consistencia interna P1–P16</div><div class="quality-v">α = {ALPHA_P1_P16:.3f}</div><div class="quality-x">Alfas dimensionales: {alpha_dims}. Valores altos indican consistencia interna, no validez del instrumento.</div></div>
+      <div class="panel quality-card" style="--accent:#F2A62C"><div class="quality-k">Patrones uniformes P1–P17</div><div class="quality-v">{pct(UNIFORM_PCT)}</div><div class="quality-x">{UNIFORM_N:,} estudiantes marcaron exactamente la misma alternativa en los 17 ítems.</div></div>
+    </div><div class="quality-warning"><b>Advertencia estadística:</b> el alfa muy alto puede reflejar buena consistencia, pero también redundancia entre ítems o patrones de respuesta poco diferenciados. El {pct(UNIFORM_PCT)} de respuestas uniformes merece auditoría, no eliminación automática. La validez de contenido mediante <b>V de Aiken</b> requiere jueces expertos; la representatividad poblacional requiere conocer el diseño muestral, cobertura y no respuesta.</div>'''
 
 
 # ==============================================================
@@ -481,13 +547,13 @@ def selected_insights_html(selected: str) -> str:
 # ==============================================================
 top_header()
 
-tab1, tab2, tab3 = st.tabs(["◉ Visión ejecutiva", "▦ Dimensiones e ítems", "ⓘ Método y PEI"])
+tab1, tab2, tab3 = st.tabs(["◉ Visión ejecutiva", "▦ Dimensiones e ítems", "ⓘ Método, PEI y calidad"])
 
 with tab1:
     section_header(
-        "Resultado principal",
-        "Diagnóstico 2026: satisfacción general y contraste integral",
-        "P17 se usa como resultado global del instrumento; P1–P16 se conserva como análisis complementario no oficial.",
+        "Lectura principal",
+        "Separar PEI oficial y diagnóstico de encuesta 2026",
+        "Primero se presenta la estadística observada; después, por separado, la escala propuesta del instrumento y el contexto documental PEI.",
     )
     st.markdown(primary_cards_html(), unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
@@ -496,54 +562,38 @@ with tab1:
     section_header(
         "Diagnóstico 4D",
         "Satisfacción en las cuatro dimensiones",
-        "Cada dimensión clasifica al estudiante como satisfecho si el promedio de sus cuatro ítems es ≥4. No se aplica la meta PEI de 60% a cada dimensión.",
+        "Cada dimensión se estima con la regla documental promedio ≥4; el semáforo solo traduce la escala propuesta y no constituye una prueba estadística.",
     )
     st.markdown(dimension_cards_html(), unsafe_allow_html=True)
 
     section_header(
         "Interpretación ejecutiva",
-        "Hallazgos que sí están sustentados por el instrumento y la ficha PEI",
-        "Se diferencia diagnóstico 2026, escala propuesta del instrumento y programación oficial del PEI.",
+        "Qué dicen los resultados y qué decisiones sugieren",
+        "Lectura descriptiva con precisión estadística aproximada, confiabilidad y asociación exploratoria.",
     )
     st.markdown(insights_html(), unsafe_allow_html=True)
 
     section_header(
         "Contexto estratégico",
         "Ruta PEI 2026–2030",
-        "2026 corresponde a preparación del instrumento; la medición efectiva y los logros esperados empiezan en 2027.",
+        "2026 es fase de instrumento; 2027 inicia la medición efectiva con logro esperado de 60%.",
     )
     st.markdown(pei_route_html(), unsafe_allow_html=True)
 
 with tab2:
-    section_header(
-        "Explorador",
-        "Dimensiones e ítems",
-        "Visualizaciones estáticas y responsivas: no hay zoom, arrastre ni ejes móviles.",
-    )
+    section_header("Explorador", "Dimensiones e ítems", "Visualizaciones estáticas y responsivas: no hay zoom, arrastre ni ejes móviles.")
     selected = st.selectbox(
         "Dimensión a analizar",
         ["Todas", "D1", "D2", "D3", "D4"],
         format_func=lambda x: "Todas las dimensiones · P1–P16" if x == "Todas" else f"{x} · {DIMENSIONS[x]['name']}",
         label_visibility="collapsed",
     )
-
-    section_header("Lectura del bloque", "Fortaleza y prioridad del conjunto seleccionado")
+    section_header("Lectura del bloque", "Qué destaca y qué requiere atención")
     st.markdown(selected_insights_html(selected), unsafe_allow_html=True)
-
-    section_header(
-        "Valoración favorable",
-        "Panel de aspectos del instrumento",
-        "Los ítems se muestran descriptivamente; no se les asigna un nivel institucional individual.",
-    )
+    section_header("Valoración favorable", "Panel de aspectos del instrumento", "4–5 = favorable. Los ítems explican las dimensiones; no se reportan como indicadores PEI individuales.")
     st.markdown(item_cards_html(selected), unsafe_allow_html=True)
-
-    section_header(
-        "Distribución de respuesta",
-        "Desfavorable · neutral · favorable",
-        "1–2 = desfavorable · 3 = neutral · 4–5 = favorable.",
-    )
+    section_header("Distribución de respuesta", "Desfavorable · neutral · favorable", "1–2 = desfavorable · 3 = neutral · 4–5 = favorable.")
     st.markdown(likert_html(selected), unsafe_allow_html=True)
-
     with st.expander("Ver detalle técnico de los ítems"):
         dshow = ITEMS_SUM.copy() if selected == "Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
         dshow = dshow.sort_values(["Dimensión", "Número"])
@@ -554,39 +604,30 @@ with tab2:
         st.dataframe(table, use_container_width=True, hide_index=True, height=min(600, 45 + 36*len(table)))
 
 with tab3:
-    section_header("PEI", "Qué dice la ficha técnica y cómo debe usarse en 2026")
+    section_header("PEI oficial", "Qué establece la ficha técnica IND.01")
     st.markdown(
         '''<div class="method-grid">
-          <div class="panel method"><div class="method-i">◎</div><div class="method-t">Fórmula PEI</div><div class="method-x">El indicador se expresa como <b>(N/D) × 100</b>, donde N es el número de estudiantes satisfechos y D el total de estudiantes encuestados.</div></div>
-          <div class="panel method"><div class="method-i">⚠</div><div class="method-t">2026 no es medición oficial</div><div class="method-x">La ficha señala que durante 2026 se diseña, estandariza y valida el instrumento, sin generar aún valores medibles oficiales. La medición efectiva inicia a partir de 2027 y la frecuencia es anual.</div></div>
-          <div class="panel method"><div class="method-i">🎯</div><div class="method-t">Referencia y logros esperados</div><div class="method-x">Valor referencial de satisfacción: <b>≥60%</b>. Logros esperados: <b>2027 60%</b>, <b>2028 65%</b>, <b>2029 70%</b> y <b>2030 75%</b>.</div></div>
-        </div>''',
-        unsafe_allow_html=True,
-    )
+          <div class="panel method"><div class="method-i">◎</div><div class="method-t">Indicador y fórmula</div><div class="method-x"><b>IND.01:</b> porcentaje de estudiantes de pregrado satisfechos con su proceso de formación académica. Fórmula oficial: <b>(N/D) × 100</b>.</div></div>
+          <div class="panel method"><div class="method-i">⚠</div><div class="method-t">Situación 2026</div><div class="method-x">La ficha indica diseño, estandarización y validación del instrumento durante 2026, <b>sin generar todavía valores medibles oficiales</b>. La medición efectiva inicia en 2027.</div></div>
+          <div class="panel method"><div class="method-i">🎯</div><div class="method-t">Referencia documental, no corte estadístico</div><div class="method-x">La ficha consigna un valor referencial <b>≥60%</b> y logros esperados 2027–2030. Ese 60% es un criterio de planeamiento; <b>no se deriva de los datos</b> y no define por sí mismo si el resultado es estadísticamente bueno o malo.</div></div>
+        </div>''', unsafe_allow_html=True)
 
-    section_header("Instrumento", "Reglas de cálculo que sí están escritas en la propuesta")
+    section_header("Instrumento propuesto", "Qué reglas de cálculo están explícitamente definidas")
     st.markdown(
-        f'''<div class="method-grid">
-          <div class="panel method"><div class="method-i">▦</div><div class="method-t">D1–D4</div><div class="method-x">Cada dimensión contiene cuatro ítems. El estudiante se clasifica como satisfecho en la dimensión cuando el <b>promedio de sus cuatro respuestas es ≥4</b>.</div></div>
-          <div class="panel method"><div class="method-i">◉</div><div class="method-t">P17 · satisfacción general</div><div class="method-x">P17 se clasifica como <b>satisfecho con respuesta 4 o 5</b> y no satisfecho con 1, 2 o 3. El sustento del documento describe la satisfacción general como el <b>indicador sintético</b> de la percepción global.</div></div>
-          <div class="panel method"><div class="method-i">∑</div><div class="method-t">P1–P16 integral</div><div class="method-x">El promedio P1–P16 ≥4 se muestra solo como <b>análisis complementario</b>. La documentación compartida no especifica de forma explícita que este agregado de 16 ítems sea la regla global oficial del IND.01.</div></div>
-        </div>''',
-        unsafe_allow_html=True,
-    )
-
+        '''<div class="method-grid">
+          <div class="panel method"><div class="method-i">▦</div><div class="method-t">D1–D4</div><div class="method-x">Cada dimensión contiene 4 ítems. Un estudiante se clasifica como satisfecho en la dimensión si el <b>promedio de sus cuatro respuestas es ≥4</b>.</div></div>
+          <div class="panel method"><div class="method-i">◉</div><div class="method-t">P17 · satisfacción general</div><div class="method-x">P17: respuesta <b>4 o 5 = satisfecho</b>; 1, 2 o 3 = no satisfecho. El sustento lo describe como <b>indicador sintético de la percepción global</b>.</div></div>
+          <div class="panel method"><div class="method-i">🚦</div><div class="method-t">Escala propuesta, no clasificación estadística</div><div class="method-x"><b>0–59%</b> Insatisfactorio · <b>60–74%</b> Regular · <b>75–89%</b> Satisfactorio · <b>90–100%</b> Muy satisfactorio. Estos rangos provienen de la propuesta del instrumento, que además indica que pueden ajustarse; por ello el semáforo es una ayuda visual, no una prueba estadística.</div></div>
+        </div>''', unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    st.markdown(
-        '''<div class="method-alert"><b>Decisión metodológica usada en este dashboard:</b> para el <b>diagnóstico 2026</b> se presenta P17 como resultado global principal porque el instrumento lo define como satisfacción general y lo describe como indicador sintético. Las cuatro dimensiones explican dónde se concentra la satisfacción o la debilidad. El cálculo P1–P16 ≥4 se conserva únicamente como contraste analítico. Antes de convertir este tablero en reporte oficial del IND.01 a partir de 2027, la regla global debe quedar formalmente aprobada junto con la validación del instrumento.</div>''',
-        unsafe_allow_html=True,
-    )
+    st.markdown('''<div class="method-alert"><b>Criterio estadístico usado en este tablero:</b> se reporta primero la <b>proporción observada</b>, el numerador/denominador y un <b>IC 95% aproximado de Wilson</b>. El IC solo permite inferencia poblacional estricta si el diseño de selección es probabilístico o razonablemente equivalente. Luego se muestran, por separado, la <b>escala interpretativa propuesta</b> y la <b>referencia documental PEI</b>. El tablero no publica un IND.01 oficial 2026.</div>''', unsafe_allow_html=True)
 
-    section_header("Interpretación", "Escala propuesta del instrumento")
-    st.markdown(scale_html(GLOBAL), unsafe_allow_html=True)
+    section_header("Calidad de datos", "Controles que conviene revisar antes del informe oficial")
+    st.markdown(quality_html(), unsafe_allow_html=True)
 
-    section_header("Resultados 2026", "Resumen técnico calculado con la base actual")
+    section_header("Resultados diagnósticos 2026", "Resumen técnico de la base actual")
     summary = pd.DataFrame([
-        ["Satisfacción general P17", pct(GLOBAL), GLOBAL_LEVEL, f"{N_GLOBAL:,} / {N_TOTAL:,}"],
-        ["Análisis complementario P1–P16 ≥4", pct(INTEGRAL16), institutional_level(INTEGRAL16)[0], f"{N_INTEGRAL16:,} / {N_TOTAL:,}"],
-        *[[f"{r['Código']} · {r['Dimensión']}", pct(float(r['Satisfacción'])), str(r['Nivel']), f"{int(r['N satisfechos']):,} / {N_TOTAL:,}"] for _,r in DIMS.sort_values('Código').iterrows()],
-    ], columns=["Medida", "Resultado", "Lectura", "N / D"])
+        ["P17 · satisfacción general", pct(GLOBAL), f"{pct(GLOBAL_CI_LOW)}–{pct(GLOBAL_CI_HIGH)}", GLOBAL_LEVEL, f"{N_GLOBAL:,} / {N_TOTAL:,}", "P17 = 4 o 5"],
+        *[[f"{r['Código']} · {r['Dimensión']}", pct(float(r['Satisfacción'])), f"{pct(float(r['IC95 inferior']))}–{pct(float(r['IC95 superior']))}", str(r['Nivel']), f"{int(r['N satisfechos']):,} / {N_TOTAL:,}", "Promedio de 4 ítems ≥4"] for _,r in DIMS.sort_values('Código').iterrows()],
+    ], columns=["Medida", "Resultado", "IC 95% aprox.*", "Escala propuesta", "N / D", "Regla"])
     st.dataframe(summary, use_container_width=True, hide_index=True)
