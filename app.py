@@ -845,6 +845,10 @@ def item_summary() -> pd.DataFrame:
             "Favorable": float((s >= 4).mean()),
             "Neutral": float((s == 3).mean()),
             "Desfavorable": float((s <= 2).mean()),
+            "N favorable": int((s >= 4).sum()),
+            "N neutral": int((s == 3).sum()),
+            "N desfavorable": int((s <= 2).sum()),
+            "N válido": int(s.shape[0]),
         })
     return pd.DataFrame(rows)
 
@@ -861,32 +865,47 @@ GLOBAL_LEVEL, GLOBAL_INTERVAL, GLOBAL_COLOR, GLOBAL_STATE = institutional_level(
 
 
 
-# Interpretaciones institucionales sustentadas en el contenido del instrumento.
+# Interpretaciones institucionales sustentadas en el contenido del instrumento y su marco teórico.
+# Importante: estas lecturas organizan e interpretan las respuestas observadas; no son inferencias causales.
 DIMENSION_CRITICAL = {
-    "D1": "La dimensión muestra una percepción desigual del proceso académico. Los estudiantes valoran mejor la pertinencia de los contenidos (P1) y la coherencia entre objetivos y contenidos (P4), mientras que la actualización del plan de estudios (P2) y la adecuación de la carga académica (P3) reciben menor respaldo. Institucionalmente, el resultado sugiere revisar con mayor atención los mecanismos de actualización curricular y el equilibrio de la carga académica, sin perder las fortalezas ya reconocidas en pertinencia y coherencia formativa.",
-    "D2": "La docencia presenta una base favorable, especialmente por el reconocimiento del dominio temático de los docentes (P5). Sin embargo, la valoración disminuye cuando se pregunta por las metodologías que facilitan el aprendizaje (P6), la retroalimentación (P8) y, en menor medida, la participación activa (P7). La lectura institucional es que el conocimiento disciplinar constituye una fortaleza, pero todavía existe espacio para fortalecer cómo se enseña, cómo se acompaña el aprendizaje y cómo se retroalimenta al estudiante.",
-    "D3": "Esta es la dimensión con menor satisfacción observada y concentra la principal brecha institucional del diagnóstico. El punto más crítico es la infraestructura y los recursos educativos (P11), seguido por la eficiencia de los servicios académicos (P9). La información sobre procesos académicos (P10) obtiene una valoración relativamente mejor, pero no compensa las dificultades percibidas en recursos, infraestructura y gestión. Para la universidad, esta dimensión señala una prioridad de gestión que trasciende el aula y afecta directamente las condiciones en las que ocurre el aprendizaje.",
-    "D4": "Es la dimensión con mayor satisfacción observada. Los estudiantes reconocen con fuerza el desarrollo de competencias profesionales (P13), los valores y la responsabilidad social (P14), así como el aporte de las actividades académicas y extracurriculares al desarrollo personal (P15). El aspecto relativamente menos favorable es la preparación percibida para afrontar el ejercicio profesional futuro (P16). La lectura institucional es positiva, pero sugiere reforzar la transición entre formación universitaria y desempeño profesional.",
+    "D1": "D1 representa la calidad del proceso académico desde la pertinencia curricular, la actualización del plan de estudios, la carga académica y la coherencia entre objetivos y contenidos. En el alineamiento estratégico del instrumento, esta dimensión se vincula con la pertinencia y actualización académica. La lectura de la base muestra que la pertinencia de los contenidos y la coherencia formativa reciben mayor respaldo que la actualización curricular y la carga académica. Para la universidad, el punto no es solo conservar contenidos pertinentes, sino asegurar que el currículo se actualice con suficiente oportunidad y que la exigencia académica sea compatible con condiciones efectivas de aprendizaje.",
+    "D2": "D2 representa la calidad docente y la mediación pedagógica: dominio disciplinar, metodologías, participación y retroalimentación. El sustento del instrumento la vincula con calidad docente y mejora pedagógica continua. En las respuestas observadas, el dominio temático aparece como fortaleza, pero la valoración disminuye al pasar de qué sabe el docente a cómo enseña, involucra y retroalimenta. La implicancia institucional es clara: la mejora no debe concentrarse únicamente en el conocimiento disciplinar, sino en el acompañamiento del aprendizaje y en prácticas pedagógicas que conviertan ese dominio en experiencias de aprendizaje efectivas.",
+    "D3": "D3 reúne servicios académicos, información, infraestructura, recursos educativos y aseguramiento de la calidad. El documento la vincula con la gestión institucional orientada a la calidad. Bajo la lente estructura–proceso–resultado citada en el sustento teórico, D3 concentra especialmente condiciones de estructura y soporte que acompañan el proceso formativo. La menor satisfacción observada en esta dimensión indica que la experiencia universitaria no depende únicamente del aula: infraestructura, recursos y funcionamiento de servicios forman parte de las condiciones que hacen posible el aprendizaje. Por ello, D3 debe leerse como una prioridad de gestión institucional, no como un problema aislado de un solo trámite o unidad.",
+    "D4": "D4 representa formación integral y desarrollo personal: competencias profesionales, valores, responsabilidad social, desarrollo ciudadano y preparación para el ejercicio profesional. El propio sustento la alinea directamente con el eje central del OEI de formación integral. Es la dimensión con mejor resultado observado, lo que muestra una fortaleza relativa en los resultados formativos percibidos. Sin embargo, la preparación para el ejercicio profesional futuro recibe menor respaldo que otros componentes de D4. La decisión institucional debe ser doble: proteger las fortalezas en competencias y valores y, al mismo tiempo, reforzar la transición entre la experiencia universitaria y los retos concretos del desempeño profesional.",
+}
+
+DIMENSION_THEORY = {
+    "D1": "Alineamiento OEI: pertinencia y actualización académica. Marco de lectura: calidad del proceso formativo y coherencia curricular.",
+    "D2": "Alineamiento OEI: calidad docente y mejora pedagógica continua. Marco de lectura: procesos de enseñanza y mediación del aprendizaje.",
+    "D3": "Alineamiento OEI: gestión institucional orientada a la calidad. Marco de lectura: servicios, estructura, recursos y soporte del proceso educativo.",
+    "D4": "Alineamiento OEI: formación integral del estudiante. Marco de lectura: competencias, valores, desarrollo personal y preparación profesional.",
 }
 
 ITEM_CRITICAL = {
-    "P1": "La alta valoración indica que los contenidos de las asignaturas son percibidos como pertinentes para la formación profesional; esta es una fortaleza curricular que conviene preservar.",
-    "P2": "La menor valoración dentro de D1 sugiere que una proporción importante de estudiantes no percibe con la misma fuerza que el plan de estudios esté actualizado frente a las demandas del entorno profesional.",
-    "P3": "La percepción sobre la carga académica es moderada; esto sugiere revisar el equilibrio entre exigencia, tiempo disponible y condiciones para lograr un aprendizaje adecuado.",
-    "P4": "La coherencia entre objetivos y contenidos es una fortaleza relativa de D1 y aporta consistencia al proceso formativo desde la perspectiva estudiantil.",
-    "P5": "El dominio de los temas por parte de los docentes es una de las fortalezas más claras de la dimensión pedagógica.",
-    "P6": "La valoración de las metodologías de enseñanza es menor que la del dominio temático; el reto no es solo qué sabe el docente, sino cómo facilita el aprendizaje.",
-    "P7": "La participación activa recibe una valoración favorable, aunque todavía existe margen para ampliar estrategias que involucren más al estudiante en el proceso de aprendizaje.",
-    "P8": "La retroalimentación es percibida favorablemente por una mayoría, pero no con la misma fuerza que el dominio docente; conviene reforzar su oportunidad, claridad y utilidad para mejorar el desempeño.",
-    "P9": "La eficiencia de matrícula, registros y trámites presenta una valoración baja respecto de otras áreas, lo que señala una necesidad de simplificación y mejora de servicios académicos.",
-    "P10": "La información académica es el componente mejor valorado dentro de D3, pero todavía deja un grupo importante de estudiantes sin una percepción claramente favorable.",
-    "P11": "Es el ítem más crítico de las 16 preguntas. La infraestructura y los recursos educativos aparecen como una debilidad concreta que puede afectar la experiencia de aprendizaje y requiere atención prioritaria a nivel institucional.",
-    "P12": "Las acciones de aseguramiento de la calidad son reconocidas por una mayoría limitada; la universidad debe fortalecer tanto su implementación como su visibilidad para los estudiantes.",
-    "P13": "Es la mayor fortaleza del instrumento: los estudiantes reconocen que la formación universitaria contribuye al desarrollo de sus competencias profesionales.",
-    "P14": "La formación ética y la responsabilidad social presentan una valoración ampliamente favorable y constituyen una fortaleza de la formación integral.",
-    "P15": "Las actividades académicas y extracurriculares son valoradas como un aporte importante al desarrollo personal y ciudadano.",
-    "P16": "Aunque la valoración es mayoritariamente favorable, es el componente más débil de D4; conviene reforzar experiencias que acerquen al estudiante al ejercicio profesional real.",
+    "P1": "El respaldo a la pertinencia de los contenidos indica que una parte amplia de las respuestas reconoce conexión entre lo que se enseña y la formación profesional. Para la gestión curricular, esta fortaleza debe conservarse y verificarse periódicamente frente a cambios disciplinares y profesionales.",
+    "P2": "La actualización del plan de estudios recibe menor respaldo que la pertinencia de los contenidos. Esto sugiere una brecha percibida entre la formación actual y la velocidad con la que cambian las demandas del entorno profesional. La respuesta institucional debería enfocarse en mecanismos de revisión curricular, participación de actores académicos y vinculación con el entorno profesional.",
+    "P3": "La carga académica presenta una valoración menos favorable dentro de D1. La lectura crítica no es reducir exigencia, sino revisar si la distribución de actividades, tiempos y evaluaciones permite que la exigencia se traduzca efectivamente en aprendizaje y no solo en acumulación de tareas.",
+    "P4": "La coherencia entre objetivos y contenidos es una fortaleza relativa. Esto sugiere que el diseño de las asignaturas mantiene una lógica interna reconocible para los estudiantes; conviene preservar esa consistencia cuando se realicen cambios curriculares.",
+    "P5": "El dominio de los temas por parte de los docentes es una de las fortalezas más claras de D2. El resultado respalda la base disciplinar de la docencia, pero debe analizarse junto con P6–P8 porque el conocimiento del tema no garantiza, por sí solo, una mediación pedagógica efectiva.",
+    "P6": "La metodología de enseñanza recibe menor respaldo que el dominio temático. Para la universidad, esto desplaza la atención desde la suficiencia disciplinar hacia la capacidad de transformar el conocimiento en experiencias que faciliten comprensión, aplicación y aprendizaje activo.",
+    "P7": "La participación activa es valorada favorablemente por una mayoría, aunque no de forma uniforme. El resultado sugiere reforzar estrategias que hagan al estudiante parte del proceso de aprendizaje y no únicamente receptor de contenidos.",
+    "P8": "La retroalimentación muestra espacio de mejora. Desde una perspectiva de calidad pedagógica, la retroalimentación debe ser oportuna, comprensible y útil para que el estudiante identifique cómo mejorar; por eso este resultado debe leerse como un componente de acompañamiento del aprendizaje.",
+    "P9": "La eficiencia de matrícula, registros y trámites recibe un respaldo reducido frente a otras áreas. A nivel institucional, esta percepción afecta la experiencia universitaria cotidiana y señala la necesidad de revisar tiempos, simplicidad, coordinación y claridad de los servicios académicos.",
+    "P10": "La información académica es uno de los componentes mejor valorados dentro de D3, pero todavía existe un grupo relevante sin valoración favorable. La gestión debe asegurar no solo que la información exista, sino que llegue de forma oportuna, comprensible y consistente por los canales que usan los estudiantes.",
+    "P11": "La infraestructura y los recursos educativos constituyen el aspecto más crítico entre los ítems observados. En el marco de calidad del servicio y del enfoque estructura–proceso–resultado citado por el instrumento, estos recursos forman parte de las condiciones que sostienen el aprendizaje. La prioridad institucional es identificar en qué sedes, recursos o condiciones concretas se concentra la percepción desfavorable antes de definir inversiones o intervenciones.",
+    "P12": "Las acciones de aseguramiento de la calidad reciben un respaldo moderado. El resultado puede reflejar tanto la experiencia con esas acciones como su visibilidad para el estudiante. La mejora debe considerar implementación, comunicación y participación estudiantil, evitando asumir que una baja percepción equivale automáticamente a ausencia de acciones de calidad.",
+    "P13": "El desarrollo de competencias profesionales es la fortaleza más clara del instrumento. Este resultado se alinea directamente con la finalidad de formación integral y sugiere que los estudiantes reconocen aporte de la universidad a su preparación profesional. La gestión debe proteger esta fortaleza y conectarla con evidencias de desempeño y empleabilidad cuando estas estén disponibles.",
+    "P14": "La formación ética y la responsabilidad social presentan una valoración ampliamente favorable. Esto fortalece la dimensión de formación integral más allá del dominio técnico y se alinea con la idea de desarrollo personal y ciudadano recogida por el instrumento.",
+    "P15": "Las actividades académicas y extracurriculares son reconocidas como parte del desarrollo personal y ciudadano. La implicancia es que la formación integral no se limita al aula; conviene sostener oportunidades de participación que contribuyan a habilidades, ciudadanía y desarrollo personal.",
+    "P16": "La preparación para afrontar el ejercicio profesional futuro es el componente relativamente más débil de D4. Aunque existe valoración favorable, la brecha frente a competencias y valores sugiere reforzar experiencias de transición profesional: práctica aplicada, vinculación con entornos reales, orientación y contacto con retos del ejercicio profesional.",
 }
+
+THEORY_FOUNDATIONS = [
+    ("Likert", "La encuesta mide percepciones y actitudes mediante una escala ordinal de cinco puntos. Por ello, el tablero interpreta cómo responden los estudiantes; no afirma que la encuesta mida objetivamente la calidad de cada servicio."),
+    ("Calidad del servicio", "El sustento menciona SERVQUAL como referencia. En el tablero se utiliza como lente para leer la experiencia percibida, especialmente en servicios, información, recursos y atención institucional, sin aplicar aquí las dimensiones originales de SERVQUAL como si fueran parte del cuestionario."),
+    ("Estructura–proceso–resultado", "El sustento menciona el enfoque de Donabedian. Se usa como marco analítico: recursos e infraestructura pueden leerse como condiciones de estructura; currículo, docencia y gestión como procesos; competencias y satisfacción como resultados percibidos. Esta es una lectura interpretativa, no una clasificación oficial del PEI."),
+    ("Calidad en educación superior", "Los lineamientos de UNESCO y SUNEDU aparecen como sustento general del instrumento. En el tablero sirven para mantener el foco en mejora continua, pertinencia, condiciones educativas y formación integral, sin atribuirles los puntos de corte porcentuales del semáforo."),
+]
 
 # ==============================================================
 # HTML COMPONENTS
@@ -970,11 +989,11 @@ def insights_html() -> str:
     d3 = float(DIMS.loc[DIMS['Código']=='D3','Satisfacción'].iloc[0])
     d4 = float(DIMS.loc[DIMS['Código']=='D4','Satisfacción'].iloc[0])
     return f'''<div class="insight-grid">
-      <div class="panel insight" style="--accent:#2457B8"><div class="insight-k">Lectura integral de P1–P16</div><div class="insight-t"><span class="metric-code">Resultado observado</span><span class="metric-main">Cumplen el criterio integral: {pct(INTEGRAL)}</span><span class="metric-sub">{N_INTEGRAL:,} de {N_TOTAL:,} respuestas</span></div><div class="insight-x">El resultado indica que menos de la mitad de las respuestas alcanza el criterio integral usado en el tablero. Esto no significa que todos los demás estudiantes rechacen su formación; significa que la valoración favorable <b>no se sostiene con la misma intensidad en el conjunto de los 16 componentes</b>. La lectura global está siendo afectada por brechas específicas que aparecen con mayor claridad en D3 y, dentro de D1 y D2, en algunos aspectos curriculares y pedagógicos.</div></div>
-      <div class="panel insight" style="--accent:#B9794E"><div class="insight-k">Principal prioridad institucional</div><div class="insight-t"><span class="metric-code">D3: Servicios y gestión educativa</span><span class="metric-main">Satisfacción observada: {pct(d3)}</span></div><div class="insight-x">D3 es la dimensión con menor resultado observado. El problema no se concentra solo en un trámite: el patrón combina menor valoración de <b>infraestructura y recursos educativos (P11)</b> y de la <b>eficiencia de servicios académicos (P9)</b>. Para una lectura a nivel universidad, esto señala que la experiencia formativa depende también de condiciones institucionales fuera del aula y que estas condiciones requieren una respuesta de gestión prioritaria.</div></div>
-      <div class="panel insight" style="--accent:#348675"><div class="insight-k">Fortaleza institucional a conservar</div><div class="insight-t"><span class="metric-code">D4: Formación integral</span><span class="metric-main">Satisfacción observada: {pct(d4)}</span></div><div class="insight-x">D4 presenta el mejor resultado dimensional. Destacan el desarrollo de <b>competencias profesionales (P13)</b>, los <b>valores y la responsabilidad social (P14)</b> y el desarrollo personal (P15). Aun así, la preparación para el ejercicio profesional futuro (P16) recibe una valoración relativamente menor, por lo que la fortaleza formativa debe complementarse con experiencias que acerquen más al estudiante al desempeño profesional real.</div></div>
-      <div class="panel insight" style="--accent:#6C7583"><div class="insight-k">P17 como contraste global</div><div class="insight-t"><span class="metric-code">Satisfacción general declarada</span><span class="metric-main">P17: {pct(GLOBAL)}</span><span class="metric-sub">Diferencia descriptiva frente a P1–P16: +{pp(delta_p17)}</span></div><div class="insight-x">La percepción general es más favorable que la lectura integral. Esto es importante para la gestión: los estudiantes pueden sentirse globalmente satisfechos y, al mismo tiempo, identificar problemas específicos en infraestructura, servicios, actualización curricular o metodologías. <b>La satisfacción general no debe ocultar las brechas concretas del proceso formativo.</b></div></div>
-    </div><div class="interpret-banner"><b>Lectura institucional de conjunto:</b> los resultados sugieren una experiencia formativa con fortalezas claras en competencias, valores, pertinencia de contenidos y dominio docente, pero con debilidades más marcadas en infraestructura, recursos educativos, servicios académicos, actualización curricular y algunas prácticas pedagógicas. La prioridad no es “mejorar todo por igual”, sino intervenir donde las respuestas muestran los puntos más débiles y proteger las fortalezas ya reconocidas por los estudiantes.</div>'''
+      <div class="panel insight" style="--accent:#2457B8"><div class="insight-k">Lectura integral del proceso formativo</div><div class="insight-t"><span class="metric-code">P1–P16</span><span class="metric-main">Cumplen el criterio integral: {pct(INTEGRAL)}</span><span class="metric-sub">{N_INTEGRAL:,} de {N_TOTAL:,} respuestas</span></div><div class="insight-x">La formación académica integral es un concepto multidimensional en el propio instrumento: combina currículo, docencia, gestión educativa y desarrollo integral. Por eso el resultado P1–P16 no debe leerse como una calificación aislada. <b>El {pct(INTEGRAL)} indica cuántas respuestas alcanzan simultáneamente el criterio integral utilizado en el tablero</b>; la explicación del resultado está en la desigualdad entre dimensiones y componentes específicos.</div></div>
+      <div class="panel insight" style="--accent:#B9794E"><div class="insight-k">Prioridad de gestión institucional</div><div class="insight-t"><span class="metric-code">D3: Servicios y gestión educativa</span><span class="metric-main">Satisfacción observada: {pct(d3)}</span></div><div class="insight-x">D3 concentra las condiciones de soporte de la experiencia formativa: servicios, información, infraestructura, recursos y calidad. Bajo la lente estructura–proceso–resultado citada en el sustento teórico, la debilidad en estos componentes señala un problema de condiciones institucionales que puede limitar la experiencia de aprendizaje, aunque otros componentes académicos sean mejor valorados. La prioridad debe ser <b>localizar dónde se concentra la brecha</b> y no asumir que toda la universidad presenta la misma situación.</div></div>
+      <div class="panel insight" style="--accent:#348675"><div class="insight-k">Fortaleza vinculada al OEI</div><div class="insight-t"><span class="metric-code">D4: Formación integral y desarrollo personal</span><span class="metric-main">Satisfacción observada: {pct(d4)}</span></div><div class="insight-x">D4 es la dimensión de mejor resultado y está directamente vinculada, en el sustento del instrumento, con el principio de formación integral del OEI. El reconocimiento de competencias, valores y desarrollo personal constituye una fortaleza institucional. Sin embargo, P16 muestra que la preparación para el ejercicio profesional futuro merece un refuerzo específico; <b>la fortaleza de D4 no elimina la necesidad de fortalecer la transición hacia el desempeño profesional real</b>.</div></div>
+      <div class="panel insight" style="--accent:#6C7583"><div class="insight-k">P17: percepción global como contraste</div><div class="insight-t"><span class="metric-code">Satisfacción general declarada</span><span class="metric-main">P17: {pct(GLOBAL)}</span><span class="metric-sub">Diferencia descriptiva frente a P1–P16: +{pp(delta_p17)}</span></div><div class="insight-x">El sustento del instrumento presenta la satisfacción general como una síntesis de la percepción global. Su valor más alto no invalida las brechas de P1–P16: <b>una experiencia puede ser valorada positivamente en términos generales y, a la vez, contener problemas concretos</b>. Para la toma de decisiones, P17 funciona mejor como señal global de contexto; D1–D4 y sus ítems son los que indican dónde actuar.</div></div>
+    </div><div class="interpret-banner"><b>Lectura de sistema:</b> el marco teórico del instrumento combina percepción estudiantil, calidad del servicio, estructura–proceso–resultado y mejora de la calidad en educación superior. Aplicado a estos resultados, la prioridad institucional no es intervenir todas las áreas por igual: <b>proteger fortalezas de D4 y componentes académicos bien valorados; fortalecer los procesos pedagógicos donde hay menor respaldo; y atender con prioridad las condiciones de soporte institucional que aparecen debilitadas en D3.</b></div>'''
 
 
 def pei_route_html() -> str:
@@ -990,7 +1009,8 @@ def item_cards_html(selected: str) -> str:
     cards=[]
     for _,r in d.sort_values(["Dimensión","Número"]).iterrows():
         code=r["Dimensión"]; meta=DIMENSIONS[code]; fav=float(r["Favorable"]); neu=float(r["Neutral"]); unf=float(r["Desfavorable"])
-        cards.append(f'''<div class="panel item" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="item-top"><div class="item-code">Ítem {r['Ítem']} | Dimensión {code}</div><div class="item-score">{pct(fav)}</div></div><div class="item-q">{escape(str(r['Pregunta']))}</div><div class="meter"><span style="width:{fav*100:.2f}%"></span></div><div class="item-meta"><div><div class="k">Favorable</div><div class="v">{pct(fav)}</div></div><div><div class="k">Neutral</div><div class="v">{pct(neu)}</div></div><div><div class="k">Desfavorable</div><div class="v">{pct(unf)}</div></div></div><div class="item-critical"><b>Lectura:</b> {escape(ITEM_CRITICAL[r['Ítem']])}</div></div>''')
+        nfav=int(r["N favorable"]); nneu=int(r["N neutral"]); nunf=int(r["N desfavorable"])
+        cards.append(f'''<div class="panel item" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="item-top"><div class="item-code">Ítem {r['Ítem']} | Dimensión {code}</div><div class="item-score">{pct(fav)}</div></div><div class="item-q">{escape(str(r['Pregunta']))}</div><div class="meter"><span style="width:{fav*100:.2f}%"></span></div><div class="item-meta"><div><div class="k">Favorable</div><div class="v">{pct(fav)}</div><div class="n">{nfav:,} respuestas</div></div><div><div class="k">Neutral</div><div class="v">{pct(neu)}</div><div class="n">{nneu:,} respuestas</div></div><div><div class="k">Desfavorable</div><div class="v">{pct(unf)}</div><div class="n">{nunf:,} respuestas</div></div></div><div class="item-critical"><b>Interpretación crítica:</b> {escape(ITEM_CRITICAL[r['Ítem']])}</div></div>''')
     return '<div class="item-grid">'+''.join(cards)+'</div>'
 
 
@@ -1011,18 +1031,27 @@ def selected_insights_html(selected: str) -> str:
     strong=d.sort_values("Favorable",ascending=False).iloc[0]
 
     if selected=="Todas":
-        context="Se revisan las 16 preguntas que conforman las cuatro dimensiones del proceso de formación académica integral."
-        critical="La lectura conjunta muestra que las fortalezas no están distribuidas de manera uniforme. Los mejores resultados se concentran en competencias profesionales, pertinencia de contenidos, valores y dominio docente; las principales brechas aparecen en infraestructura, servicios académicos y algunos aspectos de actualización curricular y metodología de enseñanza."
+        context="Se analizan las 16 preguntas que operacionalizan cuatro componentes de la formación académica integral: proceso académico, docencia, gestión educativa y formación integral."
+        critical="La lectura conjunta no muestra una experiencia uniforme. Las fortalezas se concentran en competencias profesionales, pertinencia de contenidos, valores y dominio docente; las brechas más visibles aparecen en infraestructura, servicios académicos y algunos componentes de actualización curricular y mediación pedagógica. La decisión institucional debe diferenciar estas áreas en lugar de resumir todo el diagnóstico en un único porcentaje."
+        theory="El marco declarado del instrumento combina medición de actitudes mediante Likert, calidad del servicio, estructura–proceso–resultado y lineamientos de calidad en educación superior. Estas referencias sirven para organizar la interpretación, no para generar automáticamente los porcentajes ni los puntos de corte."
     else:
         context=f"{selected} analiza {DIMENSIONS[selected]['meaning'].lower()}"
         critical=DIMENSION_CRITICAL[selected]
+        theory=DIMENSION_THEORY[selected]
 
     return f'''<div class="insight-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))">
       <div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Bloque analizado</div><div class="insight-t">{escape(selected)}</div><div class="insight-x">{escape(context)}</div></div>
-      <div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Aspecto que requiere mayor atención</div><div class="insight-t"><span class="metric-code">Ítem {weak['Ítem']}</span><span class="metric-main">Valoración favorable: {pct(float(weak['Favorable']))}</span></div><div class="insight-x">{escape(str(weak['Pregunta']))}<div class="metric-detail"><b>Valoración desfavorable:</b> {pct(float(weak['Desfavorable']))}<br><b>Lectura institucional:</b> {escape(ITEM_CRITICAL[weak['Ítem']])}</div></div></div>
-      <div class="panel insight" style="--accent:#16A878"><div class="insight-k">Fortaleza del bloque</div><div class="insight-t"><span class="metric-code">Ítem {strong['Ítem']}</span><span class="metric-main">Valoración favorable: {pct(float(strong['Favorable']))}</span></div><div class="insight-x">{escape(str(strong['Pregunta']))}<div class="metric-detail"><b>Lectura institucional:</b> {escape(ITEM_CRITICAL[strong['Ítem']])}</div></div></div>
-      <div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Interpretación crítica del bloque</div><div class="insight-t">Qué significa para la universidad</div><div class="insight-x">{escape(critical)}</div></div>
+      <div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Aspecto que requiere mayor atención</div><div class="insight-t"><span class="metric-code">Ítem {weak['Ítem']}</span><span class="metric-main">Valoración favorable: {pct(float(weak['Favorable']))}</span><span class="metric-sub">{int(weak['N favorable']):,} de {int(weak['N válido']):,} respuestas</span></div><div class="insight-x">{escape(str(weak['Pregunta']))}<div class="metric-detail"><b>Valoración desfavorable:</b> {pct(float(weak['Desfavorable']))} ({int(weak['N desfavorable']):,} respuestas)<br><b>Lectura institucional:</b> {escape(ITEM_CRITICAL[weak['Ítem']])}</div></div></div>
+      <div class="panel insight" style="--accent:#16A878"><div class="insight-k">Fortaleza del bloque</div><div class="insight-t"><span class="metric-code">Ítem {strong['Ítem']}</span><span class="metric-main">Valoración favorable: {pct(float(strong['Favorable']))}</span><span class="metric-sub">{int(strong['N favorable']):,} de {int(strong['N válido']):,} respuestas</span></div><div class="insight-x">{escape(str(strong['Pregunta']))}<div class="metric-detail"><b>Lectura institucional:</b> {escape(ITEM_CRITICAL[strong['Ítem']])}</div></div></div>
+      <div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Interpretación crítica del bloque</div><div class="insight-t">Qué significa para la universidad</div><div class="insight-x">{escape(critical)}<div class="metric-detail"><b>Sustento conceptual aplicado:</b> {escape(theory)}</div></div></div>
     </div>'''
+
+
+def theory_framework_html() -> str:
+    cards=[]
+    for name, desc in THEORY_FOUNDATIONS:
+        cards.append(f'<div class="panel theory-card"><div class="theory-k">{escape(name)}</div><div class="theory-x">{escape(desc)}</div></div>')
+    return '<div class="theory-grid">'+''.join(cards)+'</div><div class="interpret-banner"><b>Uso correcto del marco teórico:</b> estos enfoques ayudan a explicar qué significa cada resultado y cómo se conecta con calidad educativa y formación integral. <b>No convierten una percepción en una medida objetiva de desempeño, no reemplazan evidencia administrativa y no justifican por sí solos decisiones causales.</b></div>'
 
 
 def quality_html() -> str:
@@ -1440,6 +1469,15 @@ st.markdown(r"""
 </style>
 """, unsafe_allow_html=True)
 
+st.markdown(r"""
+<style>
+.item-meta .n{font-size:.72rem!important;color:#7C8B9D!important;margin-top:3px!important;line-height:1.35!important}
+.theory-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.theory-card{padding:16px 17px!important;position:relative;overflow:hidden}.theory-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#3265CF}.theory-k{font-size:.75rem!important;letter-spacing:.08em;text-transform:uppercase;font-weight:950;color:#3265CF}.theory-x{font-size:.86rem!important;line-height:1.58!important;color:#576E84;margin-top:7px}.theory-x b{color:#203C58}
+@media(max-width:1000px){.theory-grid{grid-template-columns:1fr 1fr}}@media(max-width:700px){.theory-grid{grid-template-columns:1fr}.theory-x{font-size:.82rem!important}.item-meta .n{font-size:.69rem!important}}
+</style>
+""", unsafe_allow_html=True)
+
 # ==============================================================
 # APP
 # ==============================================================
@@ -1488,6 +1526,8 @@ with tab2:
     )
     section_header("Lectura del bloque", "Qué destaca y qué requiere atención")
     st.markdown(selected_insights_html(selected), unsafe_allow_html=True)
+    section_header("Sustento aplicado", "Cómo se interpreta este bloque desde la teoría", "El marco teórico organiza la lectura institucional; los porcentajes provienen exclusivamente de las respuestas registradas.")
+    st.markdown(theory_framework_html() if selected == "Todas" else f'<div class="interpret-banner"><b>{selected}: {escape(DIMENSIONS[selected]["name"])}</b><br>{escape(DIMENSION_THEORY[selected])}<br><br><b>Precaución:</b> esta es una lente interpretativa para la gestión; no convierte la encuesta en una medición causal ni objetiva del desempeño institucional.</div>', unsafe_allow_html=True)
     section_header("Valoración favorable", "Panel de aspectos del instrumento", "4–5 = favorable. Los ítems explican las dimensiones; no se reportan como indicadores PEI individuales.")
     st.markdown(item_cards_html(selected), unsafe_allow_html=True)
     section_header("Distribución de respuesta", "Desfavorable | Neutral | Favorable", "1–2 = desfavorable. 3 = neutral. 4–5 = favorable.")
@@ -1495,7 +1535,7 @@ with tab2:
     with st.expander("Ver detalle técnico de los ítems"):
         dshow = ITEMS_SUM.copy() if selected == "Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
         dshow = dshow.sort_values(["Dimensión", "Número"])
-        table = dshow[["Ítem", "Dimensión", "Pregunta", "Favorable", "Neutral", "Desfavorable"]].copy()
+        table = dshow[["Ítem", "Dimensión", "Pregunta", "Favorable", "N favorable", "Neutral", "N neutral", "Desfavorable", "N desfavorable"]].copy()
         for c in ["Favorable", "Neutral", "Desfavorable"]:
             table[c] = table[c].map(lambda x: f"{x*100:.1f}%")
         st.dataframe(table, use_container_width=True, hide_index=True, height=min(600, 45 + 36*len(table)))
@@ -1518,6 +1558,9 @@ with tab3:
         </div>''', unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
     st.markdown('''<div class="method-alert"><b>Criterio de análisis del tablero:</b> P1–P16 se reporta como <b>resultado integral calculado directamente con la base 2026</b>. El tablero utiliza porcentajes, conteos y distribución de respuestas para describir lo observado. <b>No se presentan intervalos de confianza, pruebas de significancia, correlaciones ni otros procedimientos inferenciales</b>, porque no se documentó un marco muestral probabilístico que permita generalizar formalmente los resultados a toda la población estudiantil. La lectura se orienta a identificar fortalezas, brechas y prioridades institucionales a partir de las respuestas disponibles.</div>''', unsafe_allow_html=True)
+
+    section_header("Sustento conceptual", "Marcos teóricos utilizados para interpretar el diagnóstico", "La teoría se utiliza para dar sentido institucional a los resultados observados, no para generar inferencias ni umbrales estadísticos.")
+    st.markdown(theory_framework_html(), unsafe_allow_html=True)
 
     section_header("Alcance del análisis", "Cómo deben leerse los resultados 2026")
     st.markdown(quality_html(), unsafe_allow_html=True)
