@@ -1290,6 +1290,146 @@ div[data-testid="stExpander"] summary, div[data-baseweb="select"]{font-size:var(
 """, unsafe_allow_html=True)
 
 
+
+# ==============================================================
+# AJUSTE FINAL — TIPOGRAFÍA LEGIBLE EN TARJETAS D1–D4
+# ==============================================================
+st.markdown(r"""
+<style>
+/*
+  Solo se modifica la sección "Satisfacción en las cuatro dimensiones".
+  El resto de la aplicación conserva la tipografía anterior.
+*/
+
+.dim-card{
+    min-height:340px!important;
+    padding:21px!important;
+}
+
+.dim-head{
+    gap:12px!important;
+}
+
+.dim-code{
+    font-size:.95rem!important;
+    line-height:1.25!important;
+    font-weight:950!important;
+}
+
+.dim-name{
+    font-size:.88rem!important;
+    line-height:1.42!important;
+    min-height:2.65em!important;
+    margin-top:6px!important;
+    color:#667B91!important;
+}
+
+.dim-body{
+    grid-template-columns:116px minmax(0,1fr)!important;
+    gap:15px!important;
+    margin-top:14px!important;
+}
+
+.donut{
+    width:112px!important;
+    height:112px!important;
+}
+
+.donut:after{
+    inset:13px!important;
+}
+
+.donut b{
+    font-size:1.40rem!important;
+    line-height:1!important;
+}
+
+.dim-level{
+    font-size:.92rem!important;
+    line-height:1.30!important;
+    font-weight:950!important;
+    margin-bottom:6px!important;
+}
+
+.dim-meta{
+    font-size:.80rem!important;
+    line-height:1.58!important;
+    color:#667B91!important;
+    margin-top:5px!important;
+}
+
+.dim-meta b{
+    color:#29435E!important;
+    font-weight:850!important;
+}
+
+.dim-meaning{
+    font-size:.83rem!important;
+    line-height:1.58!important;
+    margin-top:13px!important;
+    padding-top:11px!important;
+    color:#536B82!important;
+}
+
+.dim-meaning b{
+    color:#203C58!important;
+}
+
+.dim-foot{
+    font-size:.74rem!important;
+    line-height:1.48!important;
+    margin-top:12px!important;
+    padding-top:10px!important;
+    color:#6A7C8E!important;
+}
+
+.dim-foot b{
+    font-size:.76rem!important;
+    color:#24425F!important;
+}
+
+/* Tablet */
+@media (max-width:1100px){
+    .dim-card{
+        min-height:320px!important;
+        padding:19px!important;
+    }
+    .dim-code{font-size:.91rem!important}
+    .dim-name{font-size:.85rem!important}
+    .dim-body{grid-template-columns:108px minmax(0,1fr)!important}
+    .donut{width:104px!important;height:104px!important}
+    .donut b{font-size:1.30rem!important}
+    .dim-level{font-size:.89rem!important}
+    .dim-meta{font-size:.78rem!important}
+    .dim-meaning{font-size:.80rem!important}
+    .dim-foot{font-size:.72rem!important}
+}
+
+/* Celular */
+@media (max-width:700px){
+    .dim-card{
+        min-height:0!important;
+        padding:18px!important;
+    }
+    .dim-code{font-size:.90rem!important}
+    .dim-name{
+        font-size:.84rem!important;
+        min-height:0!important;
+    }
+    .dim-body{
+        grid-template-columns:104px minmax(0,1fr)!important;
+        gap:14px!important;
+    }
+    .donut{width:100px!important;height:100px!important}
+    .donut b{font-size:1.28rem!important}
+    .dim-level{font-size:.88rem!important}
+    .dim-meta{font-size:.78rem!important;line-height:1.55!important}
+    .dim-meaning{font-size:.80rem!important;line-height:1.55!important}
+    .dim-foot{font-size:.72rem!important;line-height:1.45!important}
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ==============================================================
 # APP
 # ==============================================================
