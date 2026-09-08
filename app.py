@@ -1026,67 +1026,6 @@ def selected_insights_html(selected: str) -> str:
       <div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Interpretación institucional del bloque</div><div class="insight-t">Lectura para mejora continua</div><div class="insight-x">{escape(critical)}</div></div>
     </div>'''
 
-
-def construction_html(compact: bool = False) -> str:
-    cls = " build-compact" if compact else ""
-    return f'''<div class="panel build-wrap{{cls}}">
-      <div class="build-head">
-        <div>
-          <div class="build-k">Cómo se construyó la medición</div>
-          <div class="build-title">Del cuestionario a los resultados del tablero</div>
-        </div>
-        <div class="build-badge">Instrumento → datos → clasificación → porcentaje</div>
-      </div>
-
-      <div class="build-flow">
-        <div class="build-step">
-          <div class="build-num">1</div>
-          <div class="build-step-title">Registro de respuestas</div>
-          <div class="build-step-text"><b>P1 a P17</b> se registran con valores de <b>1 a 5</b> según la escala Likert del cuestionario.</div>
-        </div>
-
-        <div class="build-arrow">›</div>
-
-        <div class="build-step">
-          <div class="build-num">2</div>
-          <div class="build-step-title">Agrupación por dimensión</div>
-          <div class="build-step-text"><b>D1:</b> P1–P4 &nbsp; <b>D2:</b> P5–P8<br><b>D3:</b> P9–P12 &nbsp; <b>D4:</b> P13–P16</div>
-        </div>
-
-        <div class="build-arrow">›</div>
-
-        <div class="build-step">
-          <div class="build-num">3</div>
-          <div class="build-step-title">Clasificación de satisfacción</div>
-          <div class="build-step-text">En cada dimensión, el estudiante se clasifica como <b>satisfecho si el promedio de sus 4 ítems es ≥4</b>. En <b>P17</b>, 4 o 5 = satisfecho.</div>
-        </div>
-
-        <div class="build-arrow">›</div>
-
-        <div class="build-step">
-          <div class="build-num">4</div>
-          <div class="build-step-title">Cálculo del porcentaje</div>
-          <div class="build-step-text"><b>N = estudiantes satisfechos</b><br><b>D = respuestas analizadas</b><br>Resultado = <b>(N / D) × 100</b>.</div>
-        </div>
-      </div>
-
-      <div class="build-data">
-        <div class="build-data-icon">▦</div>
-        <div><b>¿Cómo se refleja en la base?</b> Cada fila representa a un estudiante y las columnas P1–P17 conservan sus respuestas 1–5. A partir de ellas, el tablero calcula las dimensiones y las clasificaciones de satisfacción; por eso los porcentajes no se escriben manualmente en el Excel.</div>
-      </div>
-
-      <div class="build-scale">
-        <b>Escala interpretativa propuesta:</b>
-        <span class="s-red">0–59% Insatisfactorio</span>
-        <span class="s-amber">60–74% Regular</span>
-        <span class="s-green">75–89% Satisfactorio</span>
-        <span class="s-cyan">90–100% Muy satisfactorio</span>
-      </div>
-
-      <div class="build-note"><b>Importante:</b> estos rangos sirven para interpretar los resultados del instrumento y el propio documento señala que pueden ajustarse según lineamientos institucionales. No deben confundirse con el valor referencial de la ficha PEI.</div>
-    </div>'''
-
-
 def quality_html() -> str:
     return f'''<div class="quality-grid">
       <div class="panel quality-card" style="--accent:#2457B8"><div class="quality-k">Base analizada</div><div class="quality-v">{N_TOTAL:,}</div><div class="quality-x">Respuestas incluidas en el tablero 2026.</div></div>
@@ -1502,177 +1441,6 @@ st.markdown(r"""
 </style>
 """, unsafe_allow_html=True)
 
-
-st.markdown(r'''
-<style>
-.build-wrap{
-    padding:20px 22px!important;
-    overflow:hidden!important;
-}
-.build-head{
-    display:flex!important;
-    align-items:flex-start!important;
-    justify-content:space-between!important;
-    gap:16px!important;
-    margin-bottom:16px!important;
-}
-.build-k{
-    font-size:.76rem!important;
-    letter-spacing:.10em!important;
-    text-transform:uppercase!important;
-    color:#3568C9!important;
-    font-weight:950!important;
-}
-.build-title{
-    font-size:1.28rem!important;
-    line-height:1.3!important;
-    color:#173650!important;
-    font-weight:950!important;
-    margin-top:4px!important;
-}
-.build-badge{
-    font-size:.76rem!important;
-    line-height:1.35!important;
-    font-weight:850!important;
-    color:#496680!important;
-    background:rgba(241,246,252,.86)!important;
-    border:1px solid rgba(75,111,151,.14)!important;
-    border-radius:999px!important;
-    padding:9px 13px!important;
-    white-space:nowrap!important;
-}
-.build-flow{
-    display:grid!important;
-    grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr) 28px minmax(0,1fr) 28px minmax(0,1fr)!important;
-    gap:8px!important;
-    align-items:stretch!important;
-}
-.build-step{
-    min-height:150px!important;
-    padding:15px 16px!important;
-    border-radius:16px!important;
-    background:rgba(255,255,255,.70)!important;
-    border:1px solid rgba(77,109,145,.14)!important;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.92)!important;
-}
-.build-num{
-    width:29px!important;
-    height:29px!important;
-    display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    border-radius:10px!important;
-    background:linear-gradient(145deg,#234E8A,#3971CA)!important;
-    color:white!important;
-    font-size:.80rem!important;
-    font-weight:950!important;
-    box-shadow:0 6px 15px rgba(38,85,148,.18)!important;
-}
-.build-step-title{
-    margin-top:10px!important;
-    color:#173650!important;
-    font-size:.94rem!important;
-    line-height:1.35!important;
-    font-weight:950!important;
-}
-.build-step-text{
-    margin-top:7px!important;
-    color:#61778D!important;
-    font-size:.80rem!important;
-    line-height:1.56!important;
-}
-.build-step-text b{color:#284864!important}
-.build-arrow{
-    align-self:center!important;
-    justify-self:center!important;
-    color:#8EA1B5!important;
-    font-size:2rem!important;
-    font-weight:500!important;
-}
-.build-data{
-    display:grid!important;
-    grid-template-columns:40px 1fr!important;
-    gap:12px!important;
-    align-items:flex-start!important;
-    margin-top:14px!important;
-    padding:13px 15px!important;
-    border-radius:14px!important;
-    background:rgba(242,247,253,.78)!important;
-    border:1px solid rgba(71,107,148,.13)!important;
-    color:#5A7087!important;
-    font-size:.79rem!important;
-    line-height:1.58!important;
-}
-.build-data b{color:#173B60!important}
-.build-data-icon{
-    width:36px!important;
-    height:36px!important;
-    display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    border-radius:11px!important;
-    background:#E8F0FB!important;
-    color:#275FB1!important;
-    font-weight:950!important;
-}
-.build-scale{
-    display:flex!important;
-    flex-wrap:wrap!important;
-    gap:8px!important;
-    align-items:center!important;
-    margin-top:13px!important;
-    padding-top:12px!important;
-    border-top:1px solid rgba(81,107,137,.12)!important;
-    color:#526A81!important;
-    font-size:.77rem!important;
-    line-height:1.45!important;
-}
-.build-scale>b{color:#173B60!important;margin-right:2px!important}
-.build-scale span{
-    display:inline-flex!important;
-    align-items:center!important;
-    padding:6px 9px!important;
-    border-radius:999px!important;
-    font-weight:850!important;
-    border:1px solid transparent!important;
-}
-.s-red{background:#FFF0F2!important;color:#B94655!important;border-color:#F5D4D9!important}
-.s-amber{background:#FFF8E9!important;color:#9B6A11!important;border-color:#F0DEB4!important}
-.s-green{background:#EDF8F4!important;color:#157158!important;border-color:#D0EADF!important}
-.s-cyan{background:#EDF9FB!important;color:#197B8A!important;border-color:#CFEAF0!important}
-.build-note{
-    margin-top:10px!important;
-    color:#74869A!important;
-    font-size:.72rem!important;
-    line-height:1.5!important;
-}
-.build-note b{color:#4B6178!important}
-.build-compact .build-data,
-.build-compact .build-scale,
-.build-compact .build-note{display:none!important}
-.build-compact .build-step{min-height:128px!important}
-.build-compact .build-step-text{font-size:.76rem!important}
-
-@media(max-width:1080px){
-    .build-flow{grid-template-columns:1fr 1fr!important;gap:10px!important}
-    .build-arrow{display:none!important}
-    .build-badge{white-space:normal!important}
-}
-@media(max-width:700px){
-    .build-wrap{padding:17px!important}
-    .build-head{display:block!important}
-    .build-badge{display:inline-block!important;margin-top:10px!important}
-    .build-flow{grid-template-columns:1fr!important}
-    .build-step{min-height:0!important;padding:14px 15px!important}
-    .build-title{font-size:1.10rem!important}
-    .build-step-title{font-size:.90rem!important}
-    .build-step-text{font-size:.79rem!important}
-    .build-data{grid-template-columns:34px 1fr!important;font-size:.76rem!important}
-    .build-data-icon{width:32px!important;height:32px!important}
-}
-</style>
-''', unsafe_allow_html=True)
-
 # ==============================================================
 # APP
 # ==============================================================
@@ -1689,13 +1457,6 @@ with tab1:
     st.markdown(primary_cards_html(), unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
     st.markdown(scale_html(INTEGRAL), unsafe_allow_html=True)
-
-    section_header(
-        "Cómo se obtuvo",
-        "Del instrumento a este resultado",
-        "Resumen breve de la codificación utilizada antes de construir la base y calcular las dimensiones.",
-    )
-    st.markdown(construction_html(compact=True), unsafe_allow_html=True)
 
     section_header(
         "Diagnóstico 4D",
@@ -1749,22 +1510,66 @@ with tab3:
           <div class="panel method"><div class="method-i">🎯</div><div class="method-t">Referencia documental del PEI</div><div class="method-x">La ficha consigna un valor referencial <b>≥60%</b> y logros esperados 2027–2030. Ese 60% es un criterio de planeamiento del PEI; <b>no se deriva de las respuestas de la encuesta 2026</b> y se mantiene separado de la escala interpretativa propuesta del instrumento.</div></div>
         </div>''', unsafe_allow_html=True)
 
-    section_header(
-        "Construcción de la medición",
-        "Cómo el instrumento se convirtió en la base de datos 2026",
-        "La base no nació como una tabla aislada: primero se definieron los ítems, las dimensiones y las reglas de clasificación del instrumento.",
-    )
-    st.markdown(construction_html(compact=False), unsafe_allow_html=True)
-
-    section_header("Instrumento propuesto", "Reglas que sustentan los cálculos del tablero")
+    section_header("Instrumento propuesto", "Qué reglas de cálculo están explícitamente definidas")
     st.markdown(
         '''<div class="method-grid">
-          <div class="panel method"><div class="method-i">▦</div><div class="method-t">Lectura integral P1–P16 utilizada en el tablero</div><div class="method-x">Cada dimensión contiene cuatro preguntas y el documento usa <b>promedio ≥4</b> para clasificar al estudiante como satisfecho en esa dimensión. Para el análisis 2026, el tablero aplica al conjunto P1–P16 la regla <b>promedio ≥4</b> utilizada en las dimensiones. Así se obtiene una clasificación por estudiante y luego se calcula <b>N/D × 100</b> directamente sobre la base. El resultado no es una proyección ni una imputación; es una proporción observada. Si esta regla será la fórmula oficial global, debe quedar formalizada institucionalmente.</div></div>
+          <div class="panel method"><div class="method-i">▦</div><div class="method-t">Regla global aplicada a P1–P16</div><div class="method-x">Cada dimensión contiene cuatro preguntas y el documento usa <b>promedio ≥4</b> para clasificar al estudiante como satisfecho en esa dimensión. Para el análisis 2026, el tablero aplica al conjunto P1–P16 la regla <b>promedio ≥4</b> utilizada en las dimensiones. Así se obtiene una clasificación por estudiante y luego se calcula <b>N/D × 100</b> directamente sobre la base. El resultado no es una proyección ni una imputación; es una proporción observada. Si esta regla será la fórmula oficial global, debe quedar formalizada institucionalmente.</div></div>
           <div class="panel method"><div class="method-i">◉</div><div class="method-t">P17: contraste global</div><div class="method-x">P17: respuesta <b>4 o 5 = satisfecho</b>; 1, 2 o 3 = no satisfecho. Se muestra como percepción global directa y complementaria para contrastar la lectura integral P1–P16.</div></div>
           <div class="panel method"><div class="method-i">🚦</div><div class="method-t">Escala interpretativa propuesta</div><div class="method-x"><b>0–59%</b> Insatisfactorio · <b>60–74%</b> Regular · <b>75–89%</b> Satisfactorio · <b>90–100%</b> Muy satisfactorio. Estos rangos provienen de la propuesta del instrumento y pueden ajustarse según lineamientos institucionales; el semáforo es una ayuda de lectura.</div></div>
         </div>''', unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    st.markdown('''<div class="method-alert"><b>Criterio de análisis del tablero:</b> las columnas P1–P17 conservan las respuestas originales de cada estudiante en escala 1–5. A partir de ellas se calculan las variables dimensionales y las clasificaciones de satisfacción definidas por el instrumento. P1–P16 se muestra como <b>resultado integral calculado directamente con la base 2026</b>. El tablero utiliza porcentajes, conteos y distribución de respuestas para describir lo observado. <b>No se presentan intervalos de confianza, pruebas de significancia, correlaciones ni otros procedimientos inferenciales</b>, porque no se documentó un marco muestral probabilístico que permita generalizar formalmente los resultados a toda la población estudiantil.</div>''', unsafe_allow_html=True)
+    st.markdown('''<div class="method-alert"><b>Criterio de análisis del tablero:</b> P1–P16 se reporta como <b>resultado integral calculado directamente con la base 2026</b>. El tablero utiliza porcentajes, conteos y distribución de respuestas para describir lo observado. <b>No se presentan intervalos de confianza, pruebas de significancia, correlaciones ni otros procedimientos inferenciales</b>, porque no se documentó un marco muestral probabilístico que permita generalizar formalmente los resultados a toda la población estudiantil. La lectura se orienta a identificar fortalezas, brechas y prioridades institucionales a partir de las respuestas disponibles.</div>''', unsafe_allow_html=True)
+
+
+    # PLUS BREVE PARA EXPOSICIÓN: cómo el instrumento llegó a la base.
+    # Se usan componentes nativos de Streamlit para evitar HTML visible.
+    section_header(
+        "Trazabilidad metodológica",
+        "Cómo se construyó la base que alimenta el tablero",
+        "Resumen breve de las reglas definidas antes de obtener los resultados.",
+    )
+
+    with st.container(border=True):
+        c1, c2, c3, c4 = st.columns(4)
+
+        with c1:
+            st.markdown("#### 1. Respuestas")
+            st.markdown("""**P1 a P17** se registraron en escala Likert de **1 a 5**.
+
+Cada fila de la base corresponde a un estudiante.""")
+
+        with c2:
+            st.markdown("#### 2. Dimensiones")
+            st.markdown("""**D1:** P1–P4  
+**D2:** P5–P8  
+**D3:** P9–P12  
+**D4:** P13–P16""")
+
+        with c3:
+            st.markdown("#### 3. Clasificación")
+            st.markdown("""Por dimensión: **promedio de sus 4 ítems ≥ 4 = satisfecho**.
+
+En **P17**, respuesta **4 o 5 = satisfecho**.""")
+
+        with c4:
+            st.markdown("#### 4. Porcentaje")
+            st.markdown("""**N:** estudiantes satisfechos  
+**D:** respuestas analizadas  
+
+**Resultado = (N / D) × 100**""")
+
+        st.info(
+            "La base conserva las respuestas originales P1–P17. "
+            "El tablero aplica estas reglas para calcular las dimensiones y los porcentajes; "
+            "los resultados no se escriben manualmente en el Excel.",
+            icon="ℹ️",
+        )
+
+        st.caption(
+            "Escala interpretativa propuesta: 0–59% Insatisfactorio | "
+            "60–74% Regular | 75–89% Satisfactorio | 90–100% Muy satisfactorio. "
+            "El propio documento indica que estos rangos pueden ajustarse según lineamientos institucionales."
+        )
 
     section_header("Alcance del análisis", "Cómo deben leerse los resultados 2026")
     st.markdown(quality_html(), unsafe_allow_html=True)
