@@ -314,6 +314,323 @@ st.markdown(
 )
 
 
+
+# ==============================================================
+# GLASSMORPHISM REAL — CAPA FINAL (DEBE IR ÚLTIMA)
+# ============================================================== 
+st.markdown(
+    r"""
+<style>
+/* --------------------------------------------------------------
+   GLASSMORPHISM INSTITUCIONAL REAL
+   Esta capa va al final para que ninguna regla blanca anterior
+   vuelva a tapar el efecto vidrio.
+   -------------------------------------------------------------- */
+:root{
+  --glass-bg:rgba(255,255,255,.62);
+  --glass-bg-strong:rgba(255,255,255,.76);
+  --glass-bg-soft:rgba(255,255,255,.46);
+  --glass-line:rgba(255,255,255,.84);
+  --glass-shadow:0 22px 55px rgba(31,72,132,.13),0 7px 20px rgba(31,72,132,.07),inset 0 1px 0 rgba(255,255,255,.94);
+  --glass-shadow-soft:0 14px 34px rgba(31,72,132,.10),inset 0 1px 0 rgba(255,255,255,.88);
+  --glass-blur:blur(26px) saturate(155%);
+  --navy-glass:rgba(16,55,112,.86);
+  --ink-glass:#143252;
+  --muted-glass:#60758C;
+}
+
+/* Fondo con luz ambiental para que el vidrio sea visible */
+.stApp{
+  background:
+    radial-gradient(circle at 8% 4%, rgba(59,113,232,.18) 0, rgba(59,113,232,.07) 18%, transparent 34%),
+    radial-gradient(circle at 93% 10%, rgba(24,169,192,.14) 0, rgba(24,169,192,.06) 18%, transparent 33%),
+    radial-gradient(circle at 82% 78%, rgba(119,103,160,.11) 0, transparent 30%),
+    radial-gradient(circle at 16% 84%, rgba(52,134,117,.09) 0, transparent 28%),
+    linear-gradient(180deg,#F8FBFF 0%,#FFFFFF 46%,#F5F9FF 100%)!important;
+  background-attachment:fixed!important;
+  color:var(--ink-glass)!important;
+}
+header[data-testid="stHeader"]{
+  background:rgba(248,251,255,.56)!important;
+  backdrop-filter:blur(24px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%)!important;
+  border-bottom:1px solid rgba(255,255,255,.68)!important;
+}
+.block-container{position:relative;z-index:1}
+
+/* Barra superior: vidrio azul tintado */
+.topbar{
+  background:linear-gradient(115deg,rgba(15,54,111,.93),rgba(31,87,174,.86) 55%,rgba(42,103,199,.78))!important;
+  backdrop-filter:blur(28px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(150%)!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  box-shadow:0 20px 44px rgba(18,58,125,.22),inset 0 1px 0 rgba(255,255,255,.20)!important;
+}
+.meta-box{
+  background:rgba(255,255,255,.11)!important;
+  border:1px solid rgba(255,255,255,.20)!important;
+  backdrop-filter:blur(16px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(150%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15)!important;
+}
+.brand-img{background:rgba(255,255,255,.88)!important;border:1px solid rgba(255,255,255,.82)!important}
+
+/* Encabezado y chips */
+.pagehead{background:transparent!important}
+.basebox,.chip{
+  background:rgba(255,255,255,.55)!important;
+  border:1px solid rgba(255,255,255,.86)!important;
+  backdrop-filter:blur(20px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(20px) saturate(150%)!important;
+  box-shadow:0 10px 24px rgba(31,72,132,.07),inset 0 1px 0 rgba(255,255,255,.90)!important;
+}
+.chip.warn{background:rgba(255,248,229,.66)!important;border-color:rgba(255,255,255,.80)!important}
+
+/* Navegación de pestañas como vidrio */
+.stTabs [data-baseweb="tab-list"]{
+  background:rgba(255,255,255,.34)!important;
+  border:1px solid rgba(255,255,255,.72)!important;
+  border-radius:16px!important;
+  padding:5px!important;
+  backdrop-filter:blur(22px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(150%)!important;
+  box-shadow:0 12px 30px rgba(31,72,132,.07)!important;
+}
+.stTabs [data-baseweb="tab"]{border-radius:11px!important}
+.stTabs [aria-selected="true"]{
+  background:linear-gradient(135deg,rgba(37,83,180,.91),rgba(47,102,216,.79))!important;
+  border:1px solid rgba(255,255,255,.24)!important;
+  box-shadow:0 10px 25px rgba(38,91,196,.19),inset 0 1px 0 rgba(255,255,255,.23)!important;
+  backdrop-filter:blur(16px)!important;
+}
+
+/* Vidrio base para paneles */
+.panel,.kpi,.dim-card,.insight,.quality-card,.method,.item,.likert-row,.pei-card{
+  background:linear-gradient(135deg,rgba(255,255,255,.70),rgba(255,255,255,.43))!important;
+  border:1px solid var(--glass-line)!important;
+  backdrop-filter:var(--glass-blur)!important;
+  -webkit-backdrop-filter:var(--glass-blur)!important;
+  box-shadow:var(--glass-shadow-soft)!important;
+}
+
+/* Tarjeta principal: vidrio premium, NO caja blanca plana */
+.integral-hero{
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.78),rgba(235,245,255,.50))!important;
+  border:1px solid rgba(255,255,255,.92)!important;
+  backdrop-filter:blur(32px) saturate(165%)!important;
+  -webkit-backdrop-filter:blur(32px) saturate(165%)!important;
+  box-shadow:var(--glass-shadow)!important;
+  color:var(--ink-glass)!important;
+}
+.integral-hero:before{
+  content:""!important;position:absolute!important;left:0!important;top:0!important;bottom:0!important;width:7px!important;
+  background:linear-gradient(180deg,#1E4E91,#3C7CE1)!important;
+  box-shadow:7px 0 28px rgba(52,113,220,.18)!important;
+}
+.integral-hero:after{
+  content:""!important;position:absolute!important;width:420px!important;height:420px!important;right:-190px!important;top:-235px!important;border-radius:50%!important;
+  background:radial-gradient(circle at 35% 35%,rgba(98,158,255,.28),rgba(50,105,210,.09) 45%,transparent 70%)!important;
+  border:1px solid rgba(255,255,255,.45)!important;
+  box-shadow:inset 0 0 90px rgba(255,255,255,.28)!important;
+}
+.integral-eyebrow{color:#2A61BD!important}.integral-title{color:#102F51!important}.integral-text{color:#587087!important}
+.integral-score{color:#174F97!important;text-shadow:0 2px 18px rgba(31,96,188,.10)!important}
+.integral-level span{color:#71859A!important}
+.integral-signal{
+  background:rgba(255,255,255,.46)!important;
+  border:1px solid rgba(255,255,255,.84)!important;
+  backdrop-filter:blur(18px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(150%)!important;
+  box-shadow:0 14px 30px rgba(24,65,117,.10),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+.integral-formula .formula,.human-box,.integral-bottom>div,.stat-evidence,.interpret-banner,.method-alert,.quality-warning{
+  background:linear-gradient(135deg,rgba(255,255,255,.57),rgba(247,251,255,.37))!important;
+  border:1px solid rgba(255,255,255,.82)!important;
+  backdrop-filter:blur(18px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(145%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.90),0 8px 22px rgba(31,72,132,.05)!important;
+}
+.integral-formula .formula{color:#173A60!important}.integral-formula .formula-result{background:rgba(255,255,255,.76)!important}
+.human-box{color:#506981!important}.human-box b,.human-box .headline{color:#153B63!important}
+.integral-bottom b{color:#71859A!important}.integral-bottom span{color:#173650!important}
+
+/* P17 y tarjeta explicativa: secundarias, de vidrio ligero */
+.p17-card,.pei-mini{
+  background:linear-gradient(145deg,rgba(255,255,255,.62),rgba(247,250,255,.37))!important;
+  border:1px solid rgba(255,255,255,.82)!important;
+  backdrop-filter:blur(24px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(150%)!important;
+  box-shadow:var(--glass-shadow-soft)!important;
+}
+.p17-score{color:#41546A!important}
+
+/* KPI: cada tarjeta con reflejo superior */
+.kpi{position:relative!important;overflow:hidden!important}
+.kpi:after,.dim-card:after,.insight:after,.quality-card:after{
+  content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);pointer-events:none
+}
+.kpi-icon{
+  background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 88%,white),color-mix(in srgb,var(--accent) 72%,#fff))!important;
+  border:1px solid rgba(255,255,255,.34)!important;
+  box-shadow:0 9px 20px color-mix(in srgb,var(--accent) 20%,transparent),inset 0 1px 0 rgba(255,255,255,.34)!important;
+}
+
+/* Dimensiones: vidrio + acento individual */
+.dim-card{position:relative!important;overflow:hidden!important}
+.dim-card:before{
+  content:"";position:absolute;inset:0 auto auto 0;width:100%;height:5px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 40%,white));opacity:.92
+}
+.donut{
+  box-shadow:0 15px 34px rgba(37,76,123,.10),inset 0 0 0 1px rgba(255,255,255,.55)!important;
+}
+.dim-meaning{
+  background:rgba(255,255,255,.36)!important;
+  border:1px solid rgba(255,255,255,.68)!important;
+  border-radius:12px!important;padding:9px 10px!important;
+}
+
+/* Escala de interpretación también en vidrio */
+.scale-wrap{
+  background:linear-gradient(135deg,rgba(255,255,255,.67),rgba(255,255,255,.40))!important;
+  border:1px solid rgba(255,255,255,.84)!important;
+  backdrop-filter:blur(24px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(150%)!important;
+  box-shadow:var(--glass-shadow-soft)!important;
+}
+.scale-step{
+  background:rgba(255,255,255,.40)!important;
+  border:1px solid rgba(255,255,255,.74)!important;
+  backdrop-filter:blur(14px)!important;
+  -webkit-backdrop-filter:blur(14px)!important;
+}
+.scale-step.active{background:rgba(255,255,255,.66)!important;box-shadow:0 12px 28px rgba(31,72,132,.08),inset 0 1px 0 rgba(255,255,255,.92)!important}
+
+/* Ítems, Likert y métodos */
+.item,.likert-row,.method,.quality-card{position:relative!important;overflow:hidden!important}
+.item-meta>div,.likert-pill,.pei-mini-grid>div,.pei-official-mini{
+  background:rgba(255,255,255,.42)!important;
+  border:1px solid rgba(255,255,255,.72)!important;
+  backdrop-filter:blur(12px)!important;
+  -webkit-backdrop-filter:blur(12px)!important;
+}
+
+/* Marco PEI: vidrio neutro para que no compita con el resultado */
+.pei-banner,.pei-official{
+  background:linear-gradient(145deg,rgba(255,255,255,.68),rgba(249,251,255,.43))!important;
+  border:1px solid rgba(255,255,255,.82)!important;
+  backdrop-filter:blur(24px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%)!important;
+  box-shadow:var(--glass-shadow-soft)!important;
+}
+.pei-official-status{background:rgba(239,246,255,.48)!important;border:1px solid rgba(255,255,255,.72)!important}
+
+/* Dataframe: contenedor más integrado */
+div[data-testid="stDataFrame"]{
+  border-radius:16px!important;overflow:hidden!important;
+  border:1px solid rgba(255,255,255,.82)!important;
+  box-shadow:var(--glass-shadow-soft)!important;
+}
+
+/* Pequeña profundidad sin movimiento */
+.panel,.kpi,.dim-card,.insight,.integral-hero,.scale-wrap,.p17-card,.pei-mini{
+  transform:none!important;transition:none!important;
+}
+
+/* Fallback: si el navegador no soporta blur, sigue siendo legible */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .panel,.kpi,.dim-card,.insight,.quality-card,.method,.item,.likert-row,.integral-hero,.scale-wrap,.p17-card,.pei-mini,.pei-banner,.pei-official{
+    background:rgba(250,252,255,.96)!important;
+  }
+}
+
+@media(max-width:700px){
+  :root{--glass-blur:blur(18px) saturate(145%)}
+  .stApp{background:
+      radial-gradient(circle at 10% 4%,rgba(59,113,232,.14),transparent 28%),
+      radial-gradient(circle at 92% 12%,rgba(24,169,192,.10),transparent 28%),
+      linear-gradient(180deg,#F8FBFF,#FFFFFF)!important}
+  .integral-hero{backdrop-filter:blur(22px) saturate(150%)!important;-webkit-backdrop-filter:blur(22px) saturate(150%)!important}
+}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+# ==============================================================
+# AJUSTES FINALES DE IDENTIDAD VISUAL Y FÓRMULA
+# ==============================================================
+st.markdown(
+    r"""
+<style>
+/* 1) Identidad institucional: la imagen debe verse, no ser decorativa */
+.topbar{
+  min-height:82px!important;
+  padding:11px 18px!important;
+}
+.brand{gap:14px!important;align-items:center!important}
+.brand-img{
+  width:148px!important;
+  height:60px!important;
+  min-width:148px!important;
+  max-width:148px!important;
+  padding:5px 7px!important;
+  border-radius:14px!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:rgba(255,255,255,.96)!important;
+  border:1px solid rgba(255,255,255,.94)!important;
+  box-shadow:0 10px 24px rgba(8,35,82,.24),inset 0 1px 0 rgba(255,255,255,.98)!important;
+}
+.brand-img img{
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  display:block!important;
+}
+.brand-title{font-size:.95rem!important;line-height:1.08!important}
+.brand-sub{font-size:.56rem!important;line-height:1.25!important;margin-top:4px!important}
+
+/* 2) Línea divisoria de fracción N/D: oscura y visible */
+.frac{grid-template-rows:auto 2px auto!important;min-width:64px!important}
+.frac .bar{
+  height:2px!important;
+  min-height:2px!important;
+  background:#183651!important;
+  border-radius:999px!important;
+  margin:4px 0!important;
+  opacity:1!important;
+  box-shadow:none!important;
+}
+.formula-eq .frac span:first-child,
+.formula-eq .frac span:last-child{color:#153653!important}
+.integral-formula .formula-eq,
+.integral-formula .formula-eq>span{color:#153653!important}
+.integral-formula .formula-result{color:#2058A9!important}
+
+/* Responsive: conservar la imagen institucional también en celular */
+@media(max-width:700px){
+  .topbar{min-height:70px!important;padding:9px 10px!important}
+  .brand{gap:9px!important}
+  .brand-img{width:112px!important;min-width:112px!important;max-width:112px!important;height:48px!important;padding:4px 5px!important;border-radius:11px!important}
+  .brand-title{font-size:.76rem!important}
+  .brand-sub{font-size:.45rem!important;display:block!important;letter-spacing:.04em!important}
+}
+@media(max-width:470px){
+  .brand-img{width:92px!important;min-width:92px!important;max-width:92px!important;height:44px!important}
+  .brand-title{font-size:.69rem!important}
+  .brand-sub{font-size:.41rem!important}
+}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
 # ==============================================================
 # UTILIDADES
 # ==============================================================
@@ -644,7 +961,7 @@ def top_header() -> None:
     period = "11–31 ago 2026" if pd.notna(DATE_START) and pd.notna(DATE_END) else "2026"
     st.markdown(
         f'''<div class="topbar">
-          <div class="brand"><div class="brand-img"><img src="https://i.ibb.co/V0hydyyH/Whats-App-Image-2026-09-02-at-1-58-16-PM.jpg" alt="Identidad institucional UNT"></div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · OEI.01 · IND.01</div></div></div>
+          <div class="brand"><div class="brand-img"><img src="https://i.ibb.co/V0hydyyH/Whats-App-Image-2026-09-02-at-1-58-16-PM.jpg" alt="Identidad institucional UNT" loading="eager" decoding="sync" fetchpriority="high" referrerpolicy="no-referrer"></div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · OEI.01 · IND.01</div></div></div>
           <div class="top-meta"><div class="meta-box">Periodo de encuesta<b>{period}</b></div><div class="meta-box">Base analizada<b>{N_TOTAL:,} estudiantes</b></div><div class="meta-box">Instrumento<b>17 ítems · 4 dimensiones</b></div></div>
         </div>
         <div class="pagehead"><div><div class="kicker">Tablero ejecutivo · análisis estadístico 2026</div><div class="title">Indicador de satisfacción con el proceso de formación académica</div><div class="sub"><b>P1–P16 constituye la lectura principal del tablero</b>: reúne las cuatro dimensiones que describen el proceso de formación académica. <b>P17 se muestra en segundo plano</b> como una pregunta global de contraste. La estadística observada, la escala interpretativa propuesta y la ficha PEI se presentan por separado para evitar conclusiones confusas.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} estudiantes</span><span class="chip">▦ P1–P16 · estimación operativa integral</span><span class="chip">D1–D4 · diagnóstico explicativo</span><span class="chip">◉ P17 · contraste complementario</span></div></div><div class="basebox">Encuesta 2026<b>{period}</b></div></div>''',
