@@ -4,7 +4,7 @@
 
 **Cómo decirlo:**
 
-“Para el análisis 2026 se construyó una estimación operativa del IND.01 a partir de P1–P16. Para cada estudiante se calculó el promedio de las 16 respuestas y se consideró que alcanza el criterio integral cuando su promedio es igual o superior a 4. Con esta regla, 3,425 de 7,677 estudiantes, equivalentes al 44.6%, alcanzan el criterio.”
+“Para el análisis 2026 se construyó una resultado integral P1–P16 calculado con la base 2026 a partir de P1–P16. Para cada estudiante se calculó el promedio de las 16 respuestas y se consideró que alcanza el criterio integral cuando su promedio es igual o superior a 4. Con esta regla, 3,425 de 7,677 estudiantes, equivalentes al 44.6%, alcanzan el criterio.”
 
 **Evitar:** “55.4% están insatisfechos.”
 
@@ -25,7 +25,7 @@
 
 ## P17
 
-“P17 alcanza 71.4%, 26.8 puntos porcentuales por encima de la estimación P1–P16. La diferencia es estadísticamente clara mediante McNemar (p<0.001). P17 y el promedio P1–P16 tienen asociación alta (Spearman ρ≈0.812), pero la concordancia de clasificación es parcial (κ≈0.445). Por eso P17 se usa como contraste global, no como sustituto de P1–P16.”
+“P17 alcanza 71.4%, 26.8 puntos porcentuales por encima de la resultado P1–P16. La diferencia es estadísticamente clara mediante McNemar (p<0.001). P17 y el promedio P1–P16 tienen asociación alta (Spearman ρ≈0.812), pero la concordancia de clasificación es parcial (κ≈0.445). Por eso P17 se usa como contraste global, no como sustituto de P1–P16.”
 
 ## Confiabilidad
 

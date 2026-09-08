@@ -631,6 +631,51 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
+
+# ==============================================================
+# CORRECCIÓN FINAL — IDENTIDAD + TERMINOLOGÍA VISUAL
+# ==============================================================
+st.markdown(
+    r"""
+<style>
+/* El archivo de imagen proporcionado está recortado; se retira para no mostrar una identidad incompleta. */
+.brand-img{display:none!important}
+.brand-mark{
+  width:58px;height:58px;min-width:58px;border-radius:15px;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(240,247,255,.90));
+  color:#173F82;font-weight:1000;font-size:1.03rem;letter-spacing:.06em;
+  border:1px solid rgba(255,255,255,.92);
+  box-shadow:0 10px 24px rgba(8,35,82,.22),inset 0 1px 0 rgba(255,255,255,.95);
+}
+.brand-title{font-size:1rem!important}
+.brand-sub{font-size:.56rem!important}
+
+/* Fracciones: línea oscura y claramente visible en cualquier fondo claro. */
+.frac{grid-template-rows:auto 2px auto!important;min-width:66px!important}
+.frac .bar{
+  height:2px!important;min-height:2px!important;
+  background:#102A43!important;
+  border:0!important;border-radius:999px!important;
+  margin:4px 0!important;opacity:1!important;
+}
+.formula-eq .frac span:first-child,.formula-eq .frac span:last-child{color:#102A43!important}
+.integral-formula .formula-eq,.integral-formula .formula-eq>span{color:#102A43!important}
+
+/* El chip principal usa lenguaje de resultado observado, no de estimación/proyección. */
+.chip{white-space:normal!important}
+
+@media(max-width:700px){
+  .brand-mark{width:46px;height:46px;min-width:46px;border-radius:12px;font-size:.82rem}
+  .brand-title{font-size:.78rem!important}
+  .brand-sub{font-size:.45rem!important}
+}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
 # ==============================================================
 # UTILIDADES
 # ==============================================================
@@ -717,7 +762,7 @@ def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
         df[f"{code}_Prom"] = df[meta["items"]].mean(axis=1)
         df[f"{code}_Sat"] = (df[f"{code}_Prom"] >= 4).astype(float)
 
-    # Estimación integral P1-P16 para seguimiento analítico del IND.01:
+    # Resultado integral P1-P16 calculado directamente con la base 2026:
     # se extiende al conjunto de los 16 ítems la misma lógica usada en las dimensiones:
     # promedio individual >= 4 => estudiante satisfecho.
     # Esta operacionalización NO aparece formulada de manera literal en la ficha PEI;
@@ -749,12 +794,12 @@ except Exception as exc:
 
 N_TOTAL = int(len(df))
 
-# Resultado integral P1-P16 (operacionalización analítica para seguimiento).
+# Resultado integral P1-P16 calculado sobre las respuestas observadas.
 INTEGRAL = float(df["Integral_P1P16_Sat"].mean())
 N_INTEGRAL = int(df["Integral_P1P16_Sat"].sum())
 INTEGRAL_MEAN = float(df["Integral_P1P16_Prom"].mean())
 
-# P17: percepción global directa, complementaria al análisis integral.
+# P17: satisfacción general declarada, usada como contraste complementario.
 GLOBAL = float(df["P17_Sat"].mean())
 N_GLOBAL = int(df["P17_Sat"].sum())
 GLOBAL_MEAN = float(df["P17"].mean())
@@ -868,7 +913,7 @@ GLOBAL_CI_LOW, GLOBAL_CI_HIGH = wilson_interval(N_GLOBAL, N_TOTAL)
 P1P16_MEAN = df[ITEMS_16].mean(axis=1)
 RHO_P17_P1P16 = spearman_corr(df["P17"], P1P16_MEAN)
 
-# Comparación inferencial de las cuatro dimensiones: mismas personas, cuatro resultados binarios.
+# Comparación estadística de las cuatro dimensiones: mismas personas, cuatro resultados binarios.
 DIM_BINARY = df[[f"{c}_Sat" for c in DIMENSIONS]].copy()
 DIM_BINARY.columns = list(DIMENSIONS.keys())
 COCHRAN_Q, COCHRAN_P = cochran_q_test(DIM_BINARY)
@@ -961,10 +1006,10 @@ def top_header() -> None:
     period = "11–31 ago 2026" if pd.notna(DATE_START) and pd.notna(DATE_END) else "2026"
     st.markdown(
         f'''<div class="topbar">
-          <div class="brand"><div class="brand-img"><img src="https://i.ibb.co/V0hydyyH/Whats-App-Image-2026-09-02-at-1-58-16-PM.jpg" alt="Identidad institucional UNT" loading="eager" decoding="sync" fetchpriority="high" referrerpolicy="no-referrer"></div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · OEI.01 · IND.01</div></div></div>
+          <div class="brand"><div class="brand-mark" aria-label="Universidad Nacional de Trujillo">UNT</div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · OEI.01 · IND.01</div></div></div>
           <div class="top-meta"><div class="meta-box">Periodo de encuesta<b>{period}</b></div><div class="meta-box">Base analizada<b>{N_TOTAL:,} estudiantes</b></div><div class="meta-box">Instrumento<b>17 ítems · 4 dimensiones</b></div></div>
         </div>
-        <div class="pagehead"><div><div class="kicker">Tablero ejecutivo · análisis estadístico 2026</div><div class="title">Indicador de satisfacción con el proceso de formación académica</div><div class="sub"><b>P1–P16 constituye la lectura principal del tablero</b>: reúne las cuatro dimensiones que describen el proceso de formación académica. <b>P17 se muestra en segundo plano</b> como una pregunta global de contraste. La estadística observada, la escala interpretativa propuesta y la ficha PEI se presentan por separado para evitar conclusiones confusas.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} estudiantes</span><span class="chip">▦ P1–P16 · estimación operativa integral</span><span class="chip">D1–D4 · diagnóstico explicativo</span><span class="chip">◉ P17 · contraste complementario</span></div></div><div class="basebox">Encuesta 2026<b>{period}</b></div></div>''',
+        <div class="pagehead"><div><div class="kicker">Tablero ejecutivo · análisis estadístico 2026</div><div class="title">Indicador de satisfacción con el proceso de formación académica</div><div class="sub"><b>P1–P16 constituye la lectura principal del tablero</b>: reúne las cuatro dimensiones que describen el proceso de formación académica. <b>P17 se muestra en segundo plano</b> como una pregunta global de contraste. La estadística observada, la escala interpretativa propuesta y la ficha PEI se presentan por separado para evitar conclusiones confusas.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} estudiantes</span><span class="chip">▦ P1–P16 · resultado integral observado</span><span class="chip">D1–D4 · diagnóstico explicativo</span><span class="chip">◉ P17 · contraste complementario</span></div></div><div class="basebox">Encuesta 2026<b>{period}</b></div></div>''',
         unsafe_allow_html=True,
     )
 
@@ -980,7 +1025,7 @@ def scale_html(value: float) -> str:
     for name, rng, color in levels:
         active = " active" if name == level else ""
         cards.append(f'<div class="scale-step{active}" style="--lvl:{color}"><div class="scale-dot" style="background:{color}"></div><div class="scale-name">{name}</div><div class="scale-range">{rng}</div></div>')
-    return f'''<div class="panel scale-wrap"><div class="scale-title">Escala interpretativa PROPUESTA del instrumento · Resultado actual: <span style="color:{color_now}">{escape(level)} ({escape(interval)})</span></div><div class="scale4">{"".join(cards)}</div><div class="scale-note"><b>No confundir con el PEI:</b> la ficha técnica oficial fija un <b>valor referencial ≥60%</b>, pero no establece estas cuatro categorías. Los rangos provienen de la propuesta del instrumento y pueden ajustarse según lineamientos institucionales.</div></div>'''
+    return f'''<div class="panel scale-wrap"><div class="scale-title">Escala interpretativa PROPUESTA del instrumento · Clasificación descriptiva: <span style="color:{color_now}">{escape(level)} ({escape(interval)})</span></div><div class="scale4">{"".join(cards)}</div><div class="scale-note"><b>No confundir con el PEI:</b> la ficha técnica oficial fija un <b>valor referencial ≥60%</b>, pero no establece estas cuatro categorías. Los rangos provienen de la propuesta del instrumento y pueden ajustarse según lineamientos institucionales.</div></div>'''
 
 
 def primary_cards_html() -> str:
@@ -992,7 +1037,7 @@ def primary_cards_html() -> str:
     kpis = [
         ("Estudiantes analizados", f"{N_TOTAL:,}", "Denominador del análisis", "👥", "#2457B8", "#EEF4FF"),
         ("Satisfechos P1–P16", f"{N_INTEGRAL:,}", "Promedio individual ≥4", "✓", "#14846C", "#EDF8F5"),
-        ("Estimación integral", pct(INTEGRAL), "Resultado operativo P1–P16", "▦", "#2457B8", "#EEF4FF"),
+        ("Resultado integral", pct(INTEGRAL), "Base 2026 · P1–P16", "▦", "#2457B8", "#EEF4FF"),
         ("IC 95% aprox.*", integral_ci, "Wilson binomial", "↔", "#0F7D92", "#EEF9FB"),
         ("Promedio P1–P16", f"{INTEGRAL_MEAN:.2f} / 5", "Media de los 16 ítems", "∑", "#5A6475", "#F3F5F7"),
         ("P17 · contraste", pct(GLOBAL), "Pregunta global directa", "◉", "#7A8490", "#F5F6F8"),
@@ -1005,22 +1050,22 @@ def primary_cards_html() -> str:
       <div class="integral-hero">
         <div class="integral-top">
           <div>
-            <div class="integral-eyebrow">Estimación operativa del IND.01 · P1–P16 · análisis 2026</div>
+            <div class="integral-eyebrow">IND.01 · resultado integral P1–P16 · base 2026</div>
             <div class="integral-title">Satisfacción integral de las 16 preguntas · P1–P16</div>
-            <div class="integral-text">Las 16 preguntas representan las cuatro dimensiones del proceso formativo. Para esta <b>estimación operativa</b>, se calcula el promedio individual P1–P16 y se clasifica como satisfecho a quien alcanza <b>promedio ≥4</b>. La ficha y el instrumento deben formalizar esta regla global antes de denominarla cálculo oficial del IND.01.</div>
+            <div class="integral-text">Las 16 preguntas representan las cuatro dimensiones del proceso formativo. El resultado se <b>calcula directamente con las 7,677 respuestas de la base</b>: para cada estudiante se obtiene el promedio P1–P16 y se clasifica como satisfecho a quien alcanza <b>promedio ≥4</b>. Esta regla global se aplica de forma reproducible en el análisis; si se utilizará como fórmula oficial del IND.01, debe quedar incorporada expresamente en la metodología institucional.</div>
           </div>
           <div class="integral-signal">{traffic_svg(INTEGRAL_STATE,56)}</div>
         </div>
         <div class="integral-core">
           <div><div class="integral-score">{pct(INTEGRAL)}</div><div class="integral-level" style="color:{INTEGRAL_COLOR}">{escape(INTEGRAL_LEVEL)} · {escape(INTEGRAL_INTERVAL)} <span>escala interpretativa propuesta</span></div></div>
-          <div class="integral-formula">{formula_html(N_INTEGRAL,N_TOTAL,INTEGRAL,"Estimación operativa P1–P16")}</div>
+          <div class="integral-formula">{formula_html(N_INTEGRAL,N_TOTAL,INTEGRAL,"Cálculo directo P1–P16")}</div>
         </div>
         <div class="human-box"><div class="headline">¿Cómo explicarlo en una exposición?</div>De los <b>{N_TOTAL:,} estudiantes analizados</b>, <b>{N_INTEGRAL:,}</b> alcanzaron un promedio de 4 o más en el conjunto de P1–P16. Es decir, <b>aproximadamente {every100} de cada 100</b> cumplen el criterio integral definido para este análisis. El {pct(1-INTEGRAL)} restante <b>no debe llamarse automáticamente “insatisfecho”</b>: simplemente no alcanzó el umbral integral de promedio ≥4. Las dimensiones permiten precisar dónde se concentran las brechas.</div>
         <div class="integral-bottom"><div><b>IC 95% aprox.*</b><span>{integral_ci}</span></div><div><b>Promedio P1–P16</b><span>{INTEGRAL_MEAN:.2f}/5</span></div><div><b>Consistencia interna</b><span>α={ALPHA_P1_P16:.3f}</span></div></div>
       </div>
       <div class="side-stack">
-        <div class="panel p17-card"><div class="p17-head"><div><div class="side-kicker">Contraste complementario</div><div class="p17-title">P17 · satisfacción general declarada</div></div>{traffic_svg(GLOBAL_STATE,29)}</div><div class="p17-score">{pct(GLOBAL)}</div><div class="p17-level" style="color:{GLOBAL_COLOR}">{escape(GLOBAL_LEVEL)} · {escape(GLOBAL_INTERVAL)}</div><div class="p17-copy"><b>{N_GLOBAL:,} de {N_TOTAL:,}</b> respondieron 4 o 5. IC 95% aprox.: <b>{p17_ci}</b>. Es una valoración global directa y se mantiene como <b>contraste</b>; no sustituye la estimación integral P1–P16.</div></div>
-        <div class="panel pei-mini"><div class="side-kicker">Concordancia entre ambas lecturas</div><div class="pei-mini-title">Diferencia: {pp(delta)}</div><div class="pei-mini-note">P17 es más alto que P1–P16. La diferencia es estadísticamente clara en los mismos estudiantes (<b>McNemar {p_text(INT_P17_MCNEMAR_P)}</b>). Aun así, existe asociación monotónica alta (<b>ρ={RHO_P17_P1P16:.3f}</b>) y una concordancia de clasificación parcial (<b>κ={KAPPA_INT_P17:.3f}</b>). En términos simples: <b>se relacionan, pero no miden exactamente lo mismo</b>.</div></div>
+        <div class="panel p17-card"><div class="p17-head"><div><div class="side-kicker">Contraste complementario</div><div class="p17-title">P17 · satisfacción general declarada</div></div>{traffic_svg(GLOBAL_STATE,29)}</div><div class="p17-score">{pct(GLOBAL)}</div><div class="p17-level" style="color:{GLOBAL_COLOR}">{escape(GLOBAL_LEVEL)} · {escape(GLOBAL_INTERVAL)}</div><div class="p17-copy"><b>{N_GLOBAL:,} de {N_TOTAL:,}</b> respondieron 4 o 5. IC 95% aprox.: <b>{p17_ci}</b>. Es una valoración global directa y se mantiene como <b>contraste</b>; no sustituye el resultado integral P1–P16.</div></div>
+        <div class="panel pei-mini"><div class="side-kicker">Concordancia entre ambas lecturas</div><div class="pei-mini-title">Diferencia: {pp(delta)}</div><div class="pei-mini-note">P17 es más alto que P1–P16. En los mismos estudiantes, McNemar detecta una diferencia estadística (<b>McNemar {p_text(INT_P17_MCNEMAR_P)}</b>). Aun así, existe asociación monotónica alta (<b>ρ={RHO_P17_P1P16:.3f}</b>) y una concordancia de clasificación parcial (<b>κ={KAPPA_INT_P17:.3f}</b>). En términos simples: <b>se relacionan, pero no miden exactamente lo mismo</b>.</div></div>
       </div>
     </div><div class="kpi-grid">{"".join(kpi_html)}</div><div class="stat-footnote">* IC 95% de Wilson. Solo tiene interpretación inferencial estricta hacia toda la población si el diseño de selección es probabilístico o razonablemente equivalente. Si hubo autoselección o cobertura incompleta, debe leerse como referencia de precisión de estas respuestas, no como corrección del sesgo de selección.</div>'''
 
@@ -1042,12 +1087,12 @@ def insights_html() -> str:
     d4_pair_p = max([r["p_holm"] for r in PAIRWISE_DIM if "D4" in (r["A"], r["B"])])
     return f'''<div class="insight-grid">
       <div class="panel insight" style="--accent:#2457B8"><div class="insight-k">Resultado integral observado</div><div class="insight-t">{pct(INTEGRAL)} · {N_INTEGRAL:,} estudiantes</div><div class="insight-x">El {pct(INTEGRAL)} es la proporción que alcanza <b>promedio P1–P16 ≥4</b> bajo la operacionalización usada en este análisis. No equivale al promedio simple de las 16 preguntas y tampoco implica que el {pct(1-INTEGRAL)} restante esté necesariamente insatisfecho.</div></div>
-      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Dimensión con menor satisfacción observada</div><div class="insight-t">{pri['Código']} · {pct(float(pri['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta la menor proporción de satisfacción. La comparación conjunta de D1–D4 confirma que los resultados dimensionales no son iguales (<b>Cochran Q={COCHRAN_Q:.1f}; {qtxt}</b>). D3 es menor que cada una de las otras dimensiones en comparaciones pareadas de McNemar con corrección de Holm (<b>{p_text(d3_pair_p)}</b>).</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Dimensión con menor satisfacción observada</div><div class="insight-t">{pri['Código']} · {pct(float(pri['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta la menor proporción de satisfacción. La comparación conjunta de D1–D4 detecta diferencias entre las proporciones dimensionales (<b>Cochran Q={COCHRAN_Q:.1f}; {qtxt}</b>). D3 es menor que cada una de las otras dimensiones en comparaciones pareadas de McNemar con corrección de Holm (<b>{p_text(d3_pair_p)}</b>).</div></div>
       <div class="panel insight" style="--accent:{DIMENSIONS[str(strong_dim['Código'])]['accent']}"><div class="insight-k">Dimensión con mayor satisfacción observada</div><div class="insight-t">{strong_dim['Código']} · {pct(float(strong_dim['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(strong_dim['Dimensión']))}</b> registra el mejor resultado. D4 también es mayor que las otras dimensiones en las comparaciones pareadas ajustadas (<b>{p_text(d4_pair_p)}</b>). En sus ítems, <b>{strong_item['Ítem']}</b> alcanza {pct(float(strong_item['Favorable']))} de valoración favorable.</div></div>
-      <div class="panel insight" style="--accent:#6C7583"><div class="insight-k">P17 frente a la estimación integral</div><div class="insight-t">P17 {pct(GLOBAL)} · +{pp(delta_p17)}</div><div class="insight-x">P17 es significativamente más favorable que la clasificación P1–P16 (<b>McNemar {p_text(INT_P17_MCNEMAR_P)}</b>). La asociación es alta (<b>ρ={RHO_P17_P1P16:.3f}</b>), pero la concordancia binaria es solo parcial (<b>κ={KAPPA_INT_P17:.3f}</b>). Por ello, P17 sirve como contraste global, no como reemplazo automático del resultado integral.</div></div>
+      <div class="panel insight" style="--accent:#6C7583"><div class="insight-k">P17 frente al resultado integral P1–P16</div><div class="insight-t">P17 {pct(GLOBAL)} · +{pp(delta_p17)}</div><div class="insight-x">En esta base, P17 presenta una proporción mayor que la clasificación P1–P16 y McNemar detecta una diferencia estadística (<b>McNemar {p_text(INT_P17_MCNEMAR_P)}</b>). La asociación es alta (<b>ρ={RHO_P17_P1P16:.3f}</b>), pero la concordancia binaria es solo parcial (<b>κ={KAPPA_INT_P17:.3f}</b>). Por ello, P17 sirve como contraste global, no como reemplazo automático del resultado integral.</div></div>
     </div>
-    <div class="stat-evidence"><div class="stat-title">Evidencia estadística que respalda la lectura de D1–D4</div>Las cuatro dimensiones fueron evaluadas por los <b>mismos estudiantes</b>; por ello se utilizó <b>Cochran Q</b> para comparar las cuatro proporciones binarias de satisfacción y <b>McNemar pareado</b> para las comparaciones entre dimensiones, con corrección de Holm por comparaciones múltiples. <span class="tag">Q={COCHRAN_Q:.1f}</span><span class="tag">gl=3</span><span class="tag">{qtxt}</span><div class="stat-caveat">La significancia estadística no reemplaza la relevancia sustantiva ni resuelve posibles sesgos de selección de la encuesta. Sirve para respaldar que, dentro de los datos observados, las diferencias dimensionales son sistemáticas y no meramente pequeñas fluctuaciones aleatorias.</div></div>
-    <div class="interpret-banner"><b>Lectura humanizada para decisión:</b> el resultado integral muestra el nivel de satisfacción conjunta bajo la regla P1–P16; el análisis estadístico confirma que las dimensiones se comportan de manera diferente. <b>D3 debe priorizarse</b> porque combina el menor porcentaje observado con diferencias estadísticamente claras frente a las demás dimensiones. <b>D4 funciona como referencia interna de mejor desempeño</b>. P17 aporta la percepción general, pero no debe confundirse con la clasificación integral.</div>'''
+    <div class="stat-evidence"><div class="stat-title">Evidencia estadística que respalda la lectura de D1–D4</div>Las cuatro dimensiones fueron evaluadas por los <b>mismos estudiantes</b>; por ello se utilizó <b>Cochran Q</b> para comparar las cuatro proporciones binarias de satisfacción y <b>McNemar pareado</b> para las comparaciones entre dimensiones, con corrección de Holm por comparaciones múltiples. <span class="tag">Q={COCHRAN_Q:.1f}</span><span class="tag">gl=3</span><span class="tag">{qtxt}</span><div class="stat-caveat">La significancia estadística no reemplaza la relevancia sustantiva ni resuelve posibles sesgos de selección de la encuesta. Bajo los supuestos de estas pruebas, aporta evidencia de que las diferencias observadas entre dimensiones son mayores que las esperables por variación aleatoria. La generalización a toda la población depende del diseño de selección de la encuesta.</div></div>
+    <div class="interpret-banner"><b>Lectura humanizada para decisión:</b> el resultado integral muestra el nivel de satisfacción conjunta bajo la regla P1–P16; el análisis estadístico confirma que las dimensiones se comportan de manera diferente. <b>D3 constituye la prioridad diagnóstica</b> porque presenta el menor porcentaje observado y las comparaciones pareadas detectan diferencias frente a las demás dimensiones. <b>D4 funciona como referencia interna de mejor desempeño</b>. P17 aporta la percepción general, pero no debe confundirse con la clasificación integral.</div>'''
 
 
 def pei_route_html() -> str:
@@ -1112,8 +1157,8 @@ tab1, tab2, tab3 = st.tabs(["◉ Visión ejecutiva", "▦ Dimensiones e ítems",
 with tab1:
     section_header(
         "Indicador principal",
-        "Estimación operativa del IND.01 mediante P1–P16",
-        "Resultado principal del análisis 2026. Se mantiene explícita la diferencia entre estimación operativa, cálculo oficial PEI y P17 como contraste.",
+        "Resultado integral P1–P16 calculado con la base 2026",
+        "Resultado observado en las 7,677 respuestas. P17 se mantiene como contraste y la ficha PEI se presenta por separado como marco documental.",
     )
     st.markdown(primary_cards_html(), unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
@@ -1122,14 +1167,14 @@ with tab1:
     section_header(
         "Diagnóstico 4D",
         "Satisfacción en las cuatro dimensiones",
-        "Cada dimensión se estima con la regla documental promedio ≥4; el semáforo solo traduce la escala propuesta y no constituye una prueba estadística.",
+        "Cada dimensión se calcula con la regla documental promedio ≥4; el semáforo solo traduce la escala propuesta y no constituye una prueba estadística.",
     )
     st.markdown(dimension_cards_html(), unsafe_allow_html=True)
 
     section_header(
         "Interpretación ejecutiva",
         "Qué dicen los resultados y qué decisiones sugieren",
-        "Interpretación respaldada con Cochran Q, McNemar pareado, IC 95% aproximados, confiabilidad y medidas de asociación/concordancia.",
+        "Lectura descriptiva complementada con Cochran Q y McNemar para comparaciones pareadas, además de IC 95% aproximados, consistencia interna, asociación y concordancia.",
     )
     st.markdown(insights_html(), unsafe_allow_html=True)
 
@@ -1175,19 +1220,19 @@ with tab3:
     section_header("Instrumento propuesto", "Qué reglas de cálculo están explícitamente definidas")
     st.markdown(
         '''<div class="method-grid">
-          <div class="panel method"><div class="method-i">▦</div><div class="method-t">Estimación operativa global P1–P16</div><div class="method-x">Cada dimensión contiene cuatro preguntas y el documento usa <b>promedio ≥4</b> para clasificar al estudiante como satisfecho en esa dimensión. Para el análisis 2026, el tablero <b>extiende operativamente</b> al conjunto P1–P16 la regla promedio ≥4 utilizada en las dimensiones. Así se obtiene un estado por estudiante y luego <b>N/D × 100</b>. Esta regla es estadísticamente reproducible, pero su adopción como fórmula oficial global debe formalizarse institucionalmente.</div></div>
+          <div class="panel method"><div class="method-i">▦</div><div class="method-t">Regla global aplicada a P1–P16</div><div class="method-x">Cada dimensión contiene cuatro preguntas y el documento usa <b>promedio ≥4</b> para clasificar al estudiante como satisfecho en esa dimensión. Para el análisis 2026, el tablero aplica al conjunto P1–P16 la regla <b>promedio ≥4</b> utilizada en las dimensiones. Así se obtiene una clasificación por estudiante y luego se calcula <b>N/D × 100</b> directamente sobre la base. El resultado no es una proyección ni una imputación; es una proporción observada. Si esta regla será la fórmula oficial global, debe quedar formalizada institucionalmente.</div></div>
           <div class="panel method"><div class="method-i">◉</div><div class="method-t">P17 · contraste global</div><div class="method-x">P17: respuesta <b>4 o 5 = satisfecho</b>; 1, 2 o 3 = no satisfecho. Se muestra como percepción global directa y complementaria para contrastar la lectura integral P1–P16.</div></div>
           <div class="panel method"><div class="method-i">🚦</div><div class="method-t">Escala propuesta, no clasificación estadística</div><div class="method-x"><b>0–59%</b> Insatisfactorio · <b>60–74%</b> Regular · <b>75–89%</b> Satisfactorio · <b>90–100%</b> Muy satisfactorio. Estos rangos provienen de la propuesta del instrumento y pueden ajustarse; el semáforo es solo una ayuda visual.</div></div>
         </div>''', unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    st.markdown('''<div class="method-alert"><b>Criterio estadístico del tablero:</b> P1–P16 se reporta como <b>estimación operativa del IND.01</b>, no como valor oficial PEI 2026. Se utilizan IC 95% de Wilson para proporciones; Cochran Q y McNemar para comparar resultados binarios pareados; Spearman para asociación ordinal; kappa para concordancia de clasificación; y alfa de Cronbach para consistencia interna. <b>Ninguna de estas pruebas sustituye la validación institucional del instrumento ni corrige por sí sola un posible sesgo de selección.</b></div>''', unsafe_allow_html=True)
+    st.markdown('''<div class="method-alert"><b>Criterio estadístico del tablero:</b> P1–P16 se reporta como <b>resultado integral calculado en la base 2026</b>. No es una proyección ni un valor imputado. La denominación oficial del IND.01 depende de que la regla global P1–P16 quede formalizada institucionalmente. Se utilizan IC 95% de Wilson para proporciones; Cochran Q y McNemar para comparar resultados binarios pareados; Spearman para asociación ordinal; kappa para concordancia de clasificación; y alfa de Cronbach para consistencia interna. <b>Ninguna de estas pruebas sustituye la validación institucional del instrumento ni corrige por sí sola un posible sesgo de selección.</b></div>''', unsafe_allow_html=True)
 
     section_header("Calidad de datos", "Controles que conviene revisar antes del informe oficial")
     st.markdown(quality_html(), unsafe_allow_html=True)
 
     section_header("Resultados diagnósticos 2026", "Resumen técnico de la base actual")
     summary = pd.DataFrame([
-        ["Estimación operativa IND.01 · P1–P16", pct(INTEGRAL), f"{pct(INTEGRAL_CI_LOW)}–{pct(INTEGRAL_CI_HIGH)}", INTEGRAL_LEVEL, f"{N_INTEGRAL:,} / {N_TOTAL:,}", "Promedio P1–P16 ≥4 (regla analítica)"],
+        ["Resultado integral P1–P16", pct(INTEGRAL), f"{pct(INTEGRAL_CI_LOW)}–{pct(INTEGRAL_CI_HIGH)}", INTEGRAL_LEVEL, f"{N_INTEGRAL:,} / {N_TOTAL:,}", "Promedio P1–P16 ≥4 (regla global aplicada)"],
         ["P17 · satisfacción general directa", pct(GLOBAL), f"{pct(GLOBAL_CI_LOW)}–{pct(GLOBAL_CI_HIGH)}", GLOBAL_LEVEL, f"{N_GLOBAL:,} / {N_TOTAL:,}", "P17 = 4 o 5"],
         *[[f"{r['Código']} · {r['Dimensión']}", pct(float(r['Satisfacción'])), f"{pct(float(r['IC95 inferior']))}–{pct(float(r['IC95 superior']))}", str(r['Nivel']), f"{int(r['N satisfechos']):,} / {N_TOTAL:,}", "Promedio de 4 ítems ≥4"] for _,r in DIMS.sort_values('Código').iterrows()],
     ], columns=["Medida", "Resultado", "IC 95% aprox.*", "Escala propuesta", "N / D", "Regla"])
