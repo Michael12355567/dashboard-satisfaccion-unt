@@ -1147,6 +1147,149 @@ def quality_html() -> str:
     </div><div class="quality-warning"><b>Lectura metodológica:</b> P1–P16 presenta alta consistencia interna (α={ALPHA_P1_P16:.3f}) y las cuatro puntuaciones dimensionales muestran asociaciones Spearman entre <b>{DIM_CORR_MIN:.3f} y {DIM_CORR_MAX:.3f}</b>, lo que aporta evidencia exploratoria de coherencia entre componentes. Sin embargo, esto <b>no basta para validar formalmente un indicador global</b>. La validez de contenido requiere V de Aiken con jueces; la estructura del constructo debería confirmarse con análisis factorial; y la representatividad exige documentar el diseño muestral, cobertura y no respuesta. El {pct(UNIFORM_PCT)} de patrones uniformes debe auditarse, no eliminarse automáticamente.</div>'''
 
 
+
+# ==============================================================
+# CAPA FINAL DE TIPOGRAFÍA — ESCALA ÚNICA Y LEGIBLE
+# ==============================================================
+st.markdown(r"""
+<style>
+/*
+  Escala tipográfica institucional:
+  12px  = etiquetas auxiliares
+  14px  = texto secundario
+  15px  = cuerpo normal
+  17px  = títulos de tarjeta
+  24px  = títulos de sección
+  34px  = título principal
+  56px  = indicador principal (único dato deliberadamente grande)
+*/
+:root{
+  --fs-xs: .75rem;
+  --fs-sm: .875rem;
+  --fs-body: .94rem;
+  --fs-card: 1.06rem;
+  --fs-section: 1.50rem;
+  --fs-page: 2.15rem;
+  --fs-metric: 3.50rem;
+}
+
+/* Texto base: nada importante por debajo de 12 px aprox. */
+.stApp, .stApp p, .stApp li, .stApp td, .stApp th{
+  font-size:var(--fs-body)!important;
+  line-height:1.55!important;
+}
+
+/* Cabecera */
+.brand-title{font-size:1.00rem!important;line-height:1.18!important}
+.brand-sub{font-size:var(--fs-xs)!important;line-height:1.35!important;letter-spacing:.055em!important}
+.meta-box{font-size:var(--fs-xs)!important;line-height:1.35!important}
+.meta-box b{font-size:var(--fs-sm)!important}
+.kicker{font-size:var(--fs-xs)!important}
+.title{font-size:clamp(1.85rem,2.8vw,var(--fs-page))!important;line-height:1.08!important}
+.sub{font-size:var(--fs-body)!important;line-height:1.58!important}
+.basebox{font-size:var(--fs-xs)!important}
+.basebox b{font-size:var(--fs-sm)!important}
+.chip{font-size:var(--fs-xs)!important;padding:7px 11px!important}
+
+/* Navegación y títulos */
+.stTabs [data-baseweb="tab"]{font-size:var(--fs-sm)!important}
+.section-kicker{font-size:var(--fs-xs)!important}
+.section-title{font-size:clamp(1.28rem,2vw,var(--fs-section))!important;line-height:1.14!important}
+.section-note{font-size:var(--fs-sm)!important;line-height:1.48!important}
+
+/* Resultado principal */
+.integral-eyebrow,.result-eyebrow{font-size:var(--fs-xs)!important}
+.integral-title,.result-title{font-size:clamp(1.55rem,2.4vw,1.95rem)!important;line-height:1.12!important}
+.integral-text,.result-text{font-size:var(--fs-body)!important;line-height:1.58!important}
+.integral-score,.result-score{font-size:clamp(3.0rem,5.2vw,var(--fs-metric))!important;line-height:.98!important}
+.integral-level,.result-level{font-size:var(--fs-sm)!important;line-height:1.38!important}
+.integral-level span{font-size:var(--fs-xs)!important}
+.human-box{font-size:var(--fs-sm)!important;line-height:1.58!important}
+.human-box .headline{font-size:var(--fs-card)!important}
+
+/* Fórmula */
+.formula-k{font-size:var(--fs-xs)!important}
+.formula-eq{font-size:1.00rem!important;line-height:1.35!important}
+.formula-result{font-size:1.28rem!important}
+.diag-pill,.ref-badge,.stat-footnote{font-size:var(--fs-xs)!important;line-height:1.48!important}
+
+/* P17 y tarjetas secundarias */
+.side-kicker,.secondary-k{font-size:var(--fs-xs)!important}
+.p17-title,.pei-mini-title,.secondary-t{font-size:var(--fs-card)!important;line-height:1.28!important}
+.p17-score,.secondary-v{font-size:2.20rem!important;line-height:1!important}
+.p17-level{font-size:var(--fs-sm)!important}
+.p17-copy,.pei-mini-note,.secondary-x,.secondary-note{font-size:var(--fs-sm)!important;line-height:1.55!important}
+.pei-mini-grid b{font-size:var(--fs-sm)!important}
+.pei-mini-grid span{font-size:var(--fs-xs)!important}
+
+/* KPIs: misma jerarquía en las 6 tarjetas */
+.kpi-label{font-size:var(--fs-xs)!important;line-height:1.35!important}
+.kpi-v{font-size:1.42rem!important;line-height:1.1!important}
+.kpi-f{font-size:var(--fs-xs)!important;line-height:1.4!important}
+.kpi-icon{font-size:.92rem!important}
+
+/* Dimensiones */
+.dim-code{font-size:var(--fs-sm)!important}
+.dim-name{font-size:var(--fs-sm)!important;line-height:1.38!important}
+.donut b{font-size:1.20rem!important}
+.dim-level{font-size:var(--fs-sm)!important}
+.dim-meta{font-size:var(--fs-xs)!important;line-height:1.52!important}
+.dim-meaning{font-size:var(--fs-sm)!important;line-height:1.52!important}
+.dim-foot{font-size:var(--fs-xs)!important;line-height:1.4!important}
+
+/* Escala */
+.scale-title{font-size:var(--fs-sm)!important}
+.scale-name{font-size:var(--fs-sm)!important}
+.scale-range,.scale-note{font-size:var(--fs-xs)!important;line-height:1.45!important}
+
+/* Interpretación */
+.insight-k{font-size:var(--fs-xs)!important}
+.insight-t{font-size:var(--fs-card)!important;line-height:1.28!important}
+.insight-x,.interpret-banner{font-size:var(--fs-sm)!important;line-height:1.58!important}
+.stat-evidence{font-size:var(--fs-sm)!important;line-height:1.58!important}
+.stat-evidence .stat-title{font-size:var(--fs-card)!important}
+.stat-evidence .tag,.stat-caveat{font-size:var(--fs-xs)!important}
+
+/* Método, calidad e ítems */
+.method-t{font-size:var(--fs-card)!important}
+.method-x,.method-alert{font-size:var(--fs-sm)!important;line-height:1.58!important}
+.quality-k{font-size:var(--fs-xs)!important}
+.quality-v{font-size:1.42rem!important}
+.quality-x,.quality-warning{font-size:var(--fs-sm)!important;line-height:1.55!important}
+.item-code{font-size:var(--fs-xs)!important}
+.item-q{font-size:var(--fs-sm)!important;line-height:1.52!important}
+.item-score{font-size:1.08rem!important}
+.item-meta .k{font-size:var(--fs-xs)!important}
+.item-meta .v{font-size:var(--fs-sm)!important}
+.likert-code{font-size:var(--fs-xs)!important}
+
+/* Dataframes / expanders / selectbox */
+div[data-testid="stDataFrame"]{font-size:var(--fs-sm)!important}
+div[data-testid="stExpander"] summary, div[data-baseweb="select"]{font-size:var(--fs-sm)!important}
+
+/* Móvil: conservar legibilidad; reducir solo grandes titulares */
+@media(max-width:700px){
+  :root{
+    --fs-xs:.72rem;
+    --fs-sm:.82rem;
+    --fs-body:.88rem;
+    --fs-card:.98rem;
+    --fs-section:1.32rem;
+    --fs-page:1.72rem;
+    --fs-metric:3.05rem;
+  }
+  .brand-title{font-size:.86rem!important}
+  .brand-sub{font-size:.70rem!important}
+  .title{font-size:var(--fs-page)!important}
+  .integral-title,.result-title{font-size:1.42rem!important}
+  .integral-score,.result-score{font-size:var(--fs-metric)!important}
+  .p17-score,.secondary-v{font-size:1.90rem!important}
+  .kpi-v,.quality-v{font-size:1.28rem!important}
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 # ==============================================================
 # APP
 # ==============================================================

@@ -22,3 +22,7 @@ python -m streamlit run app.py
 ## Ajuste visual final
 - Imagen institucional ampliada en escritorio y celular.
 - Línea de fracción N/D en navy oscuro para mejor contraste.
+
+
+## Tipografía
+Esta versión usa una escala tipográfica estandarizada: etiquetas 12 px aprox., texto secundario 14 px, cuerpo 15 px, títulos de tarjeta 17 px, títulos de sección 24 px y un único indicador principal de tamaño mayor.
