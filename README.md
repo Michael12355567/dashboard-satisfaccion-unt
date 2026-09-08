@@ -1,9 +1,13 @@
-# Tablero UNT — análisis descriptivo institucional 2026
+# Tablero UNT 2026 — Metodología clara
 
-Versión sin inferencia estadística:
-- sin IC 95%;
-- sin Cochran Q, McNemar, Spearman, kappa ni alfa;
-- sin promedios de ítem mostrados como resultado;
-- interpretación crítica por dimensión e ítem;
-- análisis limitado a las 7,677 respuestas disponibles;
-- marco PEI separado de los resultados descriptivos.
+Versión descriptiva institucional alineada con la propuesta del instrumento.
+
+Incluye una explicación visual breve:
+Instrumento → datos → clasificación → porcentaje.
+
+No agrega pruebas inferenciales.
+
+Ejecución:
+```bash
+python -m streamlit run app.py
+```
