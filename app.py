@@ -1064,7 +1064,7 @@ def primary_cards_html() -> str:
         <div class="integral-bottom"><div><b>IC 95% aprox.*</b><span>{integral_ci}</span></div><div><b>Promedio P1–P16</b><span>{INTEGRAL_MEAN:.2f}/5</span></div><div><b>Consistencia interna</b><span>α={ALPHA_P1_P16:.3f}</span></div></div>
       </div>
       <div class="side-stack">
-        <div class="panel p17-card"><div class="p17-head"><div><div class="side-kicker">Contraste complementario</div><div class="p17-title">P17 · satisfacción general declarada</div></div>{traffic_svg(GLOBAL_STATE,29)}</div><div class="p17-score">{pct(GLOBAL)}</div><div class="p17-level" style="color:{GLOBAL_COLOR}">{escape(GLOBAL_LEVEL)} · {escape(GLOBAL_INTERVAL)}</div><div class="p17-copy"><b>{N_GLOBAL:,} de {N_TOTAL:,}</b> respondieron 4 o 5. IC 95% aprox.: <b>{p17_ci}</b>. Es una valoración global directa y se mantiene como <b>contraste</b>; no sustituye el resultado integral P1–P16.</div></div>
+        <div class="panel p17-card"><div class="p17-head"><div><div class="side-kicker">Contraste complementario</div><div class="p17-title">P17: satisfacción general declarada</div></div>{traffic_svg(GLOBAL_STATE,29)}</div><div class="p17-score">{pct(GLOBAL)}</div><div class="p17-level" style="color:{GLOBAL_COLOR}">{escape(GLOBAL_LEVEL)} · {escape(GLOBAL_INTERVAL)}</div><div class="p17-copy"><b>{N_GLOBAL:,} de {N_TOTAL:,}</b> respondieron 4 o 5. IC 95% aprox.: <b>{p17_ci}</b>. Es una valoración global directa y se mantiene como <b>contraste</b>; no sustituye el resultado integral P1–P16.</div></div>
         <div class="panel pei-mini"><div class="side-kicker">Concordancia entre ambas lecturas</div><div class="pei-mini-title">Diferencia: {pp(delta)}</div><div class="pei-mini-note">P17 es más alto que P1–P16. En los mismos estudiantes, McNemar detecta una diferencia estadística (<b>McNemar {p_text(INT_P17_MCNEMAR_P)}</b>). Aun así, existe asociación monotónica alta (<b>ρ={RHO_P17_P1P16:.3f}</b>) y una concordancia de clasificación parcial (<b>κ={KAPPA_INT_P17:.3f}</b>). En términos simples: <b>se relacionan, pero no miden exactamente lo mismo</b>.</div></div>
       </div>
     </div><div class="kpi-grid">{"".join(kpi_html)}</div><div class="stat-footnote">* IC 95% de Wilson. Solo tiene interpretación inferencial estricta hacia toda la población si el diseño de selección es probabilístico o razonablemente equivalente. Si hubo autoselección o cobertura incompleta, debe leerse como referencia de precisión de estas respuestas, no como corrección del sesgo de selección.</div>'''
@@ -1076,7 +1076,7 @@ def dimension_cards_html() -> str:
         code=r["Código"]; meta=DIMENSIONS[code]; sat=float(r["Satisfacción"]); avg=float(r["Promedio"])
         level,interval,color,state=institutional_level(sat)
         ci_low=float(r["IC95 inferior"]); ci_high=float(r["IC95 superior"])
-        cards.append(f'''<div class="panel dim-card" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="dim-head"><div><div class="dim-code">{meta['icon']} {code}</div><div class="dim-name">{escape(meta['name'])}</div></div>{traffic_svg(state,30)}</div><div class="dim-body"><div class="donut" style="--p:{sat*100:.2f};--accent:{meta['accent']}"><b>{pct(sat)}</b></div><div><div class="dim-level" style="color:{color}">{escape(level)}</div><div class="dim-meta"><b>{escape(interval)}</b> · escala propuesta<br>{int(r['N satisfechos']):,} de {N_TOTAL:,} estudiantes<br>IC 95% aprox.*: <b>{pct(ci_low)}–{pct(ci_high)}</b><br>Promedio: <b>{avg:.2f}/5</b></div></div></div><div class="dim-meaning"><b>Qué evalúa:</b> {escape(meta['meaning'])}</div><div class="dim-foot"><span>Regla documental: promedio de 4 ítems ≥4</span><b>{', '.join(meta['items'])}</b></div></div>''')
+        cards.append(f'''<div class="panel dim-card" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="dim-head"><div><div class="dim-code">{meta['icon']} {code}</div><div class="dim-name">{escape(meta['name'])}</div></div>{traffic_svg(state,30)}</div><div class="dim-body"><div class="donut" style="--p:{sat*100:.2f};--accent:{meta['accent']}"><b>{pct(sat)}</b></div><div><div class="dim-level" style="color:{color}">{escape(level)}</div><div class="dim-meta"><b>Rango de la escala propuesta:</b> {escape(interval)}<br><b>Estudiantes que cumplen el criterio:</b> {int(r['N satisfechos']):,} de {N_TOTAL:,}<br><b>IC 95% aprox.*:</b> {pct(ci_low)}–{pct(ci_high)}<br><b>Promedio dimensional:</b> {avg:.2f}/5</div></div></div><div class="dim-meaning"><b>Qué evalúa:</b> {escape(meta['meaning'])}</div><div class="dim-foot"><span>Regla documental: promedio de 4 ítems ≥4</span><b>{', '.join(meta['items'])}</b></div></div>''')
     return '<div class="dim-grid">'+''.join(cards)+'</div>'
 
 def insights_html() -> str:
@@ -1086,20 +1086,20 @@ def insights_html() -> str:
     d3_pair_p = max([r["p_holm"] for r in PAIRWISE_DIM if "D3" in (r["A"], r["B"])])
     d4_pair_p = max([r["p_holm"] for r in PAIRWISE_DIM if "D4" in (r["A"], r["B"])])
     return f'''<div class="insight-grid">
-      <div class="panel insight" style="--accent:#2457B8"><div class="insight-k">Resultado integral observado</div><div class="insight-t">{pct(INTEGRAL)} · {N_INTEGRAL:,} estudiantes</div><div class="insight-x">El {pct(INTEGRAL)} es la proporción que alcanza <b>promedio P1–P16 ≥4</b> bajo la operacionalización usada en este análisis. No equivale al promedio simple de las 16 preguntas y tampoco implica que el {pct(1-INTEGRAL)} restante esté necesariamente insatisfecho.</div></div>
-      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Dimensión con menor satisfacción observada</div><div class="insight-t">{pri['Código']} · {pct(float(pri['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta la menor proporción de satisfacción. La comparación conjunta de D1–D4 detecta diferencias entre las proporciones dimensionales (<b>Cochran Q={COCHRAN_Q:.1f}; {qtxt}</b>). D3 es menor que cada una de las otras dimensiones en comparaciones pareadas de McNemar con corrección de Holm (<b>{p_text(d3_pair_p)}</b>).</div></div>
-      <div class="panel insight" style="--accent:{DIMENSIONS[str(strong_dim['Código'])]['accent']}"><div class="insight-k">Dimensión con mayor satisfacción observada</div><div class="insight-t">{strong_dim['Código']} · {pct(float(strong_dim['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(strong_dim['Dimensión']))}</b> registra el mejor resultado. D4 también es mayor que las otras dimensiones en las comparaciones pareadas ajustadas (<b>{p_text(d4_pair_p)}</b>). En sus ítems, <b>{strong_item['Ítem']}</b> alcanza {pct(float(strong_item['Favorable']))} de valoración favorable.</div></div>
-      <div class="panel insight" style="--accent:#6C7583"><div class="insight-k">P17 frente al resultado integral P1–P16</div><div class="insight-t">P17 {pct(GLOBAL)} · +{pp(delta_p17)}</div><div class="insight-x">En esta base, P17 presenta una proporción mayor que la clasificación P1–P16 y McNemar detecta una diferencia estadística (<b>McNemar {p_text(INT_P17_MCNEMAR_P)}</b>). La asociación es alta (<b>ρ={RHO_P17_P1P16:.3f}</b>), pero la concordancia binaria es solo parcial (<b>κ={KAPPA_INT_P17:.3f}</b>). Por ello, P17 sirve como contraste global, no como reemplazo automático del resultado integral.</div></div>
+      <div class="panel insight" style="--accent:#2457B8"><div class="insight-k">Resultado integral observado</div><div class="insight-t"><span class="metric-code">P1–P16</span><span class="metric-main">Satisfacción integral: {pct(INTEGRAL)}</span><span class="metric-sub">Estudiantes que cumplen el criterio: {N_INTEGRAL:,}</span></div><div class="insight-x">El {pct(INTEGRAL)} es la proporción que alcanza <b>promedio P1–P16 ≥4</b> bajo la operacionalización usada en este análisis. No equivale al promedio simple de las 16 preguntas y tampoco implica que el {pct(1-INTEGRAL)} restante esté necesariamente insatisfecho.</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Dimensión con menor satisfacción observada</div><div class="insight-t"><span class="metric-code">{pri['Código']}</span><span class="metric-main">Satisfacción observada: {pct(float(pri['Satisfacción']))}</span></div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta la menor proporción de satisfacción. La comparación conjunta de D1–D4 detecta diferencias entre las proporciones dimensionales (<b>Cochran Q={COCHRAN_Q:.1f}; {qtxt}</b>). D3 es menor que cada una de las otras dimensiones en comparaciones pareadas de McNemar con corrección de Holm (<b>{p_text(d3_pair_p)}</b>).</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(strong_dim['Código'])]['accent']}"><div class="insight-k">Dimensión con mayor satisfacción observada</div><div class="insight-t"><span class="metric-code">{strong_dim['Código']}</span><span class="metric-main">Satisfacción observada: {pct(float(strong_dim['Satisfacción']))}</span></div><div class="insight-x"><b>{escape(str(strong_dim['Dimensión']))}</b> registra el mejor resultado. D4 también es mayor que las otras dimensiones en las comparaciones pareadas ajustadas (<b>{p_text(d4_pair_p)}</b>). En sus ítems, <b>{strong_item['Ítem']}</b> alcanza {pct(float(strong_item['Favorable']))} de valoración favorable.</div></div>
+      <div class="panel insight" style="--accent:#6C7583"><div class="insight-k">P17 frente al resultado integral P1–P16</div><div class="insight-t"><span class="metric-code">P17</span><span class="metric-main">Satisfacción general: {pct(GLOBAL)}</span><span class="metric-sub">Diferencia respecto a P1–P16: +{pp(delta_p17)}</span></div><div class="insight-x">En esta base, P17 presenta una proporción mayor que la clasificación P1–P16 y McNemar detecta una diferencia estadística (<b>McNemar {p_text(INT_P17_MCNEMAR_P)}</b>). La asociación es alta (<b>ρ={RHO_P17_P1P16:.3f}</b>), pero la concordancia binaria es solo parcial (<b>κ={KAPPA_INT_P17:.3f}</b>). Por ello, P17 sirve como contraste global, no como reemplazo automático del resultado integral.</div></div>
     </div>
     <div class="stat-evidence"><div class="stat-title">Evidencia estadística que respalda la lectura de D1–D4</div>Las cuatro dimensiones fueron evaluadas por los <b>mismos estudiantes</b>; por ello se utilizó <b>Cochran Q</b> para comparar las cuatro proporciones binarias de satisfacción y <b>McNemar pareado</b> para las comparaciones entre dimensiones, con corrección de Holm por comparaciones múltiples. <span class="tag">Q={COCHRAN_Q:.1f}</span><span class="tag">gl=3</span><span class="tag">{qtxt}</span><div class="stat-caveat">La significancia estadística no reemplaza la relevancia sustantiva ni resuelve posibles sesgos de selección de la encuesta. Bajo los supuestos de estas pruebas, aporta evidencia de que las diferencias observadas entre dimensiones son mayores que las esperables por variación aleatoria. La generalización a toda la población depende del diseño de selección de la encuesta.</div></div>
     <div class="interpret-banner"><b>Lectura humanizada para decisión:</b> el resultado integral muestra el nivel de satisfacción conjunta bajo la regla P1–P16; el análisis estadístico confirma que las dimensiones se comportan de manera diferente. <b>D3 constituye la prioridad diagnóstica</b> porque presenta el menor porcentaje observado y las comparaciones pareadas detectan diferencias frente a las demás dimensiones. <b>D4 funciona como referencia interna de mejor desempeño</b>. P17 aporta la percepción general, pero no debe confundirse con la clasificación integral.</div>'''
 
 
 def pei_route_html() -> str:
-    nodes=[f'''<div class="node diag" style="--accent:#D7A53B"><div class="node-y">2026</div><div class="node-v">Diseño · estandarización · validación</div><div class="node-c">La ficha PEI indica que no se generan todavía valores medibles oficiales del indicador.</div></div>''']
+    nodes=[f'''<div class="node diag" style="--accent:#D7A53B"><div class="node-y">2026</div><div class="node-v">Diseño, estandarización y validación</div><div class="node-c">La ficha PEI indica que no se generan todavía valores medibles oficiales del indicador.</div></div>''']
     for y,t in PEI_TARGETS.items():
         abs_target={2027:"8,400 / 14,000",2028:"9,100 / 14,000",2029:"9,800 / 14,000",2030:"10,500 / 14,000"}[y]
-        nodes.append(f'''<div class="node" style="--accent:#2F66D8"><div class="node-y">{y}</div><div class="node-v">{pct(t,0)}</div><div class="node-c">Logro esperado · {abs_target}</div></div>''')
+        nodes.append(f'''<div class="node" style="--accent:#2F66D8"><div class="node-y">{y}</div><div class="node-v">{pct(t,0)}</div><div class="node-c">Logro esperado: {abs_target}</div></div>''')
     return f'''<div class="panel pei-card"><div class="pei-banner"><div class="i">⚠</div><div><div class="t">Cómo debe leerse el PEI frente a estas encuestas 2026</div><div class="x">La base 2026 puede utilizarse como diagnóstico o línea base preliminar. No debe presentarse como cumplimiento oficial del PEI 2026, porque la ficha técnica señala que la medición efectiva inicia a partir de 2027. El 60% funciona como valor referencial y como logro esperado para 2027, no como meta oficial del año 2026.</div></div></div><div class="route">{''.join(nodes)}</div></div>'''
 
 
@@ -1108,7 +1108,7 @@ def item_cards_html(selected: str) -> str:
     cards=[]
     for _,r in d.sort_values(["Dimensión","Número"]).iterrows():
         code=str(r["Dimensión"]); meta=DIMENSIONS[code]; fav=float(r["Favorable"]); neu=float(r["Neutral"]); bad=float(r["Desfavorable"])
-        cards.append(f'''<div class="panel item" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="item-top"><div class="item-code">{r['Ítem']} · {code}</div><div class="item-score">{pct(fav)}</div></div><div class="item-q">{escape(str(r['Pregunta']))}</div><div class="meter"><span style="width:{fav*100:.2f}%"></span></div><div class="item-meta"><div><div class="k">Favorable</div><div class="v">{pct(fav)}</div></div><div><div class="k">Neutral</div><div class="v">{pct(neu)}</div></div><div><div class="k">Promedio</div><div class="v">{float(r['Promedio']):.2f}</div></div></div></div>''')
+        cards.append(f'''<div class="panel item" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="item-top"><div class="item-code">Ítem {r['Ítem']} | Dimensión {code}</div><div class="item-score">{pct(fav)}</div></div><div class="item-q">{escape(str(r['Pregunta']))}</div><div class="meter"><span style="width:{fav*100:.2f}%"></span></div><div class="item-meta"><div><div class="k">Favorable</div><div class="v">{pct(fav)}</div></div><div><div class="k">Neutral</div><div class="v">{pct(neu)}</div></div><div><div class="k">Promedio</div><div class="v">{float(r['Promedio']):.2f}</div></div></div></div>''')
     return '<div class="item-grid">'+''.join(cards)+'</div>'
 
 
@@ -1132,7 +1132,7 @@ def selected_insights_html(selected: str) -> str:
     else:
         context=f"{selected} evalúa {DIMENSIONS[selected]['meaning'].lower()}"
         action=f"Usar estos cuatro ítems para explicar el resultado de {selected}; la clasificación dimensional se obtiene con el promedio de los cuatro ítems por estudiante."
-    return f'''<div class="insight-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))"><div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Bloque analizado</div><div class="insight-t">{escape(selected)}</div><div class="insight-x">{escape(context)}</div></div><div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Aspecto prioritario</div><div class="insight-t">{weak['Ítem']} · {pct(float(weak['Favorable']))} favorable</div><div class="insight-x">{escape(str(weak['Pregunta']))}<br><b>{pct(float(weak['Desfavorable']))}</b> desfavorable · promedio <b>{float(weak['Promedio']):.2f}/5</b>.</div></div><div class="panel insight" style="--accent:#16A878"><div class="insight-k">Fortaleza del bloque</div><div class="insight-t">{strong['Ítem']} · {pct(float(strong['Favorable']))} favorable</div><div class="insight-x">{escape(str(strong['Pregunta']))}<br>Promedio <b>{float(strong['Promedio']):.2f}/5</b>.</div></div><div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Cómo usarlo</div><div class="insight-t">Lectura para decisión</div><div class="insight-x">{escape(action)}</div></div></div>'''
+    return f'''<div class="insight-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))"><div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Bloque analizado</div><div class="insight-t">{escape(selected)}</div><div class="insight-x">{escape(context)}</div></div><div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Aspecto prioritario</div><div class="insight-t"><span class="metric-code">Ítem {weak['Ítem']}</span><span class="metric-main">Valoración favorable: {pct(float(weak['Favorable']))}</span></div><div class="insight-x">{escape(str(weak['Pregunta']))}<div class="metric-detail"><b>Valoración desfavorable:</b> {pct(float(weak['Desfavorable']))}<br><b>Promedio del ítem:</b> {float(weak['Promedio']):.2f}/5</div></div></div><div class="panel insight" style="--accent:#16A878"><div class="insight-k">Fortaleza del bloque</div><div class="insight-t"><span class="metric-code">Ítem {strong['Ítem']}</span><span class="metric-main">Valoración favorable: {pct(float(strong['Favorable']))}</span></div><div class="insight-x">{escape(str(strong['Pregunta']))}<div class="metric-detail"><b>Promedio del ítem:</b> {float(strong['Promedio']):.2f}/5</div></div></div><div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Cómo usarlo</div><div class="insight-t">Lectura para decisión</div><div class="insight-x">{escape(action)}</div></div></div>'''
 
 
 def quality_html() -> str:
@@ -1430,6 +1430,119 @@ st.markdown(r"""
 </style>
 """, unsafe_allow_html=True)
 
+
+# ==============================================================
+# AJUSTE FINAL — REFERENCIA PEI LEGIBLE + MÉTRICAS SIN AMBIGÜEDAD
+# ==============================================================
+st.markdown(r"""
+<style>
+/* Títulos métricos: código y resultado en líneas separadas */
+.insight-t .metric-code{
+    display:block!important;
+    font-size:.90rem!important;
+    line-height:1.25!important;
+    font-weight:950!important;
+    letter-spacing:.04em!important;
+    text-transform:uppercase!important;
+    color:#315578!important;
+    margin-bottom:5px!important;
+}
+.insight-t .metric-main{
+    display:block!important;
+    font-size:1.03rem!important;
+    line-height:1.34!important;
+    font-weight:950!important;
+    color:#173650!important;
+}
+.insight-t .metric-sub{
+    display:block!important;
+    font-size:.80rem!important;
+    line-height:1.45!important;
+    font-weight:750!important;
+    color:#6B7E92!important;
+    margin-top:4px!important;
+}
+.metric-detail{
+    margin-top:9px!important;
+    padding-top:8px!important;
+    border-top:1px solid rgba(70,100,130,.15)!important;
+    line-height:1.58!important;
+}
+
+/* Marco documental PEI: antes se veía demasiado pequeño */
+.pei-card{
+    padding:20px 21px!important;
+}
+.pei-banner{
+    gap:14px!important;
+    padding:17px 18px!important;
+    border-radius:17px!important;
+}
+.pei-banner .i{
+    font-size:1.38rem!important;
+    line-height:1.2!important;
+}
+.pei-banner .t{
+    font-size:.92rem!important;
+    line-height:1.35!important;
+    font-weight:950!important;
+}
+.pei-banner .x{
+    font-size:.80rem!important;
+    line-height:1.58!important;
+    margin-top:6px!important;
+}
+
+.route{
+    gap:11px!important;
+    margin-top:15px!important;
+}
+.node{
+    min-height:118px!important;
+    padding:15px 16px!important;
+    border-radius:15px!important;
+}
+.node-y{
+    font-size:.70rem!important;
+    line-height:1.25!important;
+    font-weight:950!important;
+    letter-spacing:.035em!important;
+}
+.node-v{
+    font-size:1.34rem!important;
+    line-height:1.24!important;
+    margin-top:7px!important;
+}
+.node-c{
+    font-size:.72rem!important;
+    line-height:1.52!important;
+    margin-top:7px!important;
+}
+.node.diag .node-v{
+    font-size:1.02rem!important;
+    line-height:1.35!important;
+}
+
+/* Móvil: sigue legible, sin apretar el texto */
+@media(max-width:700px){
+    .pei-card{padding:15px!important}
+    .pei-banner{padding:15px!important}
+    .pei-banner .t{font-size:.88rem!important}
+    .pei-banner .x{font-size:.78rem!important}
+    .route{grid-template-columns:1fr!important}
+    .route .diag{grid-column:auto!important}
+    .node{min-height:0!important;padding:14px 15px!important}
+    .node-y{font-size:.68rem!important}
+    .node-v{font-size:1.20rem!important}
+    .node.diag .node-v{font-size:.96rem!important}
+    .node-c{font-size:.72rem!important}
+    .insight-t .metric-code{font-size:.84rem!important}
+    .insight-t .metric-main{font-size:.96rem!important}
+    .insight-t .metric-sub{font-size:.76rem!important}
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ==============================================================
 # APP
 # ==============================================================
@@ -1473,14 +1586,14 @@ with tab2:
     selected = st.selectbox(
         "Dimensión a analizar",
         ["Todas", "D1", "D2", "D3", "D4"],
-        format_func=lambda x: "Todas las dimensiones · P1–P16" if x == "Todas" else f"{x} · {DIMENSIONS[x]['name']}",
+        format_func=lambda x: "Todas las dimensiones (P1–P16)" if x == "Todas" else f"{x} · {DIMENSIONS[x]['name']}",
         label_visibility="collapsed",
     )
     section_header("Lectura del bloque", "Qué destaca y qué requiere atención")
     st.markdown(selected_insights_html(selected), unsafe_allow_html=True)
     section_header("Valoración favorable", "Panel de aspectos del instrumento", "4–5 = favorable. Los ítems explican las dimensiones; no se reportan como indicadores PEI individuales.")
     st.markdown(item_cards_html(selected), unsafe_allow_html=True)
-    section_header("Distribución de respuesta", "Desfavorable · neutral · favorable", "1–2 = desfavorable · 3 = neutral · 4–5 = favorable.")
+    section_header("Distribución de respuesta", "Desfavorable | Neutral | Favorable", "1–2 = desfavorable. 3 = neutral. 4–5 = favorable.")
     st.markdown(likert_html(selected), unsafe_allow_html=True)
     with st.expander("Ver detalle técnico de los ítems"):
         dshow = ITEMS_SUM.copy() if selected == "Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
@@ -1504,7 +1617,7 @@ with tab3:
     st.markdown(
         '''<div class="method-grid">
           <div class="panel method"><div class="method-i">▦</div><div class="method-t">Regla global aplicada a P1–P16</div><div class="method-x">Cada dimensión contiene cuatro preguntas y el documento usa <b>promedio ≥4</b> para clasificar al estudiante como satisfecho en esa dimensión. Para el análisis 2026, el tablero aplica al conjunto P1–P16 la regla <b>promedio ≥4</b> utilizada en las dimensiones. Así se obtiene una clasificación por estudiante y luego se calcula <b>N/D × 100</b> directamente sobre la base. El resultado no es una proyección ni una imputación; es una proporción observada. Si esta regla será la fórmula oficial global, debe quedar formalizada institucionalmente.</div></div>
-          <div class="panel method"><div class="method-i">◉</div><div class="method-t">P17 · contraste global</div><div class="method-x">P17: respuesta <b>4 o 5 = satisfecho</b>; 1, 2 o 3 = no satisfecho. Se muestra como percepción global directa y complementaria para contrastar la lectura integral P1–P16.</div></div>
+          <div class="panel method"><div class="method-i">◉</div><div class="method-t">P17: contraste global</div><div class="method-x">P17: respuesta <b>4 o 5 = satisfecho</b>; 1, 2 o 3 = no satisfecho. Se muestra como percepción global directa y complementaria para contrastar la lectura integral P1–P16.</div></div>
           <div class="panel method"><div class="method-i">🚦</div><div class="method-t">Escala propuesta, no clasificación estadística</div><div class="method-x"><b>0–59%</b> Insatisfactorio · <b>60–74%</b> Regular · <b>75–89%</b> Satisfactorio · <b>90–100%</b> Muy satisfactorio. Estos rangos provienen de la propuesta del instrumento y pueden ajustarse; el semáforo es solo una ayuda visual.</div></div>
         </div>''', unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
@@ -1516,7 +1629,7 @@ with tab3:
     section_header("Resultados diagnósticos 2026", "Resumen técnico de la base actual")
     summary = pd.DataFrame([
         ["Resultado integral P1–P16", pct(INTEGRAL), f"{pct(INTEGRAL_CI_LOW)}–{pct(INTEGRAL_CI_HIGH)}", INTEGRAL_LEVEL, f"{N_INTEGRAL:,} / {N_TOTAL:,}", "Promedio P1–P16 ≥4 (regla global aplicada)"],
-        ["P17 · satisfacción general directa", pct(GLOBAL), f"{pct(GLOBAL_CI_LOW)}–{pct(GLOBAL_CI_HIGH)}", GLOBAL_LEVEL, f"{N_GLOBAL:,} / {N_TOTAL:,}", "P17 = 4 o 5"],
+        ["P17: satisfacción general directa", pct(GLOBAL), f"{pct(GLOBAL_CI_LOW)}–{pct(GLOBAL_CI_HIGH)}", GLOBAL_LEVEL, f"{N_GLOBAL:,} / {N_TOTAL:,}", "P17 = 4 o 5"],
         *[[f"{r['Código']} · {r['Dimensión']}", pct(float(r['Satisfacción'])), f"{pct(float(r['IC95 inferior']))}–{pct(float(r['IC95 superior']))}", str(r['Nivel']), f"{int(r['N satisfechos']):,} / {N_TOTAL:,}", "Promedio de 4 ítems ≥4"] for _,r in DIMS.sort_values('Código').iterrows()],
     ], columns=["Medida", "Resultado", "IC 95% aprox.*", "Escala propuesta", "N / D", "Regla"])
     st.dataframe(summary, use_container_width=True, hide_index=True)
