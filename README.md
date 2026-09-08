@@ -1,9 +1,16 @@
-# Tablero UNT — Exposición profesional 2026
+# UNT PEI — Glass Institucional 2026
 
-- P1–P16 como resultado principal.
-- P17 como contraste complementario.
-- Fondo blanco y tipografía mayor.
-- Interpretaciones humanizadas.
-- IC 95% aproximados y control de calidad.
+Versión visual Glassmorphism institucional sobre la versión estadísticamente corregida.
 
-Ejecutar: `python -m streamlit run app.py`
+- Fondo blanco con luz ambiental azul/cian muy suave.
+- Vidrio selectivo en navegación, tarjetas, KPI y paneles ejecutivos.
+- Tablas y superficies densas casi opacas para preservar legibilidad.
+- Sin animaciones de movimiento en gráficos o paneles.
+- Semáforos y lógica estadística sin cambios.
+- Fallback opaco y soporte para `prefers-reduced-transparency`.
+
+Ejecutar:
+
+```bash
+python -m streamlit run app.py
+```
