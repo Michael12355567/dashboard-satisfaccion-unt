@@ -677,15 +677,18 @@ st.markdown(
 )
 
 # ==============================================================
-# LÓGICA METODOLÓGICA — BASADA EN EL INSTRUMENTO WORD
-# Se conserva la capa visual previa (semáforos, fórmula y glassmorphism).
+# UTILIDADES
 # ==============================================================
 def pct(x: float, digits: int = 1) -> str:
     return "—" if pd.isna(x) else f"{x*100:.{digits}f}%"
 
 
+def pp(x: float, digits: int = 1) -> str:
+    return "—" if pd.isna(x) else f"{x*100:.{digits}f} pp"
+
+
 def institutional_level(value: float) -> tuple[str, str, str, str]:
-    """Rangos de interpretación consignados en la propuesta del instrumento."""
+    """Escala PROPUESTA en el documento del instrumento, no asumida como norma UNT aprobada."""
     if pd.isna(value):
         return "Sin dato", "—", "#9AA7B5", "off"
     if value < .60:
@@ -698,7 +701,6 @@ def institutional_level(value: float) -> tuple[str, str, str, str]:
 
 
 def traffic_svg(state: str, size: int = 50) -> str:
-    # Diseño 3D conservado de la versión entregada por el usuario.
     active = {
         "red": (1.0, .15, .15),
         "amber": (.15, 1.0, .15),
@@ -740,13 +742,8 @@ def spark_svg(color: str, variant: int = 0) -> str:
     return f'<svg viewBox="0 0 96 20" preserveAspectRatio="none"><path d="{p}" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round"/><circle cx="94" cy="{[10,7,9,8][variant%4]}" r="2" fill="{color}"/></svg>'
 
 
-def formula_html(n: int, d: int, result: float, caption: str = "Fórmula del indicador") -> str:
-    # Diseño tipográfico/fracción conservado de la versión anterior.
-    return f'''<div class="formula"><div class="formula-k">{escape(caption)}</div><div class="formula-eq"><span>Porcentaje =</span><span class="frac"><span>N</span><span class="bar"></span><span>D</span></span><span>× 100 =</span><span class="frac"><span>{n:,}</span><span class="bar"></span><span>{d:,}</span></span><span>× 100 =</span><span class="formula-result">{pct(result)}</span></div></div>'''
-
-
 # ==============================================================
-# DATOS Y REGLAS DEL WORD
+# DATOS
 # ==============================================================
 def require_columns(df: pd.DataFrame) -> None:
     missing = [c for c in ALL_ITEMS if c not in df.columns]
@@ -760,14 +757,21 @@ def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
     for c in ALL_ITEMS:
         df[c] = pd.to_numeric(df[c], errors="coerce")
 
-    # D1–D4: el Word define satisfacción dimensional por estudiante
-    # cuando el promedio de los cuatro ítems de la dimensión es >= 4.
+    # Reglas explícitas de la propuesta del instrumento.
     for code, meta in DIMENSIONS.items():
         df[f"{code}_Prom"] = df[meta["items"]].mean(axis=1)
         df[f"{code}_Sat"] = (df[f"{code}_Prom"] >= 4).astype(float)
 
-    # Satisfacción general: P17. El Word especifica:
-    # 4 o 5 = satisfecho; 1, 2 o 3 = no satisfecho.
+    # Resultado integral P1-P16 calculado directamente con la base 2026:
+    # se extiende al conjunto de los 16 ítems la misma lógica usada en las dimensiones:
+    # promedio individual >= 4 => estudiante satisfecho.
+    # Esta operacionalización NO aparece formulada de manera literal en la ficha PEI;
+    # debe validarse institucionalmente antes de usarla como regla oficial del IND.01.
+    df["Integral_P1P16_Prom"] = df[ITEMS_16].mean(axis=1)
+    df["Integral_P1P16_Sat"] = (df["Integral_P1P16_Prom"] >= 4).astype(float)
+
+    # P17: 4 o 5 = satisfecho; 1, 2 o 3 = no satisfecho.
+    # Se conserva como percepción global directa y medida complementaria.
     df["P17_Sat"] = (df["P17"] >= 4).astype(float)
     return df
 
@@ -789,14 +793,155 @@ except Exception as exc:
     st.stop()
 
 N_TOTAL = int(len(df))
+
+# Resultado integral P1-P16 calculado sobre las respuestas observadas.
+INTEGRAL = float(df["Integral_P1P16_Sat"].mean())
+N_INTEGRAL = int(df["Integral_P1P16_Sat"].sum())
+INTEGRAL_MEAN = float(df["Integral_P1P16_Prom"].mean())
+
+# P17: satisfacción general declarada, usada como contraste complementario.
 GLOBAL = float(df["P17_Sat"].mean())
 N_GLOBAL = int(df["P17_Sat"].sum())
-N_GLOBAL_NO = N_TOTAL - N_GLOBAL
 GLOBAL_MEAN = float(df["P17"].mean())
-GLOBAL_LEVEL, GLOBAL_INTERVAL, GLOBAL_COLOR, GLOBAL_STATE = institutional_level(GLOBAL)
+REFERENCE_DELTA = GLOBAL - PEI_REFERENCE
+GAP_TO_SATISFACTORY = max(0.0, 0.75 - GLOBAL)
 
 MISSING_RESPONSES = int(df[ALL_ITEMS].isna().sum().sum())
 INVALID_RESPONSES = int((~df[ALL_ITEMS].isin([1, 2, 3, 4, 5]) & df[ALL_ITEMS].notna()).sum().sum())
+UNIFORM_MASK = df[ALL_ITEMS].nunique(axis=1, dropna=True) == 1
+UNIFORM_N = int(UNIFORM_MASK.sum())
+UNIFORM_PCT = UNIFORM_N / N_TOTAL if N_TOTAL else float("nan")
+
+def wilson_interval(k: int, n: int, z: float = 1.959963984540054) -> tuple[float, float]:
+    """IC de Wilson para una proporción binomial.
+
+    Solo debe interpretarse como inferencia poblacional estricta cuando el diseño
+    de selección sea probabilístico o razonablemente equivalente.
+    """
+    if n <= 0:
+        return (float("nan"), float("nan"))
+    p = k / n
+    den = 1 + (z**2) / n
+    center = (p + (z**2)/(2*n)) / den
+    half = z * math.sqrt((p*(1-p)/n) + (z**2)/(4*n*n)) / den
+    return (center-half, center+half)
+
+
+def spearman_corr(a: pd.Series, b: pd.Series) -> float:
+    x = pd.concat([pd.to_numeric(a, errors="coerce"), pd.to_numeric(b, errors="coerce")], axis=1).dropna()
+    if len(x) < 3:
+        return float("nan")
+    return float(x.iloc[:,0].rank(method="average").corr(x.iloc[:,1].rank(method="average")))
+
+
+def cochran_q_test(binary_df: pd.DataFrame) -> tuple[float, float]:
+    """Cochran Q for k paired binary outcomes."""
+    x = binary_df.dropna().astype(int).to_numpy()
+    if x.ndim != 2 or x.shape[1] < 3 or x.shape[0] == 0:
+        return float("nan"), float("nan")
+    k = x.shape[1]
+    col = x.sum(axis=0).astype(float)
+    row = x.sum(axis=1).astype(float)
+    den = k * row.sum() - (row ** 2).sum()
+    if den <= 0:
+        return float("nan"), float("nan")
+    q = (k - 1) * (k * (col ** 2).sum() - col.sum() ** 2) / den
+    return float(q), float(chi2.sf(q, k - 1))
+
+
+def mcnemar_exact(a: pd.Series, b: pd.Series) -> tuple[int, int, float]:
+    """Exact two-sided McNemar test via the conditional binomial."""
+    x = pd.concat([a, b], axis=1).dropna().astype(int)
+    a1_b0 = int(((x.iloc[:, 0] == 1) & (x.iloc[:, 1] == 0)).sum())
+    a0_b1 = int(((x.iloc[:, 0] == 0) & (x.iloc[:, 1] == 1)).sum())
+    n_discordant = a1_b0 + a0_b1
+    if n_discordant == 0:
+        return a1_b0, a0_b1, 1.0
+    p = float(binomtest(min(a1_b0, a0_b1), n=n_discordant, p=0.5, alternative="two-sided").pvalue)
+    return a1_b0, a0_b1, p
+
+
+def holm_adjust(pvalues: list[float]) -> list[float]:
+    """Holm family-wise correction."""
+    m = len(pvalues)
+    order = sorted(range(m), key=lambda i: pvalues[i])
+    adjusted = [1.0] * m
+    running = 0.0
+    for rank, idx in enumerate(order):
+        val = min(1.0, (m - rank) * pvalues[idx])
+        running = max(running, val)
+        adjusted[idx] = running
+    return adjusted
+
+
+def cohen_kappa_binary(a: pd.Series, b: pd.Series) -> float:
+    x = pd.concat([a, b], axis=1).dropna().astype(int)
+    if len(x) == 0:
+        return float("nan")
+    observed = float((x.iloc[:, 0] == x.iloc[:, 1]).mean())
+    p1a = float(x.iloc[:, 0].mean())
+    p1b = float(x.iloc[:, 1].mean())
+    expected = p1a * p1b + (1 - p1a) * (1 - p1b)
+    if math.isclose(1 - expected, 0.0):
+        return float("nan")
+    return (observed - expected) / (1 - expected)
+
+
+def p_text(p: float) -> str:
+    if pd.isna(p):
+        return "—"
+    if p < 0.001:
+        return "p < 0.001"
+    return f"p = {p:.3f}"
+
+
+def cronbach_alpha(cols: list[str]) -> float:
+    x = df[cols].dropna()
+    k = len(cols)
+    if k < 2 or len(x) < 2:
+        return float("nan")
+    item_var = x.var(axis=0, ddof=1).sum()
+    total_var = x.sum(axis=1).var(ddof=1)
+    if total_var == 0:
+        return float("nan")
+    return float((k / (k - 1)) * (1 - item_var / total_var))
+
+ALPHA_P1_P16 = cronbach_alpha(ITEMS_16)
+ALPHA_DIMS = {code: cronbach_alpha(meta["items"]) for code, meta in DIMENSIONS.items()}
+INTEGRAL_CI_LOW, INTEGRAL_CI_HIGH = wilson_interval(N_INTEGRAL, N_TOTAL)
+GLOBAL_CI_LOW, GLOBAL_CI_HIGH = wilson_interval(N_GLOBAL, N_TOTAL)
+P1P16_MEAN = df[ITEMS_16].mean(axis=1)
+RHO_P17_P1P16 = spearman_corr(df["P17"], P1P16_MEAN)
+
+# Comparación estadística de las cuatro dimensiones: mismas personas, cuatro resultados binarios.
+DIM_BINARY = df[[f"{c}_Sat" for c in DIMENSIONS]].copy()
+DIM_BINARY.columns = list(DIMENSIONS.keys())
+COCHRAN_Q, COCHRAN_P = cochran_q_test(DIM_BINARY)
+
+PAIRWISE_DIM = []
+dim_codes = list(DIMENSIONS.keys())
+for i in range(len(dim_codes)):
+    for j in range(i + 1, len(dim_codes)):
+        a, b = dim_codes[i], dim_codes[j]
+        n10, n01, p_raw = mcnemar_exact(DIM_BINARY[a], DIM_BINARY[b])
+        PAIRWISE_DIM.append({"A": a, "B": b, "n10": n10, "n01": n01, "p_raw": p_raw})
+_p_adj = holm_adjust([x["p_raw"] for x in PAIRWISE_DIM])
+for rec, p_adj in zip(PAIRWISE_DIM, _p_adj):
+    rec["p_holm"] = p_adj
+
+# Contraste entre la clasificación integral P1–P16 y la pregunta global P17.
+INT_P17_N10, INT_P17_N01, INT_P17_MCNEMAR_P = mcnemar_exact(df["Integral_P1P16_Sat"], df["P17_Sat"])
+KAPPA_INT_P17 = cohen_kappa_binary(df["Integral_P1P16_Sat"], df["P17_Sat"])
+
+# Correlaciones entre puntajes dimensionales: evidencia exploratoria de coherencia.
+DIM_CORRS = []
+_dim_prom = {c: df[f"{c}_Prom"] for c in DIMENSIONS}
+for i in range(len(dim_codes)):
+    for j in range(i + 1, len(dim_codes)):
+        a, b = dim_codes[i], dim_codes[j]
+        DIM_CORRS.append(spearman_corr(_dim_prom[a], _dim_prom[b]))
+DIM_CORR_MIN = min(DIM_CORRS) if DIM_CORRS else float("nan")
+DIM_CORR_MAX = max(DIM_CORRS) if DIM_CORRS else float("nan")
 DATE_START = pd.to_datetime(df["Fecha"], errors="coerce").min() if "Fecha" in df.columns else pd.NaT
 DATE_END = pd.to_datetime(df["Fecha"], errors="coerce").max() if "Fecha" in df.columns else pd.NaT
 
@@ -808,13 +953,15 @@ def dimension_summary() -> pd.DataFrame:
         avg = float(df[f"{code}_Prom"].mean())
         n_sat = int(df[f"{code}_Sat"].sum())
         level, interval, color, state = institutional_level(sat)
+        ci_low, ci_high = wilson_interval(n_sat, N_TOTAL)
         rows.append({
             "Código": code,
             "Dimensión": meta["name"],
             "Satisfacción": sat,
             "Promedio": avg,
             "N satisfechos": n_sat,
-            "N no satisfechos": N_TOTAL - n_sat,
+            "IC95 inferior": ci_low,
+            "IC95 superior": ci_high,
             "Nivel": level,
             "Intervalo": interval,
             "Color": color,
@@ -825,22 +972,24 @@ def dimension_summary() -> pd.DataFrame:
 
 def item_summary() -> pd.DataFrame:
     rows = []
-    for i in range(1, 18):
+    for i in range(1, 17):
         item = f"P{i}"
-        s = df[item].dropna()
-        code = f"D{((i-1)//4)+1}" if i <= 16 else "SG"
-        row = {
+        sr = df[item].dropna()
+        code = f"D{((i-1)//4)+1}"
+        rows.append({
             "Número": i,
             "Ítem": item,
             "Dimensión": code,
             "Pregunta": ITEM_TEXT[item],
-            "Promedio": float(s.mean()),
-            "Respuestas 4–5": float((s >= 4).mean()),
-            "Respuestas 1–3": float((s <= 3).mean()),
-        }
-        for v in range(1, 6):
-            row[f"R{v}"] = float((s == v).mean())
-        rows.append(row)
+            "Promedio": float(sr.mean()),
+            "Respuestas 4–5": float((sr >= 4).mean()),
+            "Respuestas 1–3": float((sr <= 3).mean()),
+            "R1": float((sr == 1).mean()),
+            "R2": float((sr == 2).mean()),
+            "R3": float((sr == 3).mean()),
+            "R4": float((sr == 4).mean()),
+            "R5": float((sr == 5).mean()),
+        })
     return pd.DataFrame(rows)
 
 
@@ -848,222 +997,175 @@ DIMS = dimension_summary()
 ITEMS_SUM = item_summary()
 PRIORITY_DIM = DIMS.sort_values("Satisfacción").iloc[0]
 STRONG_DIM = DIMS.sort_values("Satisfacción", ascending=False).iloc[0]
-DIM_ITEM_SUM = ITEMS_SUM[ITEMS_SUM["Número"] <= 16].copy()
-PRIORITY_ITEM = DIM_ITEM_SUM.sort_values("Respuestas 4–5").iloc[0]
-STRONG_ITEM = DIM_ITEM_SUM.sort_values("Respuestas 4–5", ascending=False).iloc[0]
+PRIORITY_ITEM = ITEMS_SUM.sort_values("Respuestas 4–5").iloc[0]
+STRONG_ITEM = ITEMS_SUM.sort_values("Respuestas 4–5", ascending=False).iloc[0]
+INTEGRAL_LEVEL, INTEGRAL_INTERVAL, INTEGRAL_COLOR, INTEGRAL_STATE = institutional_level(INTEGRAL)
+GLOBAL_LEVEL, GLOBAL_INTERVAL, GLOBAL_COLOR, GLOBAL_STATE = institutional_level(GLOBAL)
 
 
 # ==============================================================
-# AJUSTE MÍNIMO DE LA DISTRIBUCIÓN LIKERT
-# (No altera semáforos ni fórmula.)
-# ==============================================================
-st.markdown(r"""
-<style>
-.likert-legend{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 11px 56px;font-size:.68rem;color:#657A90}
-.likert-legend span{padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.58);border:1px solid rgba(255,255,255,.86)}
-.r1{background:linear-gradient(180deg,#D95B68,#BE4654)}
-.r2{background:linear-gradient(180deg,#E78A78,#CF6C5D)}
-.r3{background:linear-gradient(180deg,#BBC5CF,#9EAAB6)}
-.r4{background:linear-gradient(180deg,#61AE9A,#42917D)}
-.r5{background:linear-gradient(180deg,#359B82,#267963)}
-.item-meta{grid-template-columns:repeat(3,1fr)!important}
-@media(max-width:700px){.likert-legend{margin-left:0;font-size:.62rem}}
-</style>
-""", unsafe_allow_html=True)
-
-
-# ==============================================================
-# COMPONENTES HTML
+# HTML COMPONENTS
 # ==============================================================
 def top_header() -> None:
-    if pd.notna(DATE_START) and pd.notna(DATE_END):
-        period = f"{DATE_START:%d %b}–{DATE_END:%d %b %Y}"
-    else:
-        period = "2026"
+    period = "11–31 ago 2026" if pd.notna(DATE_START) and pd.notna(DATE_END) else "2026"
     st.markdown(
         f'''<div class="topbar">
-          <div class="brand"><div class="brand-mark" aria-label="Universidad Nacional de Trujillo">UNT</div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · Formación académica integral</div></div></div>
+          <div class="brand"><div class="brand-mark" aria-label="Universidad Nacional de Trujillo">UNT</div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · Encuesta 2026</div></div></div>
           <div class="top-meta"><div class="meta-box">Periodo de encuesta<b>{period}</b></div><div class="meta-box">Base analizada<b>{N_TOTAL:,} estudiantes</b></div><div class="meta-box">Instrumento<b>17 ítems · 4 dimensiones</b></div></div>
         </div>
-        <div class="pagehead"><div><div class="kicker">Encuesta de satisfacción · análisis 2026</div><div class="title">Satisfacción con la formación académica integral</div><div class="sub">El tablero sigue la estructura del instrumento: <b>D1–D4</b> se calculan con el promedio de sus cuatro ítems por estudiante y <b>P17</b> representa la satisfacción general. Las respuestas se mantienen en su escala Likert original de 1 a 5.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} estudiantes</span><span class="chip">◉ P17 · satisfacción general</span><span class="chip">▦ D1–D4 · promedio de 4 ítems ≥4</span><span class="chip">1–5 · escala Likert original</span></div></div><div class="basebox">Encuesta 2026<b>{period}</b></div></div>''',
+        <div class="pagehead"><div><div class="kicker">Tablero ejecutivo · encuesta de satisfacción 2026</div><div class="title">Satisfacción con la formación académica integral</div><div class="sub"><b>P1–P16 se mantiene como la lectura integral principal del tablero</b>, tal como estaba en el diseño anterior, porque resume las cuatro dimensiones calculadas desde la base Excel. <b>P17 se muestra de forma secundaria</b> como la pregunta de satisfacción general del instrumento. Las reglas de cálculo y los rangos de interpretación se presentan con la terminología del Word.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} estudiantes</span><span class="chip">▦ P1–P16 · lectura integral</span><span class="chip">D1–D4 · promedio dimensional ≥4</span><span class="chip">◉ P17 · satisfacción general</span></div></div><div class="basebox">Encuesta 2026<b>{period}</b></div></div>''',
         unsafe_allow_html=True,
     )
 
 
+def formula_html(n: int, d: int, result: float, caption: str = "Fórmula diagnóstica") -> str:
+    return f'''<div class="formula"><div class="formula-k">{escape(caption)}</div><div class="formula-eq"><span>Porcentaje =</span><span class="frac"><span>N</span><span class="bar"></span><span>D</span></span><span>× 100 =</span><span class="frac"><span>{n:,}</span><span class="bar"></span><span>{d:,}</span></span><span>× 100 =</span><span class="formula-result">{pct(result)}</span></div></div>'''
+
+
 def scale_html(value: float) -> str:
     level, interval, color_now, _ = institutional_level(value)
-    levels = [
-        ("Insatisfactorio", "0–59%", "#E25B68"),
-        ("Regular", "60–74%", "#F2A62C"),
-        ("Satisfactorio", "75–89%", "#16A878"),
-        ("Muy satisfactorio", "90–100%", "#20AABD"),
-    ]
+    levels = [("Insatisfactorio", "0–59%", "#E25B68"), ("Regular", "60–74%", "#F2A62C"), ("Satisfactorio", "75–89%", "#16A878"), ("Muy satisfactorio", "90–100%", "#20AABD")]
     cards = []
     for name, rng, color in levels:
         active = " active" if name == level else ""
         cards.append(f'<div class="scale-step{active}" style="--lvl:{color}"><div class="scale-dot" style="background:{color}"></div><div class="scale-name">{name}</div><div class="scale-range">{rng}</div></div>')
-    return f'''<div class="panel scale-wrap"><div class="scale-title">Criterios de interpretación institucional del instrumento · Resultado: <span style="color:{color_now}">{escape(level)} ({escape(interval)})</span></div><div class="scale4">{"".join(cards)}</div><div class="scale-note">Estos rangos se aplican <b>después de calcular el porcentaje de estudiantes satisfechos</b>. No son alternativas de respuesta de la encuesta. El semáforo es una ayuda visual; el nombre del nivel mostrado en texto es la clasificación exacta.</div></div>'''
+    return f'''<div class="panel scale-wrap"><div class="scale-title">Criterios de interpretación institucional · Nivel correspondiente: <span style="color:{color_now}">{escape(level)} ({escape(interval)})</span></div><div class="scale4">{"".join(cards)}</div><div class="scale-note">Rangos consignados en el Word: <b>0–59% Insatisfactorio</b>, <b>60–74% Regular</b>, <b>75–89% Satisfactorio</b> y <b>90–100% Muy satisfactorio</b>. El propio instrumento indica que estos rangos pueden ajustarse según lineamientos institucionales.</div></div>'''
 
 
 def primary_cards_html() -> str:
-    every100 = round(GLOBAL * 100)
+    integral_ci = f"{pct(INTEGRAL_CI_LOW)} – {pct(INTEGRAL_CI_HIGH)}"
+    p17_ci = f"{pct(GLOBAL_CI_LOW)} – {pct(GLOBAL_CI_HIGH)}"
+    every100 = round(INTEGRAL * 100)
+    delta = GLOBAL - INTEGRAL
+
     kpis = [
-        ("Estudiantes analizados", f"{N_TOTAL:,}", "Total de registros", "👥", "#2457B8", "#EEF4FF"),
-        ("Satisfechos P17", f"{N_GLOBAL:,}", "Respuesta 4 o 5", "✓", "#14846C", "#EDF8F5"),
-        ("No satisfechos P17", f"{N_GLOBAL_NO:,}", "Respuesta 1, 2 o 3", "–", "#C55763", "#FCEFF1"),
-        ("Satisfacción general", pct(GLOBAL), "P17", "◉", "#2457B8", "#EEF4FF"),
-        ("Promedio P17", f"{GLOBAL_MEAN:.2f} / 5", "Media descriptiva", "∑", "#5A6475", "#F3F5F7"),
-        ("Nivel del porcentaje", GLOBAL_LEVEL, GLOBAL_INTERVAL, "🚦", GLOBAL_COLOR, "#F7F9FC"),
+        ("Estudiantes analizados", f"{N_TOTAL:,}", "Denominador del análisis", "👥", "#2457B8", "#EEF4FF"),
+        ("Satisfechos P1–P16", f"{N_INTEGRAL:,}", "Promedio individual ≥4", "✓", "#14846C", "#EDF8F5"),
+        ("Resultado integral", pct(INTEGRAL), "Base 2026 · P1–P16", "▦", "#2457B8", "#EEF4FF"),
+        ("IC 95% aprox.*", integral_ci, "Wilson binomial", "↔", "#0F7D92", "#EEF9FB"),
+        ("Promedio P1–P16", f"{INTEGRAL_MEAN:.2f} / 5", "Media de los 16 ítems", "∑", "#5A6475", "#F3F5F7"),
+        ("P17 · contraste", pct(GLOBAL), "Pregunta global directa", "◉", "#7A8490", "#F5F6F8"),
     ]
-    kpi_html = []
-    for i, (label, val, foot, icon, accent, soft) in enumerate(kpis):
+    kpi_html=[]
+    for i,(label,val,foot,icon,accent,soft) in enumerate(kpis):
         kpi_html.append(f'<div class="kpi" style="--accent:{accent};--soft:{soft}"><div class="kpi-head"><div class="kpi-label">{escape(label)}</div><div class="kpi-icon">{icon}</div></div><div class="kpi-v">{escape(val)}</div><div class="kpi-f">{escape(foot)}</div><div class="spark">{spark_svg(accent,i)}</div></div>')
 
     return f'''<div class="main-reading-grid">
       <div class="integral-hero">
         <div class="integral-top">
           <div>
-            <div class="integral-eyebrow">INDICADOR GENERAL · P17 · BASE 2026</div>
-            <div class="integral-title">Porcentaje de estudiantes satisfechos con su formación académica integral</div>
-            <div class="integral-text">Para la <b>satisfacción general</b>, el instrumento utiliza el ítem 17. Se considera <b>satisfecho</b> al estudiante que responde <b>4 = De acuerdo</b> o <b>5 = Totalmente de acuerdo</b>; las respuestas <b>1, 2 o 3</b> se clasifican como <b>no satisfecho</b> para P17.</div>
+            <div class="integral-eyebrow">Resultado integral P1–P16 · base Excel 2026</div>
+            <div class="integral-title">Lectura integral de las 16 preguntas · P1–P16</div>
+            <div class="integral-text">Este bloque conserva la lectura integral que ya estaba construida en la base Excel: para cada estudiante se calcula el promedio de P1–P16 y se identifica quién alcanza <b>promedio ≥4</b>. Se mantiene como el resultado visual principal del tablero. <b>P17 no reemplaza este bloque ni se presenta como cifra principal</b>; aparece aparte como satisfacción general del instrumento.</div>
           </div>
-          <div class="integral-signal">{traffic_svg(GLOBAL_STATE,56)}</div>
+          <div class="integral-signal">{traffic_svg(INTEGRAL_STATE,56)}</div>
         </div>
         <div class="integral-core">
-          <div><div class="integral-score">{pct(GLOBAL)}</div><div class="integral-level" style="color:{GLOBAL_COLOR}">{escape(GLOBAL_LEVEL)} · {escape(GLOBAL_INTERVAL)} <span>criterio de interpretación del instrumento</span></div></div>
-          <div class="integral-formula">{formula_html(N_GLOBAL, N_TOTAL, GLOBAL, "Fórmula del indicador general · P17")}</div>
+          <div><div class="integral-score">{pct(INTEGRAL)}</div><div class="integral-level" style="color:{INTEGRAL_COLOR}">{escape(INTEGRAL_LEVEL)} · {escape(INTEGRAL_INTERVAL)} <span>escala interpretativa propuesta</span></div></div>
+          <div class="integral-formula">{formula_html(N_INTEGRAL,N_TOTAL,INTEGRAL,"Cálculo directo P1–P16")}</div>
         </div>
-        <div class="human-box"><div class="headline">¿Cómo se lee este resultado?</div>De <b>{N_TOTAL:,} estudiantes</b>, <b>{N_GLOBAL:,}</b> respondieron 4 o 5 en P17. Por ello, el porcentaje de satisfacción general es <b>{pct(GLOBAL)}</b>: aproximadamente <b>{every100} de cada 100 estudiantes</b>. Al aplicar los rangos del instrumento, este porcentaje se ubica en el nivel <b>{escape(GLOBAL_LEVEL)}</b>.</div>
-        <div class="integral-bottom"><div><b>Satisfechos</b><span>{N_GLOBAL:,}</span></div><div><b>No satisfechos</b><span>{N_GLOBAL_NO:,}</span></div><div><b>Promedio P17</b><span>{GLOBAL_MEAN:.2f}/5</span></div></div>
+        <div class="human-box"><div class="headline">¿Cómo explicarlo en una exposición?</div>De los <b>{N_TOTAL:,} estudiantes analizados</b>, <b>{N_INTEGRAL:,}</b> alcanzaron un promedio de 4 o más en el conjunto de P1–P16. Es decir, <b>aproximadamente {every100} de cada 100</b> cumplen el criterio integral definido para este análisis. El {pct(1-INTEGRAL)} restante <b>no debe llamarse automáticamente “insatisfecho”</b>: simplemente no alcanzó el umbral integral de promedio ≥4. Las dimensiones permiten precisar dónde se concentran las brechas.</div>
+        <div class="integral-bottom"><div><b>IC 95% aprox.*</b><span>{integral_ci}</span></div><div><b>Promedio P1–P16</b><span>{INTEGRAL_MEAN:.2f}/5</span></div><div><b>Consistencia interna</b><span>α={ALPHA_P1_P16:.3f}</span></div></div>
       </div>
       <div class="side-stack">
-        <div class="panel p17-card"><div class="p17-head"><div><div class="side-kicker">Regla del instrumento</div><div class="p17-title">Criterio de satisfacción general</div></div>{traffic_svg(GLOBAL_STATE,29)}</div><div class="p17-copy"><b>4–5 = Satisfecho</b><br><b>1–3 = No satisfecho</b><br><br>Esta clasificación corresponde expresamente a la satisfacción general P17.</div></div>
-        <div class="panel pei-mini"><div class="side-kicker">Escala de respuesta</div><div class="pei-mini-title">Likert de 5 puntos</div><div class="pei-mini-note"><b>1</b> Totalmente en desacuerdo<br><b>2</b> En desacuerdo<br><b>3</b> Ni de acuerdo ni en desacuerdo<br><b>4</b> De acuerdo<br><b>5</b> Totalmente de acuerdo</div></div>
+        <div class="panel p17-card"><div class="p17-head"><div><div class="side-kicker">Satisfacción general · ítem 17</div><div class="p17-title">P17: resultado complementario</div></div>{traffic_svg(GLOBAL_STATE,29)}</div><div class="p17-score">{pct(GLOBAL)}</div><div class="p17-level" style="color:{GLOBAL_COLOR}">{escape(GLOBAL_LEVEL)} · {escape(GLOBAL_INTERVAL)}</div><div class="p17-copy"><b>{N_GLOBAL:,} de {N_TOTAL:,}</b> estudiantes respondieron <b>4 o 5</b>. El Word define para P17: <b>4–5 = Satisfecho</b> y <b>1–3 = No satisfecho</b>. Esta cifra se deja deliberadamente en segundo plano.</div></div>
+        <div class="panel pei-mini"><div class="side-kicker">Regla del instrumento</div><div class="pei-mini-title">Cómo leer P17</div><div class="pei-mini-note">El <b>{pct(GLOBAL)}</b> corresponde únicamente a la pregunta 17 de satisfacción general. No es el porcentaje de cada dimensión ni sustituye la lectura P1–P16. El nivel <b>{escape(GLOBAL_LEVEL)}</b> se obtiene después, al ubicar ese porcentaje dentro de los rangos de interpretación del Word.</div></div>
       </div>
-    </div><div class="kpi-grid">{"".join(kpi_html)}</div>'''
+    </div><div class="kpi-grid">{"".join(kpi_html)}</div><div class="stat-footnote">* IC 95% de Wilson. Solo tiene interpretación inferencial estricta hacia toda la población si el diseño de selección es probabilístico o razonablemente equivalente. Si hubo autoselección o cobertura incompleta, debe leerse como referencia de precisión de estas respuestas, no como corrección del sesgo de selección.</div>'''
 
 
 def dimension_cards_html() -> str:
-    cards = []
-    for _, r in DIMS.sort_values("Código").iterrows():
-        code = str(r["Código"])
-        meta = DIMENSIONS[code]
-        sat = float(r["Satisfacción"])
-        avg = float(r["Promedio"])
-        level, interval, color, state = institutional_level(sat)
-        cards.append(f'''<div class="panel dim-card" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="dim-head"><div><div class="dim-code">{meta['icon']} {code}</div><div class="dim-name">{escape(meta['name'])}</div></div>{traffic_svg(state,30)}</div><div class="dim-body"><div class="donut" style="--p:{sat*100:.2f};--accent:{meta['accent']}"><b>{pct(sat)}</b></div><div><div class="dim-level" style="color:{color}">{escape(level)}</div><div class="dim-meta"><b>Rango:</b> {escape(interval)}<br><b>Estudiantes satisfechos:</b> {int(r['N satisfechos']):,} de {N_TOTAL:,}<br><b>No satisfechos:</b> {int(r['N no satisfechos']):,}<br><b>Promedio dimensional:</b> {avg:.2f}/5</div></div></div><div class="dim-meaning"><b>Qué evalúa:</b> {escape(meta['meaning'])}</div><div class="dim-foot"><span>Regla del Word: promedio de los 4 ítems ≥4</span><b>{', '.join(meta['items'])}</b></div></div>''')
-    return '<div class="dim-grid">' + ''.join(cards) + '</div>'
-
+    cards=[]
+    for _,r in DIMS.sort_values("Código").iterrows():
+        code=r["Código"]; meta=DIMENSIONS[code]; sat=float(r["Satisfacción"]); avg=float(r["Promedio"])
+        level,interval,color,state=institutional_level(sat)
+        ci_low=float(r["IC95 inferior"]); ci_high=float(r["IC95 superior"])
+        cards.append(f'''<div class="panel dim-card" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="dim-head"><div><div class="dim-code">{meta['icon']} {code}</div><div class="dim-name">{escape(meta['name'])}</div></div>{traffic_svg(state,30)}</div><div class="dim-body"><div class="donut" style="--p:{sat*100:.2f};--accent:{meta['accent']}"><b>{pct(sat)}</b></div><div><div class="dim-level" style="color:{color}">{escape(level)}</div><div class="dim-meta"><b>Rango de la escala propuesta:</b> {escape(interval)}<br><b>Estudiantes que cumplen el criterio:</b> {int(r['N satisfechos']):,} de {N_TOTAL:,}<br><b>IC 95% aprox.*:</b> {pct(ci_low)}–{pct(ci_high)}<br><b>Promedio dimensional:</b> {avg:.2f}/5</div></div></div><div class="dim-meaning"><b>Qué evalúa:</b> {escape(meta['meaning'])}</div><div class="dim-foot"><span>Regla documental: promedio de 4 ítems ≥4</span><b>{', '.join(meta['items'])}</b></div></div>''')
+    return '<div class="dim-grid">'+''.join(cards)+'</div>'
 
 def insights_html() -> str:
-    pri = PRIORITY_DIM
-    strong = STRONG_DIM
-    pitem = PRIORITY_ITEM
-    sitem = STRONG_ITEM
+    pri=PRIORITY_DIM; pitem=PRIORITY_ITEM; strong_dim=STRONG_DIM; strong_item=STRONG_ITEM
+    delta_p17 = GLOBAL - INTEGRAL
+    qtxt = p_text(COCHRAN_P)
+    d3_pair_p = max([r["p_holm"] for r in PAIRWISE_DIM if "D3" in (r["A"], r["B"])])
+    d4_pair_p = max([r["p_holm"] for r in PAIRWISE_DIM if "D4" in (r["A"], r["B"])])
     return f'''<div class="insight-grid">
-      <div class="panel insight" style="--accent:#2457B8"><div class="insight-k">Satisfacción general</div><div class="insight-t">P17 · {pct(GLOBAL)}</div><div class="insight-x"><b>{N_GLOBAL:,} de {N_TOTAL:,}</b> estudiantes respondieron 4 o 5. Según la escala del instrumento, el resultado es <b>{escape(GLOBAL_LEVEL)}</b>.</div></div>
-      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Menor resultado dimensional</div><div class="insight-t">{pri['Código']} · {pct(float(pri['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta la menor proporción de estudiantes con promedio dimensional ≥4.</div></div>
-      <div class="panel insight" style="--accent:{DIMENSIONS[str(strong['Código'])]['accent']}"><div class="insight-k">Mayor resultado dimensional</div><div class="insight-t">{strong['Código']} · {pct(float(strong['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(strong['Dimensión']))}</b> presenta la mayor proporción de estudiantes con promedio dimensional ≥4.</div></div>
-      <div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Lectura por preguntas</div><div class="insight-t">P1–P16 explican las dimensiones</div><div class="insight-x">El menor porcentaje de respuestas 4–5 está en <b>{pitem['Ítem']} ({pct(float(pitem['Respuestas 4–5']))})</b> y el mayor en <b>{sitem['Ítem']} ({pct(float(sitem['Respuestas 4–5']))})</b>. Estos porcentajes por pregunta son descriptivos; la clasificación de cada dimensión se obtiene con el promedio de sus cuatro ítems por estudiante.</div></div>
-    </div>'''
+      <div class="panel insight" style="--accent:#2457B8"><div class="insight-k">Resultado integral observado</div><div class="insight-t"><span class="metric-code">P1–P16</span><span class="metric-main">Satisfacción integral: {pct(INTEGRAL)}</span><span class="metric-sub">Estudiantes que cumplen el criterio: {N_INTEGRAL:,}</span></div><div class="insight-x">El {pct(INTEGRAL)} es la proporción que alcanza <b>promedio P1–P16 ≥4</b> bajo la operacionalización usada en este análisis. No equivale al promedio simple de las 16 preguntas y tampoco implica que el {pct(1-INTEGRAL)} restante esté necesariamente insatisfecho.</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Dimensión con menor satisfacción observada</div><div class="insight-t"><span class="metric-code">{pri['Código']}</span><span class="metric-main">Satisfacción observada: {pct(float(pri['Satisfacción']))}</span></div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta la menor proporción de satisfacción. La comparación conjunta de D1–D4 detecta diferencias entre las proporciones dimensionales (<b>Cochran Q={COCHRAN_Q:.1f}; {qtxt}</b>). D3 es menor que cada una de las otras dimensiones en comparaciones pareadas de McNemar con corrección de Holm (<b>{p_text(d3_pair_p)}</b>).</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(strong_dim['Código'])]['accent']}"><div class="insight-k">Dimensión con mayor satisfacción observada</div><div class="insight-t"><span class="metric-code">{strong_dim['Código']}</span><span class="metric-main">Satisfacción observada: {pct(float(strong_dim['Satisfacción']))}</span></div><div class="insight-x"><b>{escape(str(strong_dim['Dimensión']))}</b> registra el mejor resultado. D4 también es mayor que las otras dimensiones en las comparaciones pareadas ajustadas (<b>{p_text(d4_pair_p)}</b>). En sus ítems, <b>{strong_item['Ítem']}</b> alcanza {pct(float(strong_item['Respuestas 4–5']))} de respuestas 4–5.</div></div>
+      <div class="panel insight" style="--accent:#6C7583"><div class="insight-k">P17 frente al resultado integral P1–P16</div><div class="insight-t"><span class="metric-code">P17</span><span class="metric-main">Satisfacción general: {pct(GLOBAL)}</span><span class="metric-sub">Diferencia respecto a P1–P16: +{pp(delta_p17)}</span></div><div class="insight-x">En esta base, P17 presenta una proporción mayor que la clasificación P1–P16 y McNemar detecta una diferencia estadística (<b>McNemar {p_text(INT_P17_MCNEMAR_P)}</b>). La asociación es alta (<b>ρ={RHO_P17_P1P16:.3f}</b>), pero la concordancia binaria es solo parcial (<b>κ={KAPPA_INT_P17:.3f}</b>). Por ello, P17 sirve como contraste global, no como reemplazo automático del resultado integral.</div></div>
+    </div>
+    <div class="stat-evidence"><div class="stat-title">Evidencia estadística que respalda la lectura de D1–D4</div>Las cuatro dimensiones fueron evaluadas por los <b>mismos estudiantes</b>; por ello se utilizó <b>Cochran Q</b> para comparar las cuatro proporciones binarias de satisfacción y <b>McNemar pareado</b> para las comparaciones entre dimensiones, con corrección de Holm por comparaciones múltiples. <span class="tag">Q={COCHRAN_Q:.1f}</span><span class="tag">gl=3</span><span class="tag">{qtxt}</span><div class="stat-caveat">La significancia estadística no reemplaza la relevancia sustantiva ni resuelve posibles sesgos de selección de la encuesta. Bajo los supuestos de estas pruebas, aporta evidencia de que las diferencias observadas entre dimensiones son mayores que las esperables por variación aleatoria. La generalización a toda la población depende del diseño de selección de la encuesta.</div></div>
+    <div class="interpret-banner"><b>Lectura humanizada para decisión:</b> el resultado integral muestra el nivel de satisfacción conjunta bajo la regla P1–P16; el análisis estadístico confirma que las dimensiones se comportan de manera diferente. <b>D3 constituye la prioridad diagnóstica</b> porque presenta el menor porcentaje observado y las comparaciones pareadas detectan diferencias frente a las demás dimensiones. <b>D4 funciona como referencia interna de mejor desempeño</b>. P17 aporta la percepción general, pero no debe confundirse con la clasificación integral.</div>'''
 
 
-def _style_for_item(code: str) -> tuple[str, str]:
-    if code in DIMENSIONS:
-        return DIMENSIONS[code]["accent"], DIMENSIONS[code]["soft"]
-    return "#2457B8", "#EEF4FF"
-
-
-def _selected_items(selected: str) -> pd.DataFrame:
-    if selected == "Todas":
-        return ITEMS_SUM.copy()
-    if selected == "SG":
-        return ITEMS_SUM[ITEMS_SUM["Ítem"] == "P17"].copy()
-    return ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
+def pei_route_html() -> str:
+    nodes=[f'''<div class="node diag" style="--accent:#D7A53B"><div class="node-y">2026</div><div class="node-v">Diseño, estandarización y validación</div><div class="node-c">La ficha PEI indica que no se generan todavía valores medibles oficiales del indicador.</div></div>''']
+    for y,t in PEI_TARGETS.items():
+        abs_target={2027:"8,400 / 14,000",2028:"9,100 / 14,000",2029:"9,800 / 14,000",2030:"10,500 / 14,000"}[y]
+        nodes.append(f'''<div class="node" style="--accent:#2F66D8"><div class="node-y">{y}</div><div class="node-v">{pct(t,0)}</div><div class="node-c">Logro esperado: {abs_target}</div></div>''')
+    return f'''<div class="panel pei-card"><div class="pei-banner"><div class="i">⚠</div><div><div class="t">Cómo debe leerse el PEI frente a estas encuestas 2026</div><div class="x">La base 2026 puede utilizarse como diagnóstico o línea base preliminar. No debe presentarse como cumplimiento oficial del PEI 2026, porque la ficha técnica señala que la medición efectiva inicia a partir de 2027. El 60% funciona como valor referencial y como logro esperado para 2027, no como meta oficial del año 2026.</div></div></div><div class="route">{''.join(nodes)}</div></div>'''
 
 
 def item_cards_html(selected: str) -> str:
-    d = _selected_items(selected)
+    d = ITEMS_SUM.copy() if selected == "Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
     cards = []
-    for _, r in d.sort_values("Número").iterrows():
+    for _, r in d.sort_values(["Dimensión", "Número"]).iterrows():
         code = str(r["Dimensión"])
-        accent, soft = _style_for_item(code)
-        p45 = float(r["Respuestas 4–5"])
-        p13 = float(r["Respuestas 1–3"])
-        label45 = "Satisfechos (4–5)" if r["Ítem"] == "P17" else "Respuestas 4–5"
-        label13 = "No satisfechos (1–3)" if r["Ítem"] == "P17" else "Respuestas 1–3"
-        dim_label = "Satisfacción general" if code == "SG" else f"Dimensión {code}"
-        cards.append(f'''<div class="panel item" style="--accent:{accent};--soft:{soft}"><div class="item-top"><div class="item-code">Ítem {r['Ítem']} | {dim_label}</div><div class="item-score">{pct(p45)}</div></div><div class="item-q">{escape(str(r['Pregunta']))}</div><div class="meter"><span style="width:{p45*100:.2f}%"></span></div><div class="item-meta"><div><div class="k">{escape(label45)}</div><div class="v">{pct(p45)}</div></div><div><div class="k">{escape(label13)}</div><div class="v">{pct(p13)}</div></div><div><div class="k">Promedio</div><div class="v">{float(r['Promedio']):.2f}/5</div></div></div></div>''')
+        meta = DIMENSIONS[code]
+        r45 = float(r["Respuestas 4–5"])
+        r13 = float(r["Respuestas 1–3"])
+        cards.append(f'''<div class="panel item" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="item-top"><div class="item-code">Ítem {r['Ítem']} | Dimensión {code}</div><div class="item-score">{pct(r45)}</div></div><div class="item-q">{escape(str(r['Pregunta']))}</div><div class="meter"><span style="width:{r45*100:.2f}%"></span></div><div class="item-meta"><div><div class="k">Respuestas 4–5</div><div class="v">{pct(r45)}</div></div><div><div class="k">Respuestas 1–3</div><div class="v">{pct(r13)}</div></div><div><div class="k">Promedio</div><div class="v">{float(r['Promedio']):.2f}</div></div></div></div>''')
     return '<div class="item-grid">' + ''.join(cards) + '</div>'
 
 
 def likert_html(selected: str) -> str:
-    d = _selected_items(selected)
+    d = ITEMS_SUM.copy() if selected == "Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
     rows = []
-    for _, r in d.sort_values("Número").iterrows():
+    for _, r in d.sort_values(["Dimensión", "Número"]).iterrows():
         vals = [float(r[f"R{i}"]) for i in range(1, 6)]
         def label(v: float) -> str:
-            return f"{v*100:.0f}%" if v >= .075 else ""
-        segs = ''.join(
-            f'<div class="seg r{i}" style="width:{vals[i-1]*100:.3f}%" title="Respuesta {i}: {pct(vals[i-1])}">{label(vals[i-1])}</div>'
-            for i in range(1, 6)
+            return f"{v*100:.0f}%" if v >= .065 else ""
+        segments = ''.join(
+            f'<div class="seg lik{i}" style="width:{v*100:.3f}%">{label(v)}</div>'
+            for i, v in enumerate(vals, start=1)
         )
-        rows.append(f'<div class="likert-row"><div class="likert-code">{r["Ítem"]}</div><div class="likert-pill">{segs}</div></div>')
-    legend = '''<div class="likert-legend"><span>1 · Totalmente en desacuerdo</span><span>2 · En desacuerdo</span><span>3 · Ni de acuerdo ni en desacuerdo</span><span>4 · De acuerdo</span><span>5 · Totalmente de acuerdo</span></div>'''
-    return legend + '<div class="panel likert">' + ''.join(rows) + '</div>'
+        rows.append(f'''<div class="likert-row"><div class="likert-code">{r['Ítem']}</div><div class="likert-pill">{segments}</div></div>''')
+    legend = '''<div class="likert-legend">
+      <div><b>1</b><span>Totalmente en desacuerdo</span></div>
+      <div><b>2</b><span>En desacuerdo</span></div>
+      <div><b>3</b><span>Ni de acuerdo ni en desacuerdo</span></div>
+      <div><b>4</b><span>De acuerdo</span></div>
+      <div><b>5</b><span>Totalmente de acuerdo</span></div>
+    </div>'''
+    return '<div class="panel likert">' + legend + ''.join(rows) + '</div>'
 
 
 def selected_insights_html(selected: str) -> str:
-    d = _selected_items(selected)
+    d = ITEMS_SUM.copy() if selected == "Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
     weak = d.sort_values("Respuestas 4–5").iloc[0]
     strong = d.sort_values("Respuestas 4–5", ascending=False).iloc[0]
     if selected == "Todas":
-        context = "Se muestran las 17 preguntas del instrumento: P1–P16 explican las cuatro dimensiones y P17 corresponde a satisfacción general."
-        action = "Use los ítems para identificar aspectos específicos. Para D1–D4, la satisfacción se calcula con el promedio de los cuatro ítems; para P17 se usa directamente la respuesta 4–5."
-    elif selected == "SG":
-        context = "P17 corresponde a la satisfacción general con la formación académica."
-        action = "En P17, el Word define 4–5 como satisfecho y 1–3 como no satisfecho."
+        context = "El análisis cubre P1–P16 y permite revisar cada pregunta dentro de las cuatro dimensiones del instrumento."
+        action = "Leer cada ítem con su porcentaje de respuestas 4–5, respuestas 1–3 y promedio; la clasificación de la dimensión se calcula aparte con el promedio de sus cuatro ítems por estudiante."
     else:
         context = f"{selected} evalúa {DIMENSIONS[selected]['meaning'].lower()}"
-        action = f"Los porcentajes de cada pregunta describen respuestas. El resultado de {selected} se calcula por estudiante con el promedio de {', '.join(DIMENSIONS[selected]['items'])} ≥4."
-    return f'''<div class="insight-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))"><div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Bloque analizado</div><div class="insight-t">{escape(selected)}</div><div class="insight-x">{escape(context)}</div></div><div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Menor porcentaje 4–5</div><div class="insight-t">Ítem {weak['Ítem']} · {pct(float(weak['Respuestas 4–5']))}</div><div class="insight-x">{escape(str(weak['Pregunta']))}</div></div><div class="panel insight" style="--accent:#16A878"><div class="insight-k">Mayor porcentaje 4–5</div><div class="insight-t">Ítem {strong['Ítem']} · {pct(float(strong['Respuestas 4–5']))}</div><div class="insight-x">{escape(str(strong['Pregunta']))}</div></div><div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Cómo leerlo</div><div class="insight-t">Regla del instrumento</div><div class="insight-x">{escape(action)}</div></div></div>'''
+        action = f"Usar estos cuatro ítems para explicar el resultado de {selected}; el Word define satisfacción dimensional cuando el promedio de los cuatro ítems del estudiante es ≥4."
+    return f'''<div class="insight-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))"><div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Bloque analizado</div><div class="insight-t">{escape(selected)}</div><div class="insight-x">{escape(context)}</div></div><div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Menor proporción de respuestas 4–5</div><div class="insight-t"><span class="metric-code">Ítem {weak['Ítem']}</span><span class="metric-main">Respuestas 4–5: {pct(float(weak['Respuestas 4–5']))}</span></div><div class="insight-x">{escape(str(weak['Pregunta']))}<div class="metric-detail"><b>Respuestas 1–3:</b> {pct(float(weak['Respuestas 1–3']))}<br><b>Promedio del ítem:</b> {float(weak['Promedio']):.2f}/5</div></div></div><div class="panel insight" style="--accent:#16A878"><div class="insight-k">Mayor proporción de respuestas 4–5</div><div class="insight-t"><span class="metric-code">Ítem {strong['Ítem']}</span><span class="metric-main">Respuestas 4–5: {pct(float(strong['Respuestas 4–5']))}</span></div><div class="insight-x">{escape(str(strong['Pregunta']))}<div class="metric-detail"><b>Respuestas 1–3:</b> {pct(float(strong['Respuestas 1–3']))}<br><b>Promedio del ítem:</b> {float(strong['Promedio']):.2f}/5</div></div></div><div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Cómo usarlo</div><div class="insight-t">Lectura por pregunta</div><div class="insight-x">{escape(action)}</div></div></div>'''
 
 
-def method_cards_html() -> str:
-    return '''<div class="method-grid">
-      <div class="panel method"><div class="method-i">◎</div><div class="method-t">Indicador institucional</div><div class="method-x"><b>Porcentaje de estudiantes de pregrado satisfechos con su formación académica integral.</b> El porcentaje se obtiene como número de estudiantes satisfechos dividido entre el total de estudiantes encuestados, multiplicado por 100.</div></div>
-      <div class="panel method"><div class="method-i">▦</div><div class="method-t">D1–D4</div><div class="method-x"><b>D1:</b> P1–P4 · <b>D2:</b> P5–P8 · <b>D3:</b> P9–P12 · <b>D4:</b> P13–P16. En cada dimensión, un estudiante es satisfecho cuando el <b>promedio de sus cuatro respuestas es ≥4</b>.</div></div>
-      <div class="panel method"><div class="method-i">◉</div><div class="method-t">Satisfacción general · P17</div><div class="method-x"><b>Satisfecho:</b> respuesta 4 o 5.<br><b>No satisfecho:</b> respuesta 1, 2 o 3.</div></div>
-    </div>'''
-
-
-def interpretation_cards_html() -> str:
-    return '''<div class="scale4">
-      <div class="scale-step" style="opacity:1"><div class="scale-dot" style="background:#E25B68"></div><div class="scale-name">Insatisfactorio</div><div class="scale-range">0–59%</div></div>
-      <div class="scale-step" style="opacity:1"><div class="scale-dot" style="background:#F2A62C"></div><div class="scale-name">Regular</div><div class="scale-range">60–74%</div></div>
-      <div class="scale-step" style="opacity:1"><div class="scale-dot" style="background:#16A878"></div><div class="scale-name">Satisfactorio</div><div class="scale-range">75–89%</div></div>
-      <div class="scale-step" style="opacity:1"><div class="scale-dot" style="background:#20AABD"></div><div class="scale-name">Muy satisfactorio</div><div class="scale-range">90–100%</div></div>
-    </div>'''
-
-
-def technical_sheet_html() -> str:
-    return '''<div class="method-grid">
-      <div class="panel method"><div class="method-i">📝</div><div class="method-t">Instrumento</div><div class="method-x"><b>Encuesta de satisfacción sobre la formación académica integral</b><br>Cuestionario estructurado · escala Likert de 5 puntos.</div></div>
-      <div class="panel method"><div class="method-i">🎓</div><div class="method-t">Población y unidad de análisis</div><div class="method-x">Población objetivo: <b>estudiantes de pregrado de la Universidad Nacional de Trujillo</b>.<br>Unidad de análisis: estudiante de pregrado.</div></div>
-      <div class="panel method"><div class="method-i">✓</div><div class="method-t">Aplicación y variable</div><div class="method-x">Aplicación <b>autoadministrada y anónima</b>.<br>Variable: <b>satisfacción con la formación académica integral</b>.</div></div>
-    </div>'''
-
-
-def data_quality_html() -> str:
-    total_cells = N_TOTAL * len(ALL_ITEMS)
-    completeness = 1 - MISSING_RESPONSES / total_cells if total_cells else float("nan")
-    validity = 1 - INVALID_RESPONSES / total_cells if total_cells else float("nan")
+def quality_html() -> str:
+    completeness = 1 - (MISSING_RESPONSES / (N_TOTAL * len(ALL_ITEMS))) if N_TOTAL else float("nan")
+    valid_pct = 1 - (INVALID_RESPONSES / (N_TOTAL * len(ALL_ITEMS))) if N_TOTAL else float("nan")
+    alpha_dims = " · ".join([f"{k} {v:.3f}" for k,v in ALPHA_DIMS.items()])
     return f'''<div class="quality-grid">
-      <div class="panel quality-card" style="--accent:#16A878"><div class="quality-k">Registros</div><div class="quality-v">{N_TOTAL:,}</div><div class="quality-x">Estudiantes contenidos en la base utilizada por el tablero.</div></div>
-      <div class="panel quality-card" style="--accent:#2F66D8"><div class="quality-k">Completitud P1–P17</div><div class="quality-v">{pct(completeness)}</div><div class="quality-x">{MISSING_RESPONSES:,} valores faltantes en los 17 ítems.</div></div>
-      <div class="panel quality-card" style="--accent:#7C5CE7"><div class="quality-k">Respuestas dentro de 1–5</div><div class="quality-v">{pct(validity)}</div><div class="quality-x">{INVALID_RESPONSES:,} valores fuera de la escala Likert esperada.</div></div>
-      <div class="panel quality-card" style="--accent:#F2A62C"><div class="quality-k">Fuente del tablero</div><div class="quality-v">Excel</div><div class="quality-x">Los resultados se recalculan desde las columnas P1–P17 de basededatos.xlsx.</div></div>
-    </div>'''
+      <div class="panel quality-card" style="--accent:#16A878"><div class="quality-k">Completitud P1–P17</div><div class="quality-v">{pct(completeness)}</div><div class="quality-x">{MISSING_RESPONSES:,} valores faltantes en los 17 ítems.</div></div>
+      <div class="panel quality-card" style="--accent:#2F66D8"><div class="quality-k">Rango de respuestas</div><div class="quality-v">{pct(valid_pct)}</div><div class="quality-x">{INVALID_RESPONSES:,} respuestas fuera de la escala 1–5.</div></div>
+      <div class="panel quality-card" style="--accent:#7C5CE7"><div class="quality-k">Consistencia interna P1–P16</div><div class="quality-v">α = {ALPHA_P1_P16:.3f}</div><div class="quality-x">Alfas dimensionales: {alpha_dims}. La consistencia es muy alta, pero <b>alfa no demuestra validez ni unidimensionalidad</b>.</div></div>
+      <div class="panel quality-card" style="--accent:#F2A62C"><div class="quality-k">Patrones uniformes P1–P17</div><div class="quality-v">{pct(UNIFORM_PCT)}</div><div class="quality-x">{UNIFORM_N:,} estudiantes marcaron exactamente la misma alternativa en los 17 ítems.</div></div>
+    </div><div class="quality-warning"><b>Lectura metodológica:</b> P1–P16 presenta alta consistencia interna (α={ALPHA_P1_P16:.3f}) y las cuatro puntuaciones dimensionales muestran asociaciones Spearman entre <b>{DIM_CORR_MIN:.3f} y {DIM_CORR_MAX:.3f}</b>, lo que aporta evidencia exploratoria de coherencia entre componentes. Sin embargo, esto <b>no basta para validar formalmente un indicador global</b>. La validez de contenido requiere V de Aiken con jueces; la estructura del constructo debería confirmarse con análisis factorial; y la representatividad exige documentar el diseño muestral, cobertura y no respuesta. El {pct(UNIFORM_PCT)} de patrones uniformes debe auditarse, no eliminarse automáticamente.</div>'''
+
+
 
 # ==============================================================
 # CAPA FINAL DE TIPOGRAFÍA — ESCALA ÚNICA Y LEGIBLE
@@ -1461,92 +1563,110 @@ st.markdown(r"""
 """, unsafe_allow_html=True)
 
 # ==============================================================
+# AJUSTE FINAL SOLICITADO — SOLO CONTENIDO / JERARQUÍA
+# ==============================================================
+st.markdown(r"""
+<style>
+/* P17 queda claramente secundario; el valor grande sigue siendo P1–P16 */
+.p17-score{font-size:1.52rem!important;line-height:1.05!important;margin-top:8px!important;letter-spacing:-.025em!important}
+@media(max-width:700px){.p17-score{font-size:1.42rem!important}}
+
+/* Distribución exacta de las cinco alternativas Likert del Word */
+.likert-legend{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin-bottom:12px}
+.likert-legend>div{padding:8px 7px;border-radius:10px;background:rgba(255,255,255,.58);border:1px solid rgba(255,255,255,.82);text-align:center}
+.likert-legend b{display:block;font-size:.76rem;color:#173650}
+.likert-legend span{display:block;font-size:.60rem;line-height:1.30;color:#718196;margin-top:2px}
+.seg.lik1{background:linear-gradient(180deg,#D85D6B,#BE4858)}
+.seg.lik2{background:linear-gradient(180deg,#E39A73,#CC7C59)}
+.seg.lik3{background:linear-gradient(180deg,#BAC4CF,#98A6B5)}
+.seg.lik4{background:linear-gradient(180deg,#63B59E,#439881)}
+.seg.lik5{background:linear-gradient(180deg,#318D79,#237360)}
+@media(max-width:700px){.likert-legend{grid-template-columns:1fr}.likert-legend>div{text-align:left;display:flex;gap:8px;align-items:center}.likert-legend span{margin-top:0}}
+</style>
+""", unsafe_allow_html=True)
+
+# ==============================================================
 # APP
 # ==============================================================
 top_header()
 
-tab1, tab2, tab3 = st.tabs(["◉ Visión ejecutiva", "▦ Dimensiones e ítems", "ⓘ Método del instrumento"])
+tab1, tab2, tab3 = st.tabs(["◉ Visión ejecutiva", "▦ Dimensiones e ítems", "ⓘ Método y calidad"])
 
 with tab1:
     section_header(
-        "Indicador general",
-        "Satisfacción general con la formación académica · P17",
-        "P17: 4–5 = satisfecho; 1–3 = no satisfecho. El porcentaje se interpreta con los rangos definidos en el instrumento.",
+        "Resultado principal del tablero",
+        "Lectura integral P1–P16 calculada con la base 2026",
+        "Se conserva la jerarquía visual anterior: P1–P16 permanece como lectura principal y P17 se muestra en un tamaño secundario.",
     )
     st.markdown(primary_cards_html(), unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    st.markdown(scale_html(GLOBAL), unsafe_allow_html=True)
+    st.markdown(scale_html(INTEGRAL), unsafe_allow_html=True)
 
     section_header(
-        "Cálculo por dimensión",
+        "Diagnóstico 4D",
         "Satisfacción en las cuatro dimensiones",
-        "En D1–D4, cada estudiante se clasifica como satisfecho cuando el promedio de los cuatro ítems de la dimensión es ≥4.",
+        "Cada dimensión se calcula con la regla documental promedio ≥4; el semáforo solo traduce la escala propuesta y no constituye una prueba estadística.",
     )
     st.markdown(dimension_cards_html(), unsafe_allow_html=True)
 
     section_header(
-        "Lectura de resultados",
-        "Resumen para interpretación",
-        "Los porcentajes global y dimensionales se calculan con reglas distintas porque así está estructurado el instrumento.",
+        "Interpretación ejecutiva",
+        "Qué dicen los resultados y qué decisiones sugieren",
+        "Lectura descriptiva complementada con Cochran Q y McNemar para comparaciones pareadas, además de IC 95% aproximados, consistencia interna, asociación y concordancia.",
     )
     st.markdown(insights_html(), unsafe_allow_html=True)
 
+
 with tab2:
-    section_header("Explorador", "Preguntas del instrumento", "P1–P16 explican las dimensiones; P17 corresponde a satisfacción general.")
+    section_header("Explorador", "Dimensiones e ítems", "Visualizaciones estáticas y responsivas: no hay zoom, arrastre ni ejes móviles.")
     selected = st.selectbox(
-        "Bloque a analizar",
-        ["Todas", "D1", "D2", "D3", "D4", "SG"],
-        format_func=lambda x: (
-            "Todas las preguntas (P1–P17)" if x == "Todas" else
-            "Satisfacción general (P17)" if x == "SG" else
-            f"{x} · {DIMENSIONS[x]['name']}"
-        ),
+        "Dimensión a analizar",
+        ["Todas", "D1", "D2", "D3", "D4"],
+        format_func=lambda x: "Todas las dimensiones (P1–P16)" if x == "Todas" else f"{x} · {DIMENSIONS[x]['name']}",
         label_visibility="collapsed",
     )
-    section_header("Lectura del bloque", "Qué destaca y cómo debe interpretarse")
+    section_header("Lectura del bloque", "Qué destaca y qué requiere atención")
     st.markdown(selected_insights_html(selected), unsafe_allow_html=True)
-
-    section_header(
-        "Resultados por pregunta",
-        "Respuestas 4–5 en cada ítem",
-        "Para P1–P16 se muestra descriptivamente el porcentaje de respuestas 4–5 y 1–3; la satisfacción dimensional no se obtiene promediando estos porcentajes, sino por estudiante con promedio dimensional ≥4.",
-    )
+    section_header("Lectura por pregunta", "Respuestas 4–5 en cada ítem", "Se muestra la proporción de respuestas 4–5 y 1–3 sin crear categorías adicionales. La clasificación dimensional se calcula aparte con el promedio de sus cuatro ítems por estudiante.")
     st.markdown(item_cards_html(selected), unsafe_allow_html=True)
-
-    section_header(
-        "Distribución de respuestas",
-        "Escala Likert original de 1 a 5",
-        "Se muestran las cinco alternativas originales; no se crean categorías adicionales como favorable, neutral o desfavorable.",
-    )
+    section_header("Distribución de respuesta", "Escala Likert original de 1 a 5", "1 = Totalmente en desacuerdo · 2 = En desacuerdo · 3 = Ni de acuerdo ni en desacuerdo · 4 = De acuerdo · 5 = Totalmente de acuerdo.")
     st.markdown(likert_html(selected), unsafe_allow_html=True)
-
-    with st.expander("Ver detalle técnico de las preguntas"):
-        dshow = _selected_items(selected).sort_values("Número").copy()
-        table = dshow[["Ítem", "Dimensión", "Pregunta", "Respuestas 4–5", "Respuestas 1–3", "Promedio", "R1", "R2", "R3", "R4", "R5"]].copy()
+    with st.expander("Ver detalle técnico de los ítems"):
+        dshow = ITEMS_SUM.copy() if selected == "Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
+        dshow = dshow.sort_values(["Dimensión", "Número"])
+        table = dshow[["Ítem", "Dimensión", "Pregunta", "Respuestas 4–5", "Respuestas 1–3", "R1", "R2", "R3", "R4", "R5", "Promedio"]].copy()
         for c in ["Respuestas 4–5", "Respuestas 1–3", "R1", "R2", "R3", "R4", "R5"]:
             table[c] = table[c].map(lambda x: f"{x*100:.1f}%")
+        table = table.rename(columns={"R1":"1", "R2":"2", "R3":"3", "R4":"4", "R5":"5"})
         table["Promedio"] = table["Promedio"].map(lambda x: f"{x:.2f}")
-        table = table.rename(columns={"R1":"Resp. 1", "R2":"Resp. 2", "R3":"Resp. 3", "R4":"Resp. 4", "R5":"Resp. 5"})
-        st.dataframe(table, use_container_width=True, hide_index=True, height=min(650, 45 + 36*len(table)))
+        st.dataframe(table, use_container_width=True, hide_index=True, height=min(600, 45 + 36*len(table)))
 
 with tab3:
-    section_header("Definición y cálculo", "Reglas del instrumento aplicadas al Excel")
-    st.markdown(method_cards_html(), unsafe_allow_html=True)
+    section_header("Reglas del instrumento", "Cómo se calcula según el Word")
+    st.markdown(
+        '''<div class="method-grid">
+          <div class="panel method"><div class="method-i">①</div><div class="method-t">Escala Likert de 5 puntos</div><div class="method-x"><b>1</b> Totalmente en desacuerdo · <b>2</b> En desacuerdo · <b>3</b> Ni de acuerdo ni en desacuerdo · <b>4</b> De acuerdo · <b>5</b> Totalmente de acuerdo.</div></div>
+          <div class="panel method"><div class="method-i">▦</div><div class="method-t">Dimensiones D1–D4</div><div class="method-x">D1 = P1–P4, D2 = P5–P8, D3 = P9–P12 y D4 = P13–P16. En cada dimensión, el estudiante se considera <b>satisfecho cuando el promedio de sus cuatro respuestas es ≥4</b>.</div></div>
+          <div class="panel method"><div class="method-i">◉</div><div class="method-t">Satisfacción general P17</div><div class="method-x">Para P17 el Word sí lo expresa de forma directa: <b>4 o 5 = Satisfecho</b> y <b>1, 2 o 3 = No satisfecho</b>. Por eso el 71.4% se mantiene como resultado complementario y no se agranda en la portada.</div></div>
+        </div>''', unsafe_allow_html=True)
+
+    section_header("Interpretación", "Criterios institucionales consignados en el instrumento")
+    st.markdown(
+        '''<div class="method-grid">
+          <div class="panel method"><div class="method-i">🚦</div><div class="method-t">0–59% · Insatisfactorio</div><div class="method-x">Nivel asignado al porcentaje final obtenido cuando se encuentra entre 0% y 59%.</div></div>
+          <div class="panel method"><div class="method-i">🚦</div><div class="method-t">60–74% · Regular</div><div class="method-x">Nivel asignado al porcentaje final obtenido cuando se encuentra entre 60% y 74%.</div></div>
+          <div class="panel method"><div class="method-i">🚦</div><div class="method-t">75–100% · Satisfactorio / Muy satisfactorio</div><div class="method-x"><b>75–89%</b> = Satisfactorio y <b>90–100%</b> = Muy satisfactorio. Estos rangos interpretan el porcentaje; no son opciones de respuesta de la escala Likert.</div></div>
+        </div>''', unsafe_allow_html=True)
     st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
-    st.markdown(formula_html(N_GLOBAL, N_TOTAL, GLOBAL, "Aplicación de la fórmula al indicador general P17"), unsafe_allow_html=True)
+    st.markdown('''<div class="method-alert"><b>Distinción clave:</b> la escala Likert describe las respuestas individuales de 1 a 5; el criterio <b>promedio ≥4</b> clasifica satisfacción en D1–D4; y los rangos <b>0–59 / 60–74 / 75–89 / 90–100</b> se aplican después al porcentaje final para darle un nivel de interpretación. Son tres cosas distintas y el tablero ahora las mantiene separadas.</div>''', unsafe_allow_html=True)
 
-    section_header("Interpretación institucional", "Rangos definidos en la propuesta del instrumento", "Estos rangos clasifican el porcentaje ya calculado; no clasifican las alternativas 1–5.")
-    st.markdown(f'<div class="panel scale-wrap">{interpretation_cards_html()}<div class="scale-note">0–59% Insatisfactorio · 60–74% Regular · 75–89% Satisfactorio · 90–100% Muy satisfactorio. La propuesta señala que estos rangos pueden ajustarse según lineamientos institucionales.</div></div>', unsafe_allow_html=True)
+    section_header("Calidad de datos", "Controles que conviene revisar antes del informe oficial")
+    st.markdown(quality_html(), unsafe_allow_html=True)
 
-    section_header("Ficha técnica", "Características del instrumento")
-    st.markdown(technical_sheet_html(), unsafe_allow_html=True)
-
-    section_header("Control de la base", "Verificación mínima antes de interpretar")
-    st.markdown(data_quality_html(), unsafe_allow_html=True)
-
-    section_header("Resumen", "Indicador general y dimensiones")
+    section_header("Resultados diagnósticos 2026", "Resumen técnico de la base actual")
     summary = pd.DataFrame([
-        ["Satisfacción general · P17", pct(GLOBAL), GLOBAL_LEVEL, f"{N_GLOBAL:,} / {N_TOTAL:,}", "P17 = 4 o 5"],
-        *[[f"{r['Código']} · {r['Dimensión']}", pct(float(r['Satisfacción'])), str(r['Nivel']), f"{int(r['N satisfechos']):,} / {N_TOTAL:,}", "Promedio de 4 ítems ≥4"] for _, r in DIMS.sort_values("Código").iterrows()],
-    ], columns=["Medida", "Porcentaje de satisfacción", "Nivel", "N satisfechos / total", "Regla"])
+        ["Lectura integral P1–P16", pct(INTEGRAL), f"{pct(INTEGRAL_CI_LOW)}–{pct(INTEGRAL_CI_HIGH)}", INTEGRAL_LEVEL, f"{N_INTEGRAL:,} / {N_TOTAL:,}", "Promedio P1–P16 ≥4 (cálculo conservado del Excel)"],
+        ["P17: satisfacción general", pct(GLOBAL), f"{pct(GLOBAL_CI_LOW)}–{pct(GLOBAL_CI_HIGH)}", GLOBAL_LEVEL, f"{N_GLOBAL:,} / {N_TOTAL:,}", "4–5 = Satisfecho; 1–3 = No satisfecho"],
+        *[[f"{r['Código']} · {r['Dimensión']}", pct(float(r['Satisfacción'])), f"{pct(float(r['IC95 inferior']))}–{pct(float(r['IC95 superior']))}", str(r['Nivel']), f"{int(r['N satisfechos']):,} / {N_TOTAL:,}", "Promedio de 4 ítems ≥4"] for _,r in DIMS.sort_values('Código').iterrows()],
+    ], columns=["Medida", "Resultado", "IC 95% aprox.*", "Escala propuesta", "N / D", "Regla"])
     st.dataframe(summary, use_container_width=True, hide_index=True)
