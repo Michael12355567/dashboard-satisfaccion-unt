@@ -2,16 +2,19 @@ from __future__ import annotations
 
 from html import escape
 from pathlib import Path
+import math
 
 import pandas as pd
 import streamlit as st
+from scipy.stats import chi2, binomtest
+
 
 # ==============================================================
 # CONFIGURACIÓN
 # ==============================================================
 st.set_page_config(
-    page_title="UNT | Satisfacción con la formación académica integral",
-    page_icon="📊",
+    page_title="UNT | Diagnóstico 2026 de satisfacción académica",
+    page_icon="🚦",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -20,33 +23,45 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = BASE_DIR / "basededatos.xlsx"
 SHEET_NAME = "Base_Encuesta"
 
-ITEMS = [f"P{i}" for i in range(1, 18)]
-VALID_VALUES = {1, 2, 3, 4, 5}
+ITEMS_16 = [f"P{i}" for i in range(1, 17)]
+ALL_ITEMS = [f"P{i}" for i in range(1, 18)]
 
 DIMENSIONS = {
     "D1": {
         "name": "Calidad del proceso académico",
+        "short": "Proceso académico",
         "items": ["P1", "P2", "P3", "P4"],
-        "accent": "#2F6FA3",
-        "soft": "#EEF6FC",
+        "accent": "#3573A3",
+        "soft": "#EAF3FA",
+        "icon": "▥",
+        "meaning": "Pertinencia curricular, actualización del plan de estudios, carga académica y coherencia entre objetivos y contenidos.",
     },
     "D2": {
         "name": "Desempeño docente y estrategias pedagógicas",
+        "short": "Docencia y pedagogía",
         "items": ["P5", "P6", "P7", "P8"],
-        "accent": "#7064A5",
-        "soft": "#F4F1FB",
+        "accent": "#7767A0",
+        "soft": "#F1EEFA",
+        "icon": "✦",
+        "meaning": "Dominio docente, metodologías de enseñanza, participación estudiantil y retroalimentación pedagógica.",
     },
     "D3": {
         "name": "Servicios y gestión educativa",
+        "short": "Servicios y gestión",
         "items": ["P9", "P10", "P11", "P12"],
-        "accent": "#AF744C",
-        "soft": "#FFF4EA",
+        "accent": "#B9794E",
+        "soft": "#FFF1E8",
+        "icon": "⌂",
+        "meaning": "Servicios académicos, información, infraestructura, recursos educativos y aseguramiento de la calidad.",
     },
     "D4": {
         "name": "Formación integral y desarrollo personal",
+        "short": "Formación integral",
         "items": ["P13", "P14", "P15", "P16"],
-        "accent": "#338373",
-        "soft": "#EDF8F5",
+        "accent": "#348675",
+        "soft": "#E9F7F3",
+        "icon": "◇",
+        "meaning": "Competencias profesionales, valores, responsabilidad social, desarrollo personal y preparación para el ejercicio profesional.",
     },
 }
 
@@ -67,285 +82,865 @@ ITEM_TEXT = {
     "P14": "La universidad fomenta valores éticos y responsabilidad social en los estudiantes.",
     "P15": "Las actividades académicas y extracurriculares contribuyen a mi desarrollo personal y ciudadano.",
     "P16": "Me siento preparado(a) para afrontar los retos del ejercicio profesional futuro.",
-    "P17": "En general, me siento satisfecho(a) con la formación académica que recibo en la Universidad Nacional de Trujillo.",
+    "P17": "En general, me siento satisfecho(a) con el proceso de formación académica que recibo en la Universidad Nacional de Trujillo.",
 }
 
-LIKERT_LABELS = {
-    1: "Totalmente en desacuerdo",
-    2: "En desacuerdo",
-    3: "Ni de acuerdo ni en desacuerdo",
-    4: "De acuerdo",
-    5: "Totalmente de acuerdo",
-}
+# Ficha técnica PEI compartida por el usuario:
+# - 2026: diseño, estandarización y validación; sin valor medible oficial.
+# - medición efectiva a partir de 2027.
+# - valor referencial del indicador de satisfacción: >=60%.
+# - logros esperados 2027-2030: 60%, 65%, 70%, 75%.
+PEI_REFERENCE = 0.60
+PEI_TARGETS = {2027: 0.60, 2028: 0.65, 2029: 0.70, 2030: 0.75}
+
 
 # ==============================================================
-# ESTILOS
+# CSS — SISTEMA INSTITUCIONAL + PROFUNDIDAD / RESPONSIVE
 # ==============================================================
 st.markdown(
     r"""
 <style>
 :root{
-  --ink:#17324D;--muted:#6B7F94;--blue:#245DB7;--blue2:#3674D3;
-  --green:#27836F;--red:#BD5C68;--amber:#B57912;--cyan:#237E98;
-  --line:rgba(214,225,237,.92);--glass:rgba(255,255,255,.74);
-  --shadow:0 18px 45px rgba(32,72,122,.10),0 4px 12px rgba(32,72,122,.05);
+  --bg:#F3F6FA; --paper:#FFFFFF; --ink:#112B48; --muted:#718197; --line:#E1E9F2;
+  --blue:#2E5EC8; --blue2:#3B71EA; --deep:#153C82; --cyan:#18A9C0;
+  --red:#E25B68; --amber:#F2A62C; --green:#16A878; --excellent:#20AABD;
+  --shadow:0 14px 34px rgba(31,68,121,.10),0 3px 9px rgba(31,68,121,.05);
 }
 *{box-sizing:border-box}
-html,body,[class*="css"]{font-family:"Segoe UI Variable","Aptos","Segoe UI",Arial,sans-serif}
-.stApp{color:var(--ink);background:radial-gradient(circle at 7% 2%,rgba(52,104,205,.13),transparent 31%),radial-gradient(circle at 94% 7%,rgba(33,166,183,.10),transparent 29%),linear-gradient(180deg,#F9FBFF 0%,#FFFFFF 48%,#F7FAFE 100%)}
-header[data-testid="stHeader"]{background:rgba(250,252,255,.68);backdrop-filter:blur(20px)}
-#MainMenu,footer{visibility:hidden}section[data-testid="stSidebar"],[data-testid="stSidebarCollapsedControl"]{display:none!important}.block-container{max-width:1580px;padding:.65rem 1.25rem 3rem}
-.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:13px 17px;border-radius:0 0 18px 18px;background:linear-gradient(110deg,rgba(17,57,115,.94),rgba(32,90,179,.88));color:#fff;border:1px solid rgba(255,255,255,.20);box-shadow:0 18px 40px rgba(24,67,143,.20);backdrop-filter:blur(22px)}
-.brand{display:flex;gap:11px;align-items:center}.brand-mark{width:49px;height:49px;border-radius:13px;background:rgba(255,255,255,.92);color:#17427F;display:grid;place-items:center;font-weight:1000;letter-spacing:.05em}.brand-title{font-weight:950;font-size:1rem;line-height:1.1}.brand-sub{font-size:.72rem;opacity:.84;margin-top:3px}.top-meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.meta{padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);font-size:.66rem}.meta b{display:block;font-size:.78rem;margin-top:2px}
-.pagehead{padding:23px 4px 14px}.kicker,.section-kicker{font-size:.72rem;font-weight:950;letter-spacing:.14em;text-transform:uppercase;color:#3369CB}.title{font-size:clamp(2rem,3.4vw,2.8rem);font-weight:950;letter-spacing:-.045em;color:#122E4C;line-height:1.02;margin-top:4px}.sub{font-size:.94rem;line-height:1.62;color:#61768C;max-width:1210px;margin-top:8px}.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}.chip{font-size:.71rem;font-weight:850;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.92);box-shadow:0 8px 20px rgba(31,72,132,.06)}
-.stTabs [data-baseweb="tab-list"]{gap:7px;border-bottom:1px solid #DDE6F0;background:transparent;overflow-x:auto}.stTabs [data-baseweb="tab"]{height:50px;padding:0 15px;font-size:.90rem;font-weight:900;color:#64778D;border-radius:11px 11px 0 0}.stTabs [aria-selected="true"]{background:linear-gradient(135deg,#2456B2,#3472D4)!important;color:#fff!important;box-shadow:0 8px 18px rgba(35,86,178,.16)!important}.stTabs [data-baseweb="tab-highlight"]{display:none}
-.section-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin:1.35rem 0 .70rem}.section-title{font-size:clamp(1.3rem,2.2vw,1.65rem);font-weight:950;letter-spacing:-.025em;color:#17324F;margin-top:3px}.section-note{font-size:.79rem;color:#78899B;line-height:1.48;text-align:right;max-width:720px}.panel{background:var(--glass);border:1px solid rgba(255,255,255,.92);box-shadow:var(--shadow);backdrop-filter:blur(24px) saturate(145%);border-radius:19px}
-.hero-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(325px,.5fr);gap:14px}.hero{padding:25px 27px;position:relative;overflow:hidden;border-left:7px solid #245DB7}.hero:after{content:"";position:absolute;width:330px;height:330px;border-radius:50%;right:-150px;top:-210px;background:radial-gradient(circle,rgba(47,102,200,.12),transparent 68%)}.hero>*{position:relative;z-index:1}.hero-eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;font-weight:950;color:#3266C4}.hero-title{font-size:clamp(1.55rem,2.6vw,2.15rem);font-weight:950;line-height:1.13;margin-top:5px}.hero-desc{font-size:.88rem;line-height:1.6;color:#60758B;margin-top:8px;max-width:1040px}.hero-core{display:grid;grid-template-columns:230px minmax(0,1fr);gap:20px;align-items:center;margin-top:18px}.hero-score{font-size:clamp(4rem,7vw,6rem);font-weight:1000;color:#194F94;letter-spacing:-.07em;line-height:.9}.hero-level{font-size:.95rem;font-weight:950;margin-top:9px}.hero-level small{display:block;font-size:.69rem;font-weight:750;color:#73869A;margin-top:4px}.formula{padding:15px 16px;border-radius:15px;background:rgba(242,247,253,.85);border:1px solid #DCE7F2}.formula-k{font-size:.70rem;color:#6C8094;font-weight:900}.formula-eq{font-size:1rem;font-weight:950;margin-top:8px;color:#173B5D}.formula-result{display:inline-block;margin-left:5px;padding:5px 9px;border-radius:9px;background:#fff;border:1px solid #D7E3F0;color:#215DAF}.hero-foot{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}.hero-foot>div{padding:11px 12px;border-radius:12px;background:rgba(247,250,253,.88);border:1px solid #E2EAF2}.hero-foot b{display:block;font-size:.68rem;color:#728297}.hero-foot span{display:block;font-size:.92rem;font-weight:950;color:#183752;margin-top:3px}
-.side-stack{display:grid;grid-template-rows:1fr 1fr;gap:12px}.side{padding:18px 19px}.side-k{font-size:.67rem;text-transform:uppercase;letter-spacing:.10em;font-weight:950;color:#7B8B9E}.side-t{font-size:1.04rem;font-weight:950;margin-top:5px}.side-x{font-size:.78rem;line-height:1.56;color:#65798F;margin-top:9px}.side-big{font-size:2.5rem;font-weight:1000;letter-spacing:-.05em;margin-top:12px;color:#B45A66}
-.explain{margin-top:12px;padding:14px 16px;border-radius:15px;background:rgba(244,248,253,.84);border:1px solid #DDE7F2;color:#526B84;font-size:.81rem;line-height:1.58}.explain b{color:#153B61}.explain .headline{font-size:.91rem;font-weight:950;color:#153B61;margin-bottom:4px}
-.dim-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.dim{padding:17px 17px 15px;position:relative;overflow:hidden;border-top:4px solid var(--accent)}.dim-code{font-size:.72rem;font-weight:1000;color:var(--accent)}.dim-name{font-size:.84rem;font-weight:900;line-height:1.32;margin-top:4px;min-height:2.6em}.dim-score{font-size:2.18rem;font-weight:1000;letter-spacing:-.05em;margin-top:13px;color:#173651}.level-badge{display:inline-flex;margin-top:5px;padding:5px 8px;border-radius:9px;background:var(--soft);color:var(--accent);font-size:.68rem;font-weight:950}.dim-meta{font-size:.70rem;line-height:1.53;color:#667A90;margin-top:11px}.dim-meta b{color:#24435F}.dim-rule{margin-top:10px;padding-top:9px;border-top:1px dashed #DDE5EE;font-size:.66rem;color:#718397;line-height:1.45}
-.insight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.insight{padding:15px 16px;border-left:4px solid var(--accent)}.insight-k{font-size:.65rem;letter-spacing:.09em;text-transform:uppercase;color:#8190A2;font-weight:950}.insight-t{font-size:1rem;font-weight:950;margin-top:5px}.insight-x{font-size:.76rem;line-height:1.55;color:#677B91;margin-top:6px}
-.item-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.item{padding:15px;border-left:4px solid var(--accent);position:relative;overflow:hidden}.item-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.item-code{font-size:.68rem;font-weight:1000;color:var(--accent);padding:5px 7px;border-radius:8px;background:var(--soft)}.item-score{font-size:1.35rem;font-weight:1000;color:#173650}.item-q{font-size:.78rem;line-height:1.52;color:#5F7489;margin-top:9px;min-height:4.6em}.binary-pill{height:12px;border-radius:999px;background:#EDF2F6;overflow:hidden;display:flex;margin-top:11px}.seg13{height:100%;background:#A9B5C2}.seg45{height:100%;background:#328A74}.item-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}.item-meta>div{padding:8px;border-radius:10px;background:rgba(248,250,253,.88);border:1px solid #E5EBF1}.item-meta .k{font-size:.57rem;text-transform:uppercase;color:#8593A3;font-weight:900;line-height:1.25}.item-meta .v{font-size:.82rem;font-weight:1000;color:#2A455E;margin-top:3px}.item-note{font-size:.63rem;color:#8190A1;margin-top:8px;line-height:1.45}
-.binary-panel{padding:14px 16px}.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:9px;font-size:.69rem;color:#6F8194;font-weight:850}.legend span{display:flex;align-items:center;gap:6px}.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}.legend .a{background:#A9B5C2}.legend .b{background:#328A74}.bar-row{display:grid;grid-template-columns:48px minmax(0,1fr);gap:10px;align-items:center;padding:7px 0;border-top:1px solid rgba(228,235,242,.75)}.bar-row:first-of-type{border-top:0}.bar-code{font-size:.70rem;font-weight:1000;color:#4A627A}.bar{height:27px;border-radius:999px;overflow:hidden;display:flex;background:#EFF3F7;box-shadow:inset 0 2px 4px rgba(31,55,82,.07)}.bar>div{display:flex;align-items:center;justify-content:center;color:#fff;font-size:.58rem;font-weight:950;white-space:nowrap}.bar .a{background:linear-gradient(180deg,#B7C2CD,#98A6B4)}.bar .b{background:linear-gradient(180deg,#459D87,#2F826F)}
-.scale{padding:15px 16px}.scale-title{font-size:.88rem;font-weight:950;color:#1B3B59}.scale-sub{font-size:.73rem;color:#718397;line-height:1.5;margin-top:4px}.scale-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:11px}.scale-step{padding:10px 8px;text-align:center;border-radius:12px;border:1px solid #E1E9F1;background:rgba(255,255,255,.64)}.scale-dot{width:11px;height:11px;border-radius:50%;margin:0 auto 5px;background:var(--lvl)}.scale-name{font-size:.72rem;font-weight:950}.scale-range{font-size:.65rem;color:#8190A2;margin-top:2px}
-.method-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.method{padding:16px}.method-t{font-size:.94rem;font-weight:950}.method-x{font-size:.76rem;line-height:1.58;color:#687C91;margin-top:6px}.audit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.audit{padding:14px}.audit-k{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:#8594A5;font-weight:950}.audit-v{font-size:1.35rem;font-weight:1000;margin-top:5px}.audit-x{font-size:.69rem;line-height:1.48;color:#6E8195;margin-top:4px}.note{padding:13px 15px;border-radius:14px;background:#FFF8E9;border:1px solid #EFDFB7;color:#715A24;font-size:.74rem;line-height:1.55;margin-top:10px}.info{padding:13px 15px;border-radius:14px;background:#F1F6FD;border:1px solid #DCE7F3;color:#4F6983;font-size:.74rem;line-height:1.55;margin-top:10px}
-div[data-baseweb="select"]>div{background:rgba(255,255,255,.78)!important;border:1px solid #D8E3ED!important;border-radius:12px!important;min-height:44px!important}div[data-testid="stDataFrame"]{border:1px solid #E0E8F0;border-radius:14px;overflow:hidden}
-@media(max-width:1100px){.hero-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr;grid-template-rows:auto}.dim-grid{grid-template-columns:1fr 1fr}.item-grid{grid-template-columns:1fr 1fr}.audit-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:700px){.block-container{padding:.45rem .68rem 2rem}.top-meta{display:none}.title{font-size:1.72rem}.sub{font-size:.84rem}.hero{padding:19px 17px}.hero-core{grid-template-columns:1fr}.hero-score{font-size:3.7rem}.hero-foot{grid-template-columns:1fr 1fr}.hero-foot>div:last-child{grid-column:1/-1}.side-stack,.dim-grid,.item-grid,.insight-grid,.method-grid,.audit-grid{grid-template-columns:1fr}.scale-grid{grid-template-columns:1fr 1fr}.section-note{display:none}.item-q{min-height:0}.bar-row{grid-template-columns:38px minmax(0,1fr)}}
+html,body,[class*="css"]{font-family:"Segoe UI Variable","Aptos","Segoe UI",Inter,Arial,sans-serif}
+.stApp{background:linear-gradient(180deg,#FAFCFF 0%,var(--bg) 100%);color:var(--ink)}
+.block-container{max-width:1540px;padding:.55rem 1rem 3rem}
+#MainMenu,footer{visibility:hidden}
+header[data-testid="stHeader"]{background:rgba(250,252,255,.80);backdrop-filter:blur(16px)}
+section[data-testid="stSidebar"],[data-testid="stSidebarCollapsedControl"]{display:none!important}
+
+/* TOPBAR */
+.topbar{min-height:60px;border-radius:0 0 17px 17px;background:linear-gradient(105deg,#234EA8 0%,#2E5FCB 53%,#3B6FE8 100%);display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 17px;color:#fff;box-shadow:0 11px 25px rgba(31,75,165,.22);position:relative;overflow:hidden}
+.topbar:after{content:"";position:absolute;width:260px;height:260px;border:30px solid rgba(255,255,255,.065);border-radius:50%;right:-90px;top:-170px}
+.brand{display:flex;align-items:center;gap:10px;position:relative;z-index:1;min-width:0}.brand-img{height:43px;max-width:290px;background:#fff;border-radius:11px;padding:4px 7px;box-shadow:0 7px 16px rgba(10,31,80,.22);display:flex;align-items:center}.brand-img img{height:100%;width:auto;max-width:100%;object-fit:contain}.brand-title{font-size:.82rem;font-weight:950;line-height:1.08}.brand-sub{font-size:.50rem;opacity:.82;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.top-meta{display:flex;gap:8px;align-items:center;position:relative;z-index:1}.meta-box{padding:7px 10px;border-radius:10px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);font-size:.50rem;line-height:1.22}.meta-box b{display:block;font-size:.65rem;color:#fff;margin-top:2px}
+
+/* PAGE HEADER */
+.pagehead{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:19px 4px 13px}.kicker{font-size:.57rem;letter-spacing:.16em;text-transform:uppercase;font-weight:950;color:#3265CF}.title{font-size:clamp(1.42rem,2.7vw,2rem);font-weight:950;letter-spacing:-.045em;color:#142E4D;margin-top:4px;line-height:1.03}.sub{font-size:.69rem;color:#76879A;margin-top:6px;line-height:1.48;max-width:960px}.basebox{min-width:160px;padding:10px 12px;border-radius:14px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);font-size:.52rem;color:#8491A2}.basebox b{display:block;color:#183650;font-size:.74rem;margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.chip{padding:6px 9px;border-radius:999px;background:#EEF4FD;border:1px solid #DCE7F6;color:#41607F;font-size:.55rem;font-weight:850}.chip.warn{background:#FFF8E9;border-color:#F2E2B8;color:#80651F}
+
+/* TABS */
+.stTabs [data-baseweb="tab-list"]{gap:7px;background:transparent;border-bottom:1px solid #DDE5F0;padding:0;border-radius:0;box-shadow:none;margin-top:0;overflow-x:auto;white-space:nowrap}.stTabs [data-baseweb="tab"]{height:46px;border-radius:11px 11px 0 0;padding:0 15px;color:#6B7B90;font-weight:900;font-size:.74rem;flex:0 0 auto}.stTabs [aria-selected="true"]{background:linear-gradient(135deg,#2453B4,#2F66D8)!important;color:#fff!important;box-shadow:0 8px 18px rgba(44,94,198,.18)!important}.stTabs [data-baseweb="tab-highlight"]{display:none}
+
+/* SECTION */
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:1.35rem 0 .68rem}.section-kicker{font-size:.56rem;text-transform:uppercase;letter-spacing:.14em;font-weight:950;color:#3265CF}.section-title{font-size:clamp(1.02rem,2vw,1.30rem);font-weight:950;color:#17324F;letter-spacing:-.025em;margin-top:3px}.section-note{font-size:.64rem;color:#7C8B9D;text-align:right;max-width:570px;line-height:1.42}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+
+/* HERO RESULT */
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.28fr) minmax(330px,.72fr);gap:14px}
+.result-hero{padding:21px 22px;border-radius:20px;background:linear-gradient(110deg,#214BA6 0%,#2B5DC7 52%,#396DE8 100%);color:#fff;box-shadow:0 17px 36px rgba(40,85,178,.21);position:relative;overflow:hidden}.result-hero:after{content:"";position:absolute;width:320px;height:320px;border:30px solid rgba(255,255,255,.065);border-radius:50%;right:-100px;top:-190px}.result-layout{display:grid;grid-template-columns:82px minmax(0,1fr) auto;gap:17px;align-items:center;position:relative;z-index:1}.result-icon{width:82px;height:82px;border-radius:21px;background:linear-gradient(145deg,rgba(255,255,255,.28),rgba(255,255,255,.10));border:1px solid rgba(255,255,255,.18);display:grid;place-items:center;font-size:1.85rem;box-shadow:0 10px 22px rgba(15,42,105,.24),inset 0 1px 0 rgba(255,255,255,.27)}.result-eyebrow{font-size:.53rem;text-transform:uppercase;letter-spacing:.12em;font-weight:900;color:#CCDAFF}.result-title{font-size:clamp(1rem,1.8vw,1.28rem);font-weight:950;line-height:1.15;margin-top:3px}.result-text{font-size:.63rem;color:#E0E9FF;line-height:1.48;margin-top:7px;max-width:750px}.result-score{font-size:clamp(2.35rem,4.6vw,3.35rem);font-weight:950;letter-spacing:-.065em;line-height:.95;text-align:right}.result-level{font-size:.63rem;font-weight:900;text-align:right;margin-top:5px}.diag-pill{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.15);font-size:.52rem;font-weight:800}
+
+/* SECONDARY ANALYTIC */
+.secondary{padding:18px;display:flex;flex-direction:column;min-height:100%}.secondary-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.secondary-k{font-size:.53rem;letter-spacing:.11em;text-transform:uppercase;color:#7F8EA0;font-weight:950}.secondary-t{font-size:.93rem;color:#18344F;font-weight:950;line-height:1.22;margin-top:5px}.secondary-v{font-size:2.25rem;font-weight:950;color:#173451;letter-spacing:-.055em;margin-top:14px}.secondary-x{font-size:.64rem;color:#6E7F93;line-height:1.46;margin-top:6px}.secondary-note{margin-top:auto;padding-top:12px;border-top:1px solid #E9EEF4;font-size:.57rem;color:#8090A3;line-height:1.43}
+
+/* TRAFFIC LIGHT */
+.signal-shell{filter:drop-shadow(0 8px 12px rgba(10,26,40,.26))}.signal-row{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin-top:8px}.signal-copy{font-size:.57rem;font-weight:900;text-align:right;line-height:1.25}
+
+/* FORMULA */
+.formula{margin-top:13px;padding:13px 14px;border-radius:15px;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.16)}.formula-k{font-size:.47rem;text-transform:uppercase;letter-spacing:.11em;font-weight:900;color:#C9D8FA}.formula-eq{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex-wrap:wrap;margin-top:7px;font-weight:900}.frac{display:inline-grid;grid-template-rows:auto 1px auto;min-width:55px;text-align:center;align-items:center;line-height:1.05}.frac .bar{height:1px;background:#fff;margin:3px 0}.formula-result{font-size:1.12rem;background:#fff;color:#2455B7;padding:5px 9px;border-radius:9px;box-shadow:0 6px 15px rgba(9,31,77,.16)}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:12px}.kpi{min-height:112px;padding:12px;border-radius:16px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);position:relative;overflow:hidden}.kpi:before{content:"";position:absolute;right:-17px;top:-21px;width:68px;height:68px;border-radius:20px;background:var(--soft);transform:rotate(18deg);opacity:.82}.kpi-head{display:flex;justify-content:space-between;gap:7px;align-items:flex-start;position:relative;z-index:1}.kpi-label{font-size:.51rem;color:#728296;font-weight:850;line-height:1.25}.kpi-icon{width:32px;height:32px;border-radius:9px;background:linear-gradient(145deg,var(--accent),color-mix(in srgb,var(--accent) 72%,#fff));display:grid;place-items:center;color:#fff;font-size:.82rem;font-weight:950;box-shadow:0 7px 14px color-mix(in srgb,var(--accent) 22%,transparent)}.kpi-v{font-size:1.2rem;font-weight:950;color:#17324F;margin-top:7px;letter-spacing:-.04em;position:relative;z-index:1}.kpi-f{font-size:.48rem;color:#8A96A5;margin-top:4px;position:relative;z-index:1}.spark{height:18px;margin-top:8px;position:relative;z-index:1}.spark svg{width:100%;height:100%;overflow:visible}
+
+/* DIMENSIONS */
+.dim-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.dim-card{padding:15px;min-height:255px;position:relative;overflow:hidden}.dim-card:before{content:"";position:absolute;left:0;top:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#77D5DC))}.dim-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.dim-code{display:flex;align-items:center;gap:7px;font-size:.62rem;color:var(--accent);font-weight:950}.dim-name{font-size:.58rem;color:#7C8B9C;line-height:1.30;margin-top:4px;min-height:2.55em}.dim-body{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center;margin-top:10px}.donut{--p:0;--accent:#2F66D8;width:94px;height:94px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p)*1%),#EDF2F7 0);position:relative;display:grid;place-items:center;box-shadow:0 10px 18px rgba(27,54,90,.11),inset 0 1px 0 #fff}.donut:after{content:"";position:absolute;inset:11px;border-radius:50%;background:linear-gradient(145deg,#fff,#F6F9FC);box-shadow:inset 3px 3px 7px rgba(30,53,83,.05)}.donut b{position:relative;z-index:1;font-size:1.05rem;color:#18334F;letter-spacing:-.04em}.dim-level{font-size:.59rem;font-weight:950;line-height:1.25}.dim-meta{font-size:.49rem;color:#8190A1;line-height:1.47;margin-top:6px}.dim-meaning{margin-top:10px;padding-top:8px;border-top:1px dashed #E2E9F0;font-size:.54rem;color:#677A90;line-height:1.42}.dim-foot{display:flex;justify-content:space-between;gap:8px;border-top:1px solid #EDF1F5;margin-top:9px;padding-top:8px;font-size:.48rem;color:#7D8B9A}.dim-foot b{color:#2B425C}
+
+/* SCALE */
+.scale-wrap{padding:13px 14px}.scale-title{font-size:.58rem;font-weight:950;color:#1F3B57;margin-bottom:9px}.scale-note{font-size:.52rem;color:#7B8B9E;line-height:1.4;margin-top:8px}.scale4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.scale-step{padding:9px 7px;border-radius:12px;border:1px solid #E4EBF3;background:#fff;text-align:center;opacity:.58}.scale-step.active{opacity:1;box-shadow:0 9px 18px color-mix(in srgb,var(--lvl) 17%,transparent);border:2px solid var(--lvl);transform:translateY(-1px)}.scale-dot{width:11px;height:11px;border-radius:50%;margin:0 auto 5px;box-shadow:0 3px 8px rgba(20,35,50,.14)}.scale-name{font-size:.54rem;font-weight:950;color:#405168}.scale-range{font-size:.49rem;color:#8794A3;margin-top:2px}
+
+/* INTERPRETATION */
+.insight-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.insight{padding:14px 15px;position:relative;overflow:hidden}.insight:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}.insight-k{font-size:.52rem;letter-spacing:.10em;text-transform:uppercase;color:#8290A1;font-weight:950}.insight-t{font-size:.80rem;color:#1A3551;font-weight:950;line-height:1.25;margin-top:5px}.insight-x{font-size:.60rem;color:#687B90;line-height:1.47;margin-top:6px}
+
+/* PEI ROUTE */
+.pei-card{padding:15px 16px}.pei-banner{display:flex;gap:11px;align-items:flex-start;padding:12px;border-radius:14px;background:linear-gradient(135deg,#FFF8E7,#FFFDF7);border:1px solid #F0DFB4;color:#71591E}.pei-banner .i{font-size:1.12rem}.pei-banner .t{font-size:.64rem;font-weight:950}.pei-banner .x{font-size:.56rem;line-height:1.45;margin-top:3px}.route{display:grid;grid-template-columns:1.15fr repeat(4,1fr);gap:8px;margin-top:11px}.node{padding:11px;border-radius:13px;background:linear-gradient(145deg,#fff,#F7FAFE);border:1px solid var(--line);box-shadow:0 8px 18px rgba(31,70,126,.06);position:relative;overflow:hidden}.node:before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--accent)}.node-y{font-size:.49rem;color:#8190A1;text-transform:uppercase;font-weight:900}.node-v{font-size:1rem;font-weight:950;color:#214DA6;margin-top:4px}.node-c{font-size:.47rem;color:#8A97A7;margin-top:3px;line-height:1.35}.node.diag .node-v{font-size:.74rem;color:#82651F;line-height:1.2}
+
+/* SELECT */
+div[data-baseweb="select"] > div{background:#fff!important;border:1px solid #D8E4EB!important;border-radius:13px!important;min-height:44px!important;box-shadow:0 7px 18px rgba(30,57,77,.05)!important}div[data-baseweb="select"] span{color:#26445A!important;font-weight:750!important}
+
+/* ITEM CARDS */
+.item-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.item{padding:13px;position:relative;overflow:hidden}.item:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}.item-top{display:flex;justify-content:space-between;gap:8px;align-items:center}.item-code{font-size:.56rem;font-weight:950;color:var(--accent);padding:4px 7px;border-radius:8px;background:var(--soft)}.item-score{font-size:1rem;font-weight:950;color:#17324F}.item-q{font-size:.52rem;color:#6F8093;line-height:1.42;margin-top:8px;min-height:4.4em}.meter{height:7px;border-radius:99px;background:#EDF2F7;overflow:hidden;margin-top:9px}.meter span{height:100%;display:block;border-radius:99px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 58%,#78D9DF))}.item-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:9px}.item-meta>div{padding:6px 4px;border-radius:8px;background:#F7F9FC;border:1px solid #EBF0F5;text-align:center}.item-meta .k{font-size:.40rem;color:#8B97A5;text-transform:uppercase;font-weight:850}.item-meta .v{font-size:.53rem;color:#334B64;font-weight:950;margin-top:1px}
+
+/* LIKERT CAPSULES */
+.likert{padding:15px 16px}.likert-row{display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;align-items:center;padding:7px 0}.likert-code{font-size:.56rem;font-weight:950;color:#48627E}.likert-pill{height:24px;border-radius:999px;overflow:hidden;display:flex;background:#EDF2F7;box-shadow:inset 0 2px 4px rgba(28,50,78,.08)}.seg{height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.43rem;font-weight:900;white-space:nowrap;overflow:hidden}.bad{background:linear-gradient(180deg,#DB6B77,#C75563)}.neutral{background:linear-gradient(180deg,#BCC6D0,#9EABB8)}.good{background:linear-gradient(180deg,#4AA28D,#348873)}
+
+/* TECHNICAL */
+.method-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.method{padding:15px;min-height:175px}.method-i{font-size:1.1rem}.method-t{font-size:.78rem;font-weight:950;color:#1C334B;margin-top:6px}.method-x{font-size:.60rem;color:#68798C;line-height:1.50;margin-top:6px}.method-alert{padding:14px 15px;border-radius:16px;background:linear-gradient(135deg,#FFF9EA,#FFFDF7);border:1px solid #F1E2B9;color:#6D5720;font-size:.62rem;line-height:1.5;box-shadow:0 9px 22px rgba(85,69,22,.06)}
+div[data-testid="stDataFrame"]{border:1px solid #E5EAF0;border-radius:15px;overflow:hidden;box-shadow:0 9px 22px rgba(33,53,82,.05)}
+
+@media(max-width:1120px){
+  .hero-grid{grid-template-columns:1fr}.kpi-grid{grid-template-columns:repeat(3,1fr)}.dim-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.item-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.route{grid-template-columns:repeat(3,1fr)}.route .diag{grid-column:span 3}.method-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:700px){
+  .block-container{padding:.35rem .55rem 2rem}.topbar{height:auto;min-height:54px;padding:9px 11px}.brand-img{height:38px;max-width:165px}.brand-title{font-size:.66rem}.brand-sub,.top-meta{display:none}.pagehead{padding:13px 2px 9px;align-items:flex-start}.basebox{display:none}.title{font-size:1.45rem}.chips{gap:5px}.chip{font-size:.49rem;padding:5px 7px}.section-note{display:none}.result-layout{grid-template-columns:55px 1fr;gap:10px}.result-icon{width:55px;height:55px;border-radius:14px;font-size:1.25rem}.result-layout>div:last-child{grid-column:1/-1}.result-score{text-align:left;font-size:2.35rem}.result-level{text-align:left}.signal-row{justify-content:flex-start}.formula-eq{justify-content:center}.kpi-grid{grid-template-columns:1fr 1fr}.dim-grid,.item-grid,.insight-grid,.method-grid{grid-template-columns:1fr}.dim-card{min-height:0}.scale4{grid-template-columns:1fr 1fr}.route{grid-template-columns:1fr 1fr}.route .diag{grid-column:1/-1}.likert-row{grid-template-columns:36px minmax(0,1fr)}.likert-pill{height:22px}.seg{font-size:.39rem}.stTabs [data-baseweb="tab"]{padding:0 10px;font-size:.67rem}
+}
+
+/* === CAPA METODOLÓGICA FINAL 2026 === */
+.pei-official{padding:18px;display:flex;flex-direction:column;min-height:100%;background:linear-gradient(155deg,#FFFFFF 0%,#F7FAFE 100%)}
+.pei-official-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.pei-official-k{font-size:.52rem;letter-spacing:.11em;text-transform:uppercase;color:#7D8DA1;font-weight:950}
+.pei-official-t{font-size:.94rem;color:#17334F;font-weight:950;line-height:1.22;margin-top:5px}
+.pei-official-status{margin-top:14px;padding:12px 13px;border-radius:14px;background:linear-gradient(135deg,#EEF4FF,#F8FBFF);border:1px solid #DCE7FA}
+.pei-official-status .big{font-size:1.22rem;font-weight:950;color:#2B5EC7;letter-spacing:-.03em}
+.pei-official-status .small{font-size:.58rem;color:#6E8095;line-height:1.45;margin-top:4px}
+.pei-official-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.pei-official-mini{padding:9px 10px;border-radius:11px;background:#fff;border:1px solid #E7EDF5}
+.pei-official-mini .k{font-size:.45rem;text-transform:uppercase;letter-spacing:.07em;color:#8795A6;font-weight:900}
+.pei-official-mini .v{font-size:.72rem;color:#203C58;font-weight:950;margin-top:2px}
+.pei-official-note{margin-top:auto;padding-top:11px;border-top:1px solid #E8EEF5;font-size:.57rem;color:#76889B;line-height:1.45}
+.ref-badge{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:7px 9px;border-radius:10px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.19);font-size:.54rem;font-weight:850;color:#ECF4FF}
+.ref-badge b{color:#BFF3DC}
+.quality-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.quality-card{padding:14px 15px;position:relative;overflow:hidden}.quality-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
+.quality-k{font-size:.50rem;letter-spacing:.10em;text-transform:uppercase;color:#8392A4;font-weight:950}.quality-v{font-size:1.22rem;color:#173550;font-weight:950;letter-spacing:-.04em;margin-top:5px}.quality-x{font-size:.58rem;color:#6C7F94;line-height:1.46;margin-top:5px}
+.quality-warning{margin-top:10px;padding:12px 13px;border-radius:14px;background:linear-gradient(135deg,#FFF8E9,#FFFDF7);border:1px solid #F0E0B7;color:#705A24;font-size:.59rem;line-height:1.5}
+.interpret-banner{padding:13px 15px;border-radius:16px;background:linear-gradient(135deg,#EDF4FF,#F8FBFF);border:1px solid #DCE7F6;color:#31516F;font-size:.60rem;line-height:1.5;margin-top:10px}.interpret-banner b{color:#173C5C}
+@media(max-width:980px){.quality-grid{grid-template-columns:1fr 1fr}}@media(max-width:700px){.pei-official-grid,.quality-grid{grid-template-columns:1fr}.ref-badge{font-size:.50rem}}
+
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+# ==============================================================
+# AJUSTE VISUAL FINAL — FONDO BLANCO / MAYOR LEGIBILIDAD
+# ==============================================================
+st.markdown(
+    r"""
+<style>
+:root{--bg:#FFFFFF!important;--line:#DDE6F0!important;--shadow:0 10px 28px rgba(25,55,95,.08),0 2px 6px rgba(25,55,95,.035)!important}
+.stApp{background:#FFFFFF!important}
+header[data-testid="stHeader"]{background:rgba(255,255,255,.96)!important}
+.block-container{max-width:1580px!important;padding:.65rem 1.15rem 3rem!important}
+.pagehead{background:#FFFFFF!important}
+.topbar{background:linear-gradient(100deg,#123B78 0%,#1D52A2 58%,#2865C5 100%)!important}
+.title{font-size:clamp(1.75rem,3vw,2.35rem)!important}.sub{font-size:.84rem!important;line-height:1.58!important;max-width:1120px!important}
+.kicker{font-size:.68rem!important}.chip{font-size:.66rem!important;padding:7px 11px!important}.basebox{font-size:.64rem!important}.basebox b{font-size:.88rem!important}
+.stTabs [data-baseweb="tab"]{font-size:.86rem!important;height:50px!important}
+.section-title{font-size:clamp(1.25rem,2.2vw,1.55rem)!important}.section-kicker{font-size:.66rem!important}.section-note{font-size:.77rem!important;max-width:680px!important}
+.panel{background:#FFFFFF!important;border-color:#DDE6F0!important}
+.main-reading-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,.55fr);gap:16px;align-items:stretch}
+.integral-hero{border-radius:22px;background:linear-gradient(128deg,#0E3268 0%,#164A96 52%,#1F5DB6 100%);color:#fff;padding:25px 26px;box-shadow:0 18px 38px rgba(24,72,145,.18);position:relative;overflow:hidden}
+.integral-hero:after{content:"";position:absolute;width:360px;height:360px;border:42px solid rgba(255,255,255,.055);border-radius:50%;right:-120px;top:-210px}
+.integral-top,.integral-core,.integral-bottom{position:relative;z-index:1}.integral-top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.integral-eyebrow,.side-kicker{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;font-weight:900}.integral-eyebrow{color:#C9D9FA}.integral-title{font-size:clamp(1.55rem,2.7vw,2.2rem);font-weight:950;letter-spacing:-.04em;margin-top:5px}.integral-text{font-size:.82rem;line-height:1.58;color:#E7EEFC;max-width:980px;margin-top:9px}.integral-core{display:grid;grid-template-columns:250px minmax(0,1fr);gap:20px;align-items:center;margin-top:18px}.integral-score{font-size:clamp(3.3rem,6.3vw,5.2rem);font-weight:950;letter-spacing:-.07em;line-height:.92}.integral-level{font-size:.88rem;font-weight:900;margin-top:8px}.integral-level span{font-size:.70rem;color:#DDE7F8;font-weight:700;margin-left:4px}.integral-formula .formula{margin-top:0;background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.17)}.integral-bottom{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}.integral-bottom>div{padding:11px 12px;border-radius:13px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14)}.integral-bottom b{display:block;font-size:.64rem;color:#C8D8F6}.integral-bottom span{display:block;font-size:.89rem;font-weight:900;margin-top:3px}.integral-signal{position:relative;z-index:1}
+.formula-k{font-size:.62rem!important}.formula-eq{font-size:.91rem!important;gap:10px!important}.formula-result{font-size:1.35rem!important}.diag-pill,.ref-badge{font-size:.66rem!important;line-height:1.45!important}
+.side-stack{display:grid;grid-template-rows:auto auto;gap:12px}.p17-card,.pei-mini{padding:18px 19px}.p17-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.side-kicker{color:#6C7D91}.p17-title,.pei-mini-title{font-size:1.05rem;font-weight:950;color:#183651;line-height:1.25;margin-top:5px}.p17-score{font-size:2.9rem;font-weight:950;color:#183651;letter-spacing:-.06em;margin-top:14px}.p17-level{font-size:.78rem;font-weight:900}.p17-copy,.pei-mini-note{font-size:.72rem;line-height:1.52;color:#66798E;margin-top:9px}.pei-mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.pei-mini-grid>div{padding:10px 11px;border-radius:12px;background:#F7F9FC;border:1px solid #E5EBF2}.pei-mini-grid b{display:block;font-size:.86rem;color:#1D3D60}.pei-mini-grid span{display:block;font-size:.60rem;color:#8491A0;margin-top:3px}.pei-mini-note{border-top:1px solid #E8EDF3;padding-top:10px}
+.kpi{min-height:128px!important;padding:14px!important}.kpi-label{font-size:.66rem!important}.kpi-icon{width:36px!important;height:36px!important;font-size:.95rem!important}.kpi-v{font-size:1.42rem!important}.kpi-f{font-size:.60rem!important}.stat-footnote{font-size:.64rem;color:#7C8998;line-height:1.5;margin-top:8px}
+.dim-card{min-height:285px!important;padding:17px!important}.dim-code{font-size:.72rem!important}.dim-name{font-size:.70rem!important;min-height:2.35em!important}.donut{width:102px!important;height:102px!important}.donut b{font-size:1.18rem!important}.dim-level{font-size:.72rem!important}.dim-meta{font-size:.61rem!important}.dim-meaning{font-size:.64rem!important}.dim-foot{font-size:.58rem!important}.scale-title{font-size:.72rem!important}.scale-name{font-size:.66rem!important}.scale-range,.scale-note{font-size:.60rem!important}
+.insight-k{font-size:.62rem!important}.insight-t{font-size:.92rem!important}.insight-x{font-size:.70rem!important}.interpret-banner{font-size:.70rem!important}.method-t{font-size:.90rem!important}.method-x,.method-alert{font-size:.70rem!important}.quality-k{font-size:.60rem!important}.quality-v{font-size:1.42rem!important}.quality-x,.quality-warning{font-size:.68rem!important}
+div[data-testid="stDataFrame"]{font-size:.78rem!important}
+@media(max-width:1050px){.main-reading-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr;grid-template-rows:auto}.integral-core{grid-template-columns:220px 1fr}}
+@media(max-width:700px){.block-container{padding:.45rem .65rem 2rem!important}.title{font-size:1.62rem!important}.sub{font-size:.78rem!important}.main-reading-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr}.integral-hero{padding:19px 17px;border-radius:18px}.integral-top{display:grid;grid-template-columns:1fr auto}.integral-title{font-size:1.52rem}.integral-text{font-size:.76rem}.integral-core{grid-template-columns:1fr;gap:12px}.integral-score{font-size:3.25rem}.integral-bottom{grid-template-columns:1fr 1fr}.integral-bottom>div:last-child{grid-column:1/-1}.p17-score{font-size:2.45rem}.kpi-grid{grid-template-columns:1fr 1fr!important}.section-title{font-size:1.26rem!important}.section-kicker{font-size:.60rem!important}.formula-eq{justify-content:flex-start!important}}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+# ==============================================================
+# CAPA VISUAL PARA EXPOSICIÓN — BLANCO / JERARQUÍA / LETRA MAYOR
+# ==============================================================
+st.markdown(
+    r"""
+<style>
+:root{
+  --page:#FFFFFF;--navy:#12345B;--navy2:#1B4E87;--blue:#2F66C8;--blue-soft:#EEF4FC;
+  --ink:#152D47;--muted:#63768A;--line:#DCE5EF;--soft:#F7F9FC;
+  --shadow:0 12px 32px rgba(25,55,90,.08),0 2px 7px rgba(25,55,90,.035);
+}
+.stApp{background:#FFFFFF!important;color:var(--ink)!important}
+header[data-testid="stHeader"]{background:rgba(255,255,255,.97)!important}
+.block-container{max-width:1600px!important;padding:.65rem 1.2rem 3.2rem!important}
+.pagehead{padding:22px 4px 15px!important}
+.title{font-size:clamp(1.95rem,3.2vw,2.7rem)!important;color:#102D4C!important}
+.sub{font-size:.95rem!important;line-height:1.62!important;color:#60758B!important;max-width:1180px!important}
+.kicker{font-size:.72rem!important}.chip{font-size:.72rem!important;padding:8px 12px!important}
+.section-title{font-size:clamp(1.35rem,2.35vw,1.72rem)!important}.section-kicker{font-size:.70rem!important}
+.section-note{font-size:.82rem!important;line-height:1.5!important;max-width:720px!important}
+.stTabs [data-baseweb="tab"]{font-size:.92rem!important;height:52px!important}
+.panel{background:#FFFFFF!important;border:1px solid var(--line)!important;box-shadow:var(--shadow)!important}
+.main-reading-grid{display:grid!important;grid-template-columns:minmax(0,1.62fr) minmax(315px,.48fr)!important;gap:16px!important;align-items:stretch!important}
+.integral-hero{background:#FFFFFF!important;color:var(--ink)!important;border:1px solid #D8E4F0!important;border-radius:22px!important;padding:26px 28px!important;box-shadow:0 18px 42px rgba(21,56,95,.10)!important;position:relative!important;overflow:hidden!important}
+.integral-hero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:linear-gradient(180deg,#173E72,#2F6CC8)}
+.integral-hero:after{content:"";position:absolute;width:330px;height:330px;border-radius:50%;right:-150px;top:-200px;background:radial-gradient(circle,rgba(47,102,200,.09),transparent 70%);border:0!important}
+.integral-eyebrow{color:#2F66C8!important;font-size:.76rem!important}.integral-title{color:#122F50!important;font-size:clamp(1.7rem,2.8vw,2.35rem)!important;line-height:1.08!important}
+.integral-text{color:#5D7288!important;font-size:.92rem!important;line-height:1.62!important;max-width:1080px!important}
+.integral-core{grid-template-columns:265px minmax(0,1fr)!important;gap:24px!important;margin-top:20px!important}.integral-score{color:#184D91!important;font-size:clamp(4rem,7vw,6.1rem)!important}
+.integral-level{font-size:1rem!important}.integral-level span{color:#75879A!important;font-size:.78rem!important}
+.integral-formula .formula{background:#F4F8FD!important;border:1px solid #D9E6F4!important;color:#173A60!important;box-shadow:inset 0 1px 0 #fff!important}
+.integral-formula .formula-k{color:#668099!important}.integral-formula .formula-eq{color:#173A60!important;font-size:1rem!important}.integral-formula .formula-result{background:#FFFFFF!important;color:#215DB0!important;border:1px solid #D8E4F1!important}
+.integral-bottom>div{background:#F7F9FC!important;border:1px solid #E1E8F0!important}.integral-bottom b{font-size:.72rem!important;color:#718196!important}.integral-bottom span{font-size:1rem!important;color:#173650!important}
+.integral-signal{padding:7px 12px;border-radius:15px;background:#F7F9FC;border:1px solid #E2E9F0}
+.human-box{margin-top:16px;padding:14px 16px;border-radius:15px;background:linear-gradient(135deg,#F5F9FE,#FBFCFE);border:1px solid #DDE8F4;color:#4F667D;font-size:.84rem;line-height:1.58}
+.human-box b{color:#173B62}.human-box .headline{font-size:.92rem;font-weight:950;color:#163A60;margin-bottom:4px}
+.side-stack{grid-template-rows:auto auto!important}.p17-card,.pei-mini{padding:17px 18px!important}.p17-card{background:#FAFBFD!important}.side-kicker{font-size:.66rem!important;color:#7B8998!important}
+.p17-title,.pei-mini-title{font-size:1.02rem!important}.p17-score{font-size:2.35rem!important;color:#425469!important;margin-top:10px!important}.p17-level{font-size:.76rem!important}.p17-copy,.pei-mini-note{font-size:.73rem!important;line-height:1.55!important}
+.pei-mini{background:#FCFDFE!important}.pei-mini-grid b{font-size:.84rem!important}
+.kpi{min-height:132px!important}.kpi-label{font-size:.70rem!important}.kpi-v{font-size:1.48rem!important}.kpi-f{font-size:.65rem!important}
+.dim-card{min-height:300px!important;padding:18px!important}.dim-code{font-size:.77rem!important}.dim-name{font-size:.76rem!important}.dim-level{font-size:.78rem!important}.dim-meta{font-size:.67rem!important;line-height:1.55!important}.dim-meaning{font-size:.70rem!important;line-height:1.52!important}.dim-foot{font-size:.64rem!important}
+.insight-k{font-size:.68rem!important}.insight-t{font-size:1rem!important}.insight-x{font-size:.77rem!important;line-height:1.56!important}.interpret-banner{font-size:.78rem!important;line-height:1.55!important}
+.scale-title{font-size:.80rem!important}.scale-name{font-size:.72rem!important}.scale-range,.scale-note{font-size:.66rem!important}.method-t{font-size:.96rem!important}.method-x,.method-alert{font-size:.76rem!important;line-height:1.58!important}
+.quality-k{font-size:.66rem!important}.quality-v{font-size:1.48rem!important}.quality-x,.quality-warning{font-size:.73rem!important}.item-q{font-size:.66rem!important;line-height:1.52!important}.item-code{font-size:.66rem!important}.item-score{font-size:1.12rem!important}
+.item-meta .k{font-size:.50rem!important}.item-meta .v{font-size:.63rem!important}
+@media(max-width:1080px){.main-reading-grid{grid-template-columns:1fr!important}.side-stack{grid-template-columns:1fr 1fr!important;grid-template-rows:auto!important}.integral-core{grid-template-columns:230px 1fr!important}}
+@media(max-width:700px){.block-container{padding:.48rem .68rem 2.2rem!important}.title{font-size:1.72rem!important}.sub{font-size:.84rem!important}.main-reading-grid{grid-template-columns:1fr!important}.side-stack{grid-template-columns:1fr!important}.integral-hero{padding:20px 18px!important}.integral-top{display:grid!important;grid-template-columns:1fr auto!important}.integral-title{font-size:1.55rem!important}.integral-text{font-size:.80rem!important}.integral-core{grid-template-columns:1fr!important}.integral-score{font-size:3.65rem!important}.integral-bottom{grid-template-columns:1fr 1fr!important}.integral-bottom>div:last-child{grid-column:1/-1!important}.p17-score{font-size:2.1rem!important}.section-title{font-size:1.35rem!important}.section-note{display:none!important}.kpi-grid{grid-template-columns:1fr 1fr!important}}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+# ==============================================================
+# CAPA VISUAL — EVIDENCIA ESTADÍSTICA
+# ==============================================================
+st.markdown(
+    r"""
+<style>
+.stat-evidence{margin-top:13px;padding:15px 17px;border-radius:16px;background:#F7FAFE;border:1px solid #DCE7F3;color:#526A82;font-size:.78rem;line-height:1.58;box-shadow:inset 0 1px 0 #fff}
+.stat-evidence b{color:#153A61}
+.stat-evidence .stat-title{font-size:.88rem;font-weight:950;color:#153A61;margin-bottom:5px}
+.stat-evidence .tag{display:inline-block;margin:5px 5px 0 0;padding:5px 8px;border-radius:999px;background:#FFFFFF;border:1px solid #DDE7F2;font-size:.68rem;font-weight:850;color:#31587E}
+.stat-caveat{margin-top:8px;color:#74869A;font-size:.69rem}
+.p17-copy{font-size:.78rem!important}
+.pei-mini-note{font-size:.77rem!important}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+
+# ==============================================================
+# GLASSMORPHISM REAL — CAPA FINAL (DEBE IR ÚLTIMA)
+# ============================================================== 
+st.markdown(
+    r"""
+<style>
+/* --------------------------------------------------------------
+   GLASSMORPHISM INSTITUCIONAL REAL
+   Esta capa va al final para que ninguna regla blanca anterior
+   vuelva a tapar el efecto vidrio.
+   -------------------------------------------------------------- */
+:root{
+  --glass-bg:rgba(255,255,255,.62);
+  --glass-bg-strong:rgba(255,255,255,.76);
+  --glass-bg-soft:rgba(255,255,255,.46);
+  --glass-line:rgba(255,255,255,.84);
+  --glass-shadow:0 22px 55px rgba(31,72,132,.13),0 7px 20px rgba(31,72,132,.07),inset 0 1px 0 rgba(255,255,255,.94);
+  --glass-shadow-soft:0 14px 34px rgba(31,72,132,.10),inset 0 1px 0 rgba(255,255,255,.88);
+  --glass-blur:blur(26px) saturate(155%);
+  --navy-glass:rgba(16,55,112,.86);
+  --ink-glass:#143252;
+  --muted-glass:#60758C;
+}
+
+/* Fondo con luz ambiental para que el vidrio sea visible */
+.stApp{
+  background:
+    radial-gradient(circle at 8% 4%, rgba(59,113,232,.18) 0, rgba(59,113,232,.07) 18%, transparent 34%),
+    radial-gradient(circle at 93% 10%, rgba(24,169,192,.14) 0, rgba(24,169,192,.06) 18%, transparent 33%),
+    radial-gradient(circle at 82% 78%, rgba(119,103,160,.11) 0, transparent 30%),
+    radial-gradient(circle at 16% 84%, rgba(52,134,117,.09) 0, transparent 28%),
+    linear-gradient(180deg,#F8FBFF 0%,#FFFFFF 46%,#F5F9FF 100%)!important;
+  background-attachment:fixed!important;
+  color:var(--ink-glass)!important;
+}
+header[data-testid="stHeader"]{
+  background:rgba(248,251,255,.56)!important;
+  backdrop-filter:blur(24px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%)!important;
+  border-bottom:1px solid rgba(255,255,255,.68)!important;
+}
+.block-container{position:relative;z-index:1}
+
+/* Barra superior: vidrio azul tintado */
+.topbar{
+  background:linear-gradient(115deg,rgba(15,54,111,.93),rgba(31,87,174,.86) 55%,rgba(42,103,199,.78))!important;
+  backdrop-filter:blur(28px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(28px) saturate(150%)!important;
+  border:1px solid rgba(255,255,255,.18)!important;
+  box-shadow:0 20px 44px rgba(18,58,125,.22),inset 0 1px 0 rgba(255,255,255,.20)!important;
+}
+.meta-box{
+  background:rgba(255,255,255,.11)!important;
+  border:1px solid rgba(255,255,255,.20)!important;
+  backdrop-filter:blur(16px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(150%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15)!important;
+}
+.brand-img{background:rgba(255,255,255,.88)!important;border:1px solid rgba(255,255,255,.82)!important}
+
+/* Encabezado y chips */
+.pagehead{background:transparent!important}
+.basebox,.chip{
+  background:rgba(255,255,255,.55)!important;
+  border:1px solid rgba(255,255,255,.86)!important;
+  backdrop-filter:blur(20px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(20px) saturate(150%)!important;
+  box-shadow:0 10px 24px rgba(31,72,132,.07),inset 0 1px 0 rgba(255,255,255,.90)!important;
+}
+.chip.warn{background:rgba(255,248,229,.66)!important;border-color:rgba(255,255,255,.80)!important}
+
+/* Navegación de pestañas como vidrio */
+.stTabs [data-baseweb="tab-list"]{
+  background:rgba(255,255,255,.34)!important;
+  border:1px solid rgba(255,255,255,.72)!important;
+  border-radius:16px!important;
+  padding:5px!important;
+  backdrop-filter:blur(22px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(150%)!important;
+  box-shadow:0 12px 30px rgba(31,72,132,.07)!important;
+}
+.stTabs [data-baseweb="tab"]{border-radius:11px!important}
+.stTabs [aria-selected="true"]{
+  background:linear-gradient(135deg,rgba(37,83,180,.91),rgba(47,102,216,.79))!important;
+  border:1px solid rgba(255,255,255,.24)!important;
+  box-shadow:0 10px 25px rgba(38,91,196,.19),inset 0 1px 0 rgba(255,255,255,.23)!important;
+  backdrop-filter:blur(16px)!important;
+}
+
+/* Vidrio base para paneles */
+.panel,.kpi,.dim-card,.insight,.quality-card,.method,.item,.likert-row,.pei-card{
+  background:linear-gradient(135deg,rgba(255,255,255,.70),rgba(255,255,255,.43))!important;
+  border:1px solid var(--glass-line)!important;
+  backdrop-filter:var(--glass-blur)!important;
+  -webkit-backdrop-filter:var(--glass-blur)!important;
+  box-shadow:var(--glass-shadow-soft)!important;
+}
+
+/* Tarjeta principal: vidrio premium, NO caja blanca plana */
+.integral-hero{
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.78),rgba(235,245,255,.50))!important;
+  border:1px solid rgba(255,255,255,.92)!important;
+  backdrop-filter:blur(32px) saturate(165%)!important;
+  -webkit-backdrop-filter:blur(32px) saturate(165%)!important;
+  box-shadow:var(--glass-shadow)!important;
+  color:var(--ink-glass)!important;
+}
+.integral-hero:before{
+  content:""!important;position:absolute!important;left:0!important;top:0!important;bottom:0!important;width:7px!important;
+  background:linear-gradient(180deg,#1E4E91,#3C7CE1)!important;
+  box-shadow:7px 0 28px rgba(52,113,220,.18)!important;
+}
+.integral-hero:after{
+  content:""!important;position:absolute!important;width:420px!important;height:420px!important;right:-190px!important;top:-235px!important;border-radius:50%!important;
+  background:radial-gradient(circle at 35% 35%,rgba(98,158,255,.28),rgba(50,105,210,.09) 45%,transparent 70%)!important;
+  border:1px solid rgba(255,255,255,.45)!important;
+  box-shadow:inset 0 0 90px rgba(255,255,255,.28)!important;
+}
+.integral-eyebrow{color:#2A61BD!important}.integral-title{color:#102F51!important}.integral-text{color:#587087!important}
+.integral-score{color:#174F97!important;text-shadow:0 2px 18px rgba(31,96,188,.10)!important}
+.integral-level span{color:#71859A!important}
+.integral-signal{
+  background:rgba(255,255,255,.46)!important;
+  border:1px solid rgba(255,255,255,.84)!important;
+  backdrop-filter:blur(18px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(150%)!important;
+  box-shadow:0 14px 30px rgba(24,65,117,.10),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+.integral-formula .formula,.human-box,.integral-bottom>div,.stat-evidence,.interpret-banner,.method-alert,.quality-warning{
+  background:linear-gradient(135deg,rgba(255,255,255,.57),rgba(247,251,255,.37))!important;
+  border:1px solid rgba(255,255,255,.82)!important;
+  backdrop-filter:blur(18px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(145%)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.90),0 8px 22px rgba(31,72,132,.05)!important;
+}
+.integral-formula .formula{color:#173A60!important}.integral-formula .formula-result{background:rgba(255,255,255,.76)!important}
+.human-box{color:#506981!important}.human-box b,.human-box .headline{color:#153B63!important}
+.integral-bottom b{color:#71859A!important}.integral-bottom span{color:#173650!important}
+
+/* P17 y tarjeta explicativa: secundarias, de vidrio ligero */
+.p17-card,.pei-mini{
+  background:linear-gradient(145deg,rgba(255,255,255,.62),rgba(247,250,255,.37))!important;
+  border:1px solid rgba(255,255,255,.82)!important;
+  backdrop-filter:blur(24px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(150%)!important;
+  box-shadow:var(--glass-shadow-soft)!important;
+}
+.p17-score{color:#41546A!important}
+
+/* KPI: cada tarjeta con reflejo superior */
+.kpi{position:relative!important;overflow:hidden!important}
+.kpi:after,.dim-card:after,.insight:after,.quality-card:after{
+  content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);pointer-events:none
+}
+.kpi-icon{
+  background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 88%,white),color-mix(in srgb,var(--accent) 72%,#fff))!important;
+  border:1px solid rgba(255,255,255,.34)!important;
+  box-shadow:0 9px 20px color-mix(in srgb,var(--accent) 20%,transparent),inset 0 1px 0 rgba(255,255,255,.34)!important;
+}
+
+/* Dimensiones: vidrio + acento individual */
+.dim-card{position:relative!important;overflow:hidden!important}
+.dim-card:before{
+  content:"";position:absolute;inset:0 auto auto 0;width:100%;height:5px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 40%,white));opacity:.92
+}
+.donut{
+  box-shadow:0 15px 34px rgba(37,76,123,.10),inset 0 0 0 1px rgba(255,255,255,.55)!important;
+}
+.dim-meaning{
+  background:rgba(255,255,255,.36)!important;
+  border:1px solid rgba(255,255,255,.68)!important;
+  border-radius:12px!important;padding:9px 10px!important;
+}
+
+/* Escala de interpretación también en vidrio */
+.scale-wrap{
+  background:linear-gradient(135deg,rgba(255,255,255,.67),rgba(255,255,255,.40))!important;
+  border:1px solid rgba(255,255,255,.84)!important;
+  backdrop-filter:blur(24px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(150%)!important;
+  box-shadow:var(--glass-shadow-soft)!important;
+}
+.scale-step{
+  background:rgba(255,255,255,.40)!important;
+  border:1px solid rgba(255,255,255,.74)!important;
+  backdrop-filter:blur(14px)!important;
+  -webkit-backdrop-filter:blur(14px)!important;
+}
+.scale-step.active{background:rgba(255,255,255,.66)!important;box-shadow:0 12px 28px rgba(31,72,132,.08),inset 0 1px 0 rgba(255,255,255,.92)!important}
+
+/* Ítems, Likert y métodos */
+.item,.likert-row,.method,.quality-card{position:relative!important;overflow:hidden!important}
+.item-meta>div,.likert-pill,.pei-mini-grid>div,.pei-official-mini{
+  background:rgba(255,255,255,.42)!important;
+  border:1px solid rgba(255,255,255,.72)!important;
+  backdrop-filter:blur(12px)!important;
+  -webkit-backdrop-filter:blur(12px)!important;
+}
+
+/* Marco PEI: vidrio neutro para que no compita con el resultado */
+.pei-banner,.pei-official{
+  background:linear-gradient(145deg,rgba(255,255,255,.68),rgba(249,251,255,.43))!important;
+  border:1px solid rgba(255,255,255,.82)!important;
+  backdrop-filter:blur(24px) saturate(145%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(145%)!important;
+  box-shadow:var(--glass-shadow-soft)!important;
+}
+.pei-official-status{background:rgba(239,246,255,.48)!important;border:1px solid rgba(255,255,255,.72)!important}
+
+/* Dataframe: contenedor más integrado */
+div[data-testid="stDataFrame"]{
+  border-radius:16px!important;overflow:hidden!important;
+  border:1px solid rgba(255,255,255,.82)!important;
+  box-shadow:var(--glass-shadow-soft)!important;
+}
+
+/* Pequeña profundidad sin movimiento */
+.panel,.kpi,.dim-card,.insight,.integral-hero,.scale-wrap,.p17-card,.pei-mini{
+  transform:none!important;transition:none!important;
+}
+
+/* Fallback: si el navegador no soporta blur, sigue siendo legible */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .panel,.kpi,.dim-card,.insight,.quality-card,.method,.item,.likert-row,.integral-hero,.scale-wrap,.p17-card,.pei-mini,.pei-banner,.pei-official{
+    background:rgba(250,252,255,.96)!important;
+  }
+}
+
+@media(max-width:700px){
+  :root{--glass-blur:blur(18px) saturate(145%)}
+  .stApp{background:
+      radial-gradient(circle at 10% 4%,rgba(59,113,232,.14),transparent 28%),
+      radial-gradient(circle at 92% 12%,rgba(24,169,192,.10),transparent 28%),
+      linear-gradient(180deg,#F8FBFF,#FFFFFF)!important}
+  .integral-hero{backdrop-filter:blur(22px) saturate(150%)!important;-webkit-backdrop-filter:blur(22px) saturate(150%)!important}
+}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+# ==============================================================
+# AJUSTES FINALES DE IDENTIDAD VISUAL Y FÓRMULA
+# ==============================================================
+st.markdown(
+    r"""
+<style>
+/* 1) Identidad institucional: la imagen debe verse, no ser decorativa */
+.topbar{
+  min-height:82px!important;
+  padding:11px 18px!important;
+}
+.brand{gap:14px!important;align-items:center!important}
+.brand-img{
+  width:148px!important;
+  height:60px!important;
+  min-width:148px!important;
+  max-width:148px!important;
+  padding:5px 7px!important;
+  border-radius:14px!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:rgba(255,255,255,.96)!important;
+  border:1px solid rgba(255,255,255,.94)!important;
+  box-shadow:0 10px 24px rgba(8,35,82,.24),inset 0 1px 0 rgba(255,255,255,.98)!important;
+}
+.brand-img img{
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  display:block!important;
+}
+.brand-title{font-size:.95rem!important;line-height:1.08!important}
+.brand-sub{font-size:.56rem!important;line-height:1.25!important;margin-top:4px!important}
+
+/* 2) Línea divisoria de fracción N/D: oscura y visible */
+.frac{grid-template-rows:auto 2px auto!important;min-width:64px!important}
+.frac .bar{
+  height:2px!important;
+  min-height:2px!important;
+  background:#183651!important;
+  border-radius:999px!important;
+  margin:4px 0!important;
+  opacity:1!important;
+  box-shadow:none!important;
+}
+.formula-eq .frac span:first-child,
+.formula-eq .frac span:last-child{color:#153653!important}
+.integral-formula .formula-eq,
+.integral-formula .formula-eq>span{color:#153653!important}
+.integral-formula .formula-result{color:#2058A9!important}
+
+/* Responsive: conservar la imagen institucional también en celular */
+@media(max-width:700px){
+  .topbar{min-height:70px!important;padding:9px 10px!important}
+  .brand{gap:9px!important}
+  .brand-img{width:112px!important;min-width:112px!important;max-width:112px!important;height:48px!important;padding:4px 5px!important;border-radius:11px!important}
+  .brand-title{font-size:.76rem!important}
+  .brand-sub{font-size:.45rem!important;display:block!important;letter-spacing:.04em!important}
+}
+@media(max-width:470px){
+  .brand-img{width:92px!important;min-width:92px!important;max-width:92px!important;height:44px!important}
+  .brand-title{font-size:.69rem!important}
+  .brand-sub{font-size:.41rem!important}
+}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+
+# ==============================================================
+# CORRECCIÓN FINAL — IDENTIDAD + TERMINOLOGÍA VISUAL
+# ==============================================================
+st.markdown(
+    r"""
+<style>
+/* El archivo de imagen proporcionado está recortado; se retira para no mostrar una identidad incompleta. */
+.brand-img{display:none!important}
+.brand-mark{
+  width:58px;height:58px;min-width:58px;border-radius:15px;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(240,247,255,.90));
+  color:#173F82;font-weight:1000;font-size:1.03rem;letter-spacing:.06em;
+  border:1px solid rgba(255,255,255,.92);
+  box-shadow:0 10px 24px rgba(8,35,82,.22),inset 0 1px 0 rgba(255,255,255,.95);
+}
+.brand-title{font-size:1rem!important}
+.brand-sub{font-size:.56rem!important}
+
+/* Fracciones: línea oscura y claramente visible en cualquier fondo claro. */
+.frac{grid-template-rows:auto 2px auto!important;min-width:66px!important}
+.frac .bar{
+  height:2px!important;min-height:2px!important;
+  background:#102A43!important;
+  border:0!important;border-radius:999px!important;
+  margin:4px 0!important;opacity:1!important;
+}
+.formula-eq .frac span:first-child,.formula-eq .frac span:last-child{color:#102A43!important}
+.integral-formula .formula-eq,.integral-formula .formula-eq>span{color:#102A43!important}
+
+/* El chip principal usa lenguaje de resultado observado, no de estimación/proyección. */
+.chip{white-space:normal!important}
+
+@media(max-width:700px){
+  .brand-mark{width:46px;height:46px;min-width:46px;border-radius:12px;font-size:.82rem}
+  .brand-title{font-size:.78rem!important}
+  .brand-sub{font-size:.45rem!important}
+}
 </style>
 """,
     unsafe_allow_html=True,
 )
 
 # ==============================================================
-# UTILIDADES
+# LÓGICA METODOLÓGICA — BASADA EN EL INSTRUMENTO WORD
+# Se conserva la capa visual previa (semáforos, fórmula y glassmorphism).
 # ==============================================================
 def pct(x: float, digits: int = 1) -> str:
-    if pd.isna(x):
-        return "—"
-    return f"{x * 100:.{digits}f}%"
+    return "—" if pd.isna(x) else f"{x*100:.{digits}f}%"
 
 
-def level_for_percentage(value: float) -> tuple[str, str, str]:
-    """Operacionaliza los rangos de interpretación escritos en el instrumento."""
+def institutional_level(value: float) -> tuple[str, str, str, str]:
+    """Rangos de interpretación consignados en la propuesta del instrumento."""
     if pd.isna(value):
-        return "Sin dato", "—", "#8492A2"
-    if value < 0.60:
-        return "Insatisfactorio", "0–59%", "#B85A67"
-    if value < 0.75:
-        return "Regular", "60–74%", "#B77A12"
-    if value < 0.90:
-        return "Satisfactorio", "75–89%", "#19866E"
-    return "Muy satisfactorio", "90–100%", "#207C98"
+        return "Sin dato", "—", "#9AA7B5", "off"
+    if value < .60:
+        return "Insatisfactorio", "0–59%", "#E25B68", "red"
+    if value < .75:
+        return "Regular", "60–74%", "#F2A62C", "amber"
+    if value < .90:
+        return "Satisfactorio", "75–89%", "#16A878", "green"
+    return "Muy satisfactorio", "90–100%", "#20AABD", "green"
+
+
+def traffic_svg(state: str, size: int = 50) -> str:
+    # Diseño 3D conservado de la versión entregada por el usuario.
+    active = {
+        "red": (1.0, .15, .15),
+        "amber": (.15, 1.0, .15),
+        "green": (.15, .15, 1.0),
+        "off": (.15, .15, .15),
+    }[state]
+    return f'''<svg class="signal-shell" width="{size}" height="{int(size*1.62)}" viewBox="0 0 70 114" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Semáforo {state}">
+      <defs>
+        <linearGradient id="case{size}" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#344A5B"/><stop offset=".48" stop-color="#172531"/><stop offset="1" stop-color="#070C11"/></linearGradient>
+        <radialGradient id="r{size}"><stop offset="0" stop-color="#FFAAB2"/><stop offset=".45" stop-color="#FF4758"/><stop offset="1" stop-color="#9C1726"/></radialGradient>
+        <radialGradient id="a{size}"><stop offset="0" stop-color="#FFE6A9"/><stop offset=".45" stop-color="#FFB020"/><stop offset="1" stop-color="#A85A00"/></radialGradient>
+        <radialGradient id="g{size}"><stop offset="0" stop-color="#A3F5D5"/><stop offset=".45" stop-color="#22C997"/><stop offset="1" stop-color="#08724F"/></radialGradient>
+        <filter id="glow{size}"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <rect x="8" y="3" width="54" height="106" rx="19" fill="url(#case{size})" stroke="#465C6D" stroke-width="1.5"/>
+      <rect x="14" y="9" width="42" height="94" rx="14" fill="#0B1117" opacity=".84"/>
+      <circle cx="35" cy="27" r="13" fill="url(#r{size})" opacity="{active[0]}" {'filter="url(#glow'+str(size)+')"' if state=='red' else ''}/>
+      <circle cx="35" cy="56" r="13" fill="url(#a{size})" opacity="{active[1]}" {'filter="url(#glow'+str(size)+')"' if state=='amber' else ''}/>
+      <circle cx="35" cy="85" r="13" fill="url(#g{size})" opacity="{active[2]}" {'filter="url(#glow'+str(size)+')"' if state=='green' else ''}/>
+      <ellipse cx="30" cy="22" rx="4.5" ry="2.5" fill="white" opacity=".34"/><ellipse cx="30" cy="51" rx="4.5" ry="2.5" fill="white" opacity=".34"/><ellipse cx="30" cy="80" rx="4.5" ry="2.5" fill="white" opacity=".34"/>
+    </svg>'''
 
 
 def section_header(kicker: str, title: str, note: str = "") -> None:
     st.markdown(
-        f'<div class="section-head"><div><div class="section-kicker">{escape(kicker)}</div>'
-        f'<div class="section-title">{escape(title)}</div></div>'
-        f'<div class="section-note">{escape(note)}</div></div>',
+        f'''<div class="section-head"><div><div class="section-kicker">{escape(kicker)}</div><div class="section-title">{escape(title)}</div></div><div class="section-note">{escape(note)}</div></div>''',
         unsafe_allow_html=True,
     )
 
 
+def spark_svg(color: str, variant: int = 0) -> str:
+    paths = [
+        "M2 15 L24 10 L45 13 L67 8 L94 10",
+        "M2 13 L24 15 L45 9 L67 13 L94 7",
+        "M2 12 L24 8 L45 11 L67 15 L94 9",
+        "M2 15 L24 12 L45 7 L67 11 L94 8",
+    ]
+    p = paths[variant % len(paths)]
+    return f'<svg viewBox="0 0 96 20" preserveAspectRatio="none"><path d="{p}" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round"/><circle cx="94" cy="{[10,7,9,8][variant%4]}" r="2" fill="{color}"/></svg>'
+
+
+def formula_html(n: int, d: int, result: float, caption: str = "Fórmula del indicador") -> str:
+    # Diseño tipográfico/fracción conservado de la versión anterior.
+    return f'''<div class="formula"><div class="formula-k">{escape(caption)}</div><div class="formula-eq"><span>Porcentaje =</span><span class="frac"><span>N</span><span class="bar"></span><span>D</span></span><span>× 100 =</span><span class="frac"><span>{n:,}</span><span class="bar"></span><span>{d:,}</span></span><span>× 100 =</span><span class="formula-result">{pct(result)}</span></div></div>'''
+
+
 # ==============================================================
-# CARGA Y CÁLCULO DESDE EL EXCEL
+# DATOS Y REGLAS DEL WORD
 # ==============================================================
 def require_columns(df: pd.DataFrame) -> None:
-    missing = [c for c in ITEMS if c not in df.columns]
+    missing = [c for c in ALL_ITEMS if c not in df.columns]
     if missing:
         raise ValueError("Faltan columnas obligatorias: " + ", ".join(missing))
 
 
+def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    require_columns(df)
+    for c in ALL_ITEMS:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+
+    # D1–D4: el Word define satisfacción dimensional por estudiante
+    # cuando el promedio de los cuatro ítems de la dimensión es >= 4.
+    for code, meta in DIMENSIONS.items():
+        df[f"{code}_Prom"] = df[meta["items"]].mean(axis=1)
+        df[f"{code}_Sat"] = (df[f"{code}_Prom"] >= 4).astype(float)
+
+    # Satisfacción general: P17. El Word especifica:
+    # 4 o 5 = satisfecho; 1, 2 o 3 = no satisfecho.
+    df["P17_Sat"] = (df["P17"] >= 4).astype(float)
+    return df
+
+
 @st.cache_data(show_spinner=False)
-def load_data(path: str, mtime: float) -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_data(path: str, mtime: float) -> pd.DataFrame:
     raw = pd.read_excel(path, sheet_name=SHEET_NAME)
-    require_columns(raw)
-    data = raw.copy()
-    for c in ITEMS:
-        data[c] = pd.to_numeric(data[c], errors="coerce")
-    return raw, data
+    return prepare_data(raw)
 
 
 if not DATA_FILE.exists():
-    st.error("No se encontró basededatos.xlsx en la misma carpeta que app.py.")
+    st.error("No se encontró basededatos.xlsx. Debe estar en la misma carpeta que app.py.")
     st.stop()
 
 try:
-    raw_df, df = load_data(str(DATA_FILE), DATA_FILE.stat().st_mtime)
+    df = load_data(str(DATA_FILE), DATA_FILE.stat().st_mtime)
 except Exception as exc:
-    st.error(f"No pude leer la base: {exc}")
+    st.error(f"No pude leer basededatos.xlsx: {exc}")
     st.stop()
 
-N_ROWS = len(df)
-missing_responses = int(df[ITEMS].isna().sum().sum())
-invalid_mask = pd.DataFrame(False, index=df.index, columns=ITEMS)
-for c in ITEMS:
-    invalid_mask[c] = df[c].notna() & ~df[c].isin(VALID_VALUES)
-invalid_responses = int(invalid_mask.sum().sum())
+N_TOTAL = int(len(df))
+GLOBAL = float(df["P17_Sat"].mean())
+N_GLOBAL = int(df["P17_Sat"].sum())
+N_GLOBAL_NO = N_TOTAL - N_GLOBAL
+GLOBAL_MEAN = float(df["P17"].mean())
+GLOBAL_LEVEL, GLOBAL_INTERVAL, GLOBAL_COLOR, GLOBAL_STATE = institutional_level(GLOBAL)
 
-clean = df.copy()
-for c in ITEMS:
-    clean.loc[~clean[c].isin(VALID_VALUES), c] = pd.NA
+MISSING_RESPONSES = int(df[ALL_ITEMS].isna().sum().sum())
+INVALID_RESPONSES = int((~df[ALL_ITEMS].isin([1, 2, 3, 4, 5]) & df[ALL_ITEMS].notna()).sum().sum())
+DATE_START = pd.to_datetime(df["Fecha"], errors="coerce").min() if "Fecha" in df.columns else pd.NaT
+DATE_END = pd.to_datetime(df["Fecha"], errors="coerce").max() if "Fecha" in df.columns else pd.NaT
 
-# --- Satisfacción general: P17. Aquí el Word sí dice expresamente 4–5 = satisfecho y 1–3 = no satisfecho.
-p17_valid = clean["P17"].notna()
-p17_sat = clean.loc[p17_valid, "P17"].isin([4, 5])
-GLOBAL_D = int(p17_valid.sum())
-GLOBAL_N = int(p17_sat.sum())
-GLOBAL = GLOBAL_N / GLOBAL_D if GLOBAL_D else float("nan")
-GLOBAL_NO_N = GLOBAL_D - GLOBAL_N
-GLOBAL_NO = GLOBAL_NO_N / GLOBAL_D if GLOBAL_D else float("nan")
-GLOBAL_MEAN = float(clean.loc[p17_valid, "P17"].mean()) if GLOBAL_D else float("nan")
-GLOBAL_LEVEL, GLOBAL_RANGE, GLOBAL_COLOR = level_for_percentage(GLOBAL)
 
-# --- Dimensiones: promedio individual de los 4 ítems >= 4.
-dim_rows = []
-for code, meta in DIMENSIONS.items():
-    valid = clean[meta["items"]].notna().all(axis=1)
-    score = clean.loc[valid, meta["items"]].mean(axis=1)
-    sat = score >= 4
-    d = int(valid.sum())
-    n = int(sat.sum())
-    p = n / d if d else float("nan")
-    level, rng, color = level_for_percentage(p)
-    dim_rows.append({
-        "Código": code,
-        "Dimensión": meta["name"],
-        "N": n,
-        "D": d,
-        "Satisfacción": p,
-        "No alcanza": 1 - p if d else float("nan"),
-        "Promedio": float(score.mean()) if d else float("nan"),
-        "Nivel": level,
-        "Rango": rng,
-        "Color": color,
-    })
-DIMS = pd.DataFrame(dim_rows)
+def dimension_summary() -> pd.DataFrame:
+    rows = []
+    for code, meta in DIMENSIONS.items():
+        sat = float(df[f"{code}_Sat"].mean())
+        avg = float(df[f"{code}_Prom"].mean())
+        n_sat = int(df[f"{code}_Sat"].sum())
+        level, interval, color, state = institutional_level(sat)
+        rows.append({
+            "Código": code,
+            "Dimensión": meta["name"],
+            "Satisfacción": sat,
+            "Promedio": avg,
+            "N satisfechos": n_sat,
+            "N no satisfechos": N_TOTAL - n_sat,
+            "Nivel": level,
+            "Intervalo": interval,
+            "Color": color,
+            "Semáforo": state,
+        })
+    return pd.DataFrame(rows)
 
-# --- Preguntas P1–P17: lectura descriptiva por respuesta.
-# Para P1–P16 no inventamos una categoría "neutral" ni afirmamos que el Word defina 1–3 como "no satisfecho" por ítem.
-# Mostramos simplemente qué porcentaje respondió 4–5 (cumple el criterio de satisfacción) y qué porcentaje respondió 1–3.
-item_rows = []
-for i in range(1, 18):
-    item = f"P{i}"
-    s = clean[item].dropna()
-    d = int(len(s))
-    n45 = int(s.isin([4, 5]).sum())
-    n13 = d - n45
-    code = f"D{((i - 1) // 4) + 1}" if i <= 16 else "GLOBAL"
-    rec = {
-        "Número": i,
-        "Ítem": item,
-        "Dimensión": code,
-        "Pregunta": ITEM_TEXT[item],
-        "N 4-5": n45,
-        "N 1-3": n13,
-        "D": d,
-        "Resp 4-5": n45 / d if d else float("nan"),
-        "Resp 1-3": n13 / d if d else float("nan"),
-        "Promedio": float(s.mean()) if d else float("nan"),
-    }
-    for v in range(1, 6):
-        rec[f"Resp {v}"] = float((s == v).mean()) if d else float("nan")
-        rec[f"N Resp {v}"] = int((s == v).sum())
-    item_rows.append(rec)
-ITEMS_SUM = pd.DataFrame(item_rows)
 
-# --- Auditoría de las columnas derivadas ya existentes en el Excel.
-derived_checks = []
-for code, meta in DIMENSIONS.items():
-    stored_prom = f"{code}_Promedio"
-    stored_sat = f"{code}_Satisfecho"
-    valid = clean[meta["items"]].notna().all(axis=1)
-    calc_prom = clean[meta["items"]].mean(axis=1)
-    calc_sat = (calc_prom >= 4).astype(int)
-    if stored_prom in raw_df.columns:
-        cmp = pd.to_numeric(raw_df[stored_prom], errors="coerce")
-        mismatch = int(((cmp - calc_prom).abs() > 1e-9).fillna(valid).sum())
-        derived_checks.append((stored_prom, mismatch))
-    if stored_sat in raw_df.columns:
-        cmp = pd.to_numeric(raw_df[stored_sat], errors="coerce")
-        mismatch = int((cmp.loc[valid].astype("Int64") != calc_sat.loc[valid].astype("Int64")).sum())
-        derived_checks.append((stored_sat, mismatch))
+def item_summary() -> pd.DataFrame:
+    rows = []
+    for i in range(1, 18):
+        item = f"P{i}"
+        s = df[item].dropna()
+        code = f"D{((i-1)//4)+1}" if i <= 16 else "SG"
+        row = {
+            "Número": i,
+            "Ítem": item,
+            "Dimensión": code,
+            "Pregunta": ITEM_TEXT[item],
+            "Promedio": float(s.mean()),
+            "Respuestas 4–5": float((s >= 4).mean()),
+            "Respuestas 1–3": float((s <= 3).mean()),
+        }
+        for v in range(1, 6):
+            row[f"R{v}"] = float((s == v).mean())
+        rows.append(row)
+    return pd.DataFrame(rows)
 
-if "Global_Satisfecho" in raw_df.columns:
-    calc_global = clean["P17"].isin([4, 5]).astype(int)
-    cmp = pd.to_numeric(raw_df["Global_Satisfecho"], errors="coerce")
-    mismatch = int((cmp.loc[p17_valid].astype("Int64") != calc_global.loc[p17_valid].astype("Int64")).sum())
-    derived_checks.append(("Global_Satisfecho", mismatch))
 
-if "Categoria_Global" in raw_df.columns:
-    calc_cat = pd.Series(pd.NA, index=clean.index, dtype="object")
-    calc_cat.loc[p17_valid] = clean.loc[p17_valid, "P17"].isin([4, 5]).map({True: "Satisfecho", False: "No satisfecho"})
-    cmp = raw_df["Categoria_Global"].astype(str).str.strip()
-    mismatch = int((cmp.loc[p17_valid] != calc_cat.loc[p17_valid]).sum())
-    derived_checks.append(("Categoria_Global", mismatch))
+DIMS = dimension_summary()
+ITEMS_SUM = item_summary()
+PRIORITY_DIM = DIMS.sort_values("Satisfacción").iloc[0]
+STRONG_DIM = DIMS.sort_values("Satisfacción", ascending=False).iloc[0]
+DIM_ITEM_SUM = ITEMS_SUM[ITEMS_SUM["Número"] <= 16].copy()
+PRIORITY_ITEM = DIM_ITEM_SUM.sort_values("Respuestas 4–5").iloc[0]
+STRONG_ITEM = DIM_ITEM_SUM.sort_values("Respuestas 4–5", ascending=False).iloc[0]
 
-DERIVED_MISMATCHES = sum(x[1] for x in derived_checks)
-DERIVED_CHECKED = len(derived_checks)
-
-if "Fecha" in raw_df.columns:
-    dt = pd.to_datetime(raw_df["Fecha"], errors="coerce")
-    date_start, date_end = dt.min(), dt.max()
-else:
-    date_start = date_end = pd.NaT
-period = (
-    f"{date_start.strftime('%d/%m/%Y')} – {date_end.strftime('%d/%m/%Y')}"
-    if pd.notna(date_start) and pd.notna(date_end)
-    else "2026"
-)
 
 # ==============================================================
-# COMPONENTES
+# AJUSTE MÍNIMO DE LA DISTRIBUCIÓN LIKERT
+# (No altera semáforos ni fórmula.)
+# ==============================================================
+st.markdown(r"""
+<style>
+.likert-legend{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 11px 56px;font-size:.68rem;color:#657A90}
+.likert-legend span{padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.58);border:1px solid rgba(255,255,255,.86)}
+.r1{background:linear-gradient(180deg,#D95B68,#BE4654)}
+.r2{background:linear-gradient(180deg,#E78A78,#CF6C5D)}
+.r3{background:linear-gradient(180deg,#BBC5CF,#9EAAB6)}
+.r4{background:linear-gradient(180deg,#61AE9A,#42917D)}
+.r5{background:linear-gradient(180deg,#359B82,#267963)}
+.item-meta{grid-template-columns:repeat(3,1fr)!important}
+@media(max-width:700px){.likert-legend{margin-left:0;font-size:.62rem}}
+</style>
+""", unsafe_allow_html=True)
+
+
+# ==============================================================
+# COMPONENTES HTML
 # ==============================================================
 def top_header() -> None:
+    if pd.notna(DATE_START) and pd.notna(DATE_END):
+        period = f"{DATE_START:%d %b}–{DATE_END:%d %b %Y}"
+    else:
+        period = "2026"
     st.markdown(
         f'''<div class="topbar">
-          <div class="brand"><div class="brand-mark">UNT</div><div><div class="brand-title">Tablero de satisfacción académica</div><div class="brand-sub">Universidad Nacional de Trujillo · Formación académica integral</div></div></div>
-          <div class="top-meta"><div class="meta">Periodo<b>{escape(period)}</b></div><div class="meta">Base analizada<b>{N_ROWS:,} registros</b></div><div class="meta">Fuente<b>Word + Excel</b></div></div>
+          <div class="brand"><div class="brand-mark" aria-label="Universidad Nacional de Trujillo">UNT</div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · Formación académica integral</div></div></div>
+          <div class="top-meta"><div class="meta-box">Periodo de encuesta<b>{period}</b></div><div class="meta-box">Base analizada<b>{N_TOTAL:,} estudiantes</b></div><div class="meta-box">Instrumento<b>17 ítems · 4 dimensiones</b></div></div>
         </div>
-        <div class="pagehead"><div class="kicker">Encuesta de satisfacción · 2026</div><div class="title">Satisfacción con la formación académica integral</div>
-        <div class="sub">El tablero sigue la lógica operativa del instrumento: <b>P17</b> representa la satisfacción general; allí el documento indica expresamente <b>4–5 = satisfecho</b> y <b>1–3 = no satisfecho</b>. En <b>D1–D4</b>, cada estudiante se clasifica según el <b>promedio de los cuatro ítems de la dimensión: promedio ≥4 = satisfecho</b>. En P1–P16 se muestran las respuestas 4–5 y 1–3 como lectura descriptiva, sin crear una categoría “neutral”.</div>
-        <div class="chips"><span class="chip">Global = P17</span><span class="chip">D1–D4 = promedio individual ≥4</span><span class="chip">P1–P16 = análisis descriptivo por pregunta</span><span class="chip">Escala Likert original 1–5 conservada</span></div></div>''',
+        <div class="pagehead"><div><div class="kicker">Encuesta de satisfacción · análisis 2026</div><div class="title">Satisfacción con la formación académica integral</div><div class="sub">El tablero sigue la estructura del instrumento: <b>D1–D4</b> se calculan con el promedio de sus cuatro ítems por estudiante y <b>P17</b> representa la satisfacción general. Las respuestas se mantienen en su escala Likert original de 1 a 5.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} estudiantes</span><span class="chip">◉ P17 · satisfacción general</span><span class="chip">▦ D1–D4 · promedio de 4 ítems ≥4</span><span class="chip">1–5 · escala Likert original</span></div></div><div class="basebox">Encuesta 2026<b>{period}</b></div></div>''',
         unsafe_allow_html=True,
     )
 
 
-def interpretation_scale_html() -> str:
+def scale_html(value: float) -> str:
+    level, interval, color_now, _ = institutional_level(value)
     levels = [
-        ("Insatisfactorio", "0–59%", "#B85A67"),
-        ("Regular", "60–74%", "#B77A12"),
-        ("Satisfactorio", "75–89%", "#19866E"),
-        ("Muy satisfactorio", "90–100%", "#207C98"),
+        ("Insatisfactorio", "0–59%", "#E25B68"),
+        ("Regular", "60–74%", "#F2A62C"),
+        ("Satisfactorio", "75–89%", "#16A878"),
+        ("Muy satisfactorio", "90–100%", "#20AABD"),
     ]
-    blocks = ''.join(
-        f'<div class="scale-step" style="--lvl:{c}"><div class="scale-dot"></div><div class="scale-name">{escape(name)}</div><div class="scale-range">{escape(interval)}</div></div>'
-        for name, interval, c in levels
-    )
-    return (
-        '<div class="panel scale"><div class="scale-title">Criterios de interpretación institucional del porcentaje</div>'
-        '<div class="scale-sub">Estos rangos se aplican <b>después de calcular el porcentaje de satisfacción</b>. No son categorías de respuesta de la escala Likert y no equivalen a “favorable / neutral / desfavorable”.</div>'
-        f'<div class="scale-grid">{blocks}</div></div>'
-    )
+    cards = []
+    for name, rng, color in levels:
+        active = " active" if name == level else ""
+        cards.append(f'<div class="scale-step{active}" style="--lvl:{color}"><div class="scale-dot" style="background:{color}"></div><div class="scale-name">{name}</div><div class="scale-range">{rng}</div></div>')
+    return f'''<div class="panel scale-wrap"><div class="scale-title">Criterios de interpretación institucional del instrumento · Resultado: <span style="color:{color_now}">{escape(level)} ({escape(interval)})</span></div><div class="scale4">{"".join(cards)}</div><div class="scale-note">Estos rangos se aplican <b>después de calcular el porcentaje de estudiantes satisfechos</b>. No son alternativas de respuesta de la encuesta. El semáforo es una ayuda visual; el nombre del nivel mostrado en texto es la clasificación exacta.</div></div>'''
 
 
-def hero_html() -> str:
-    return f'''<div class="hero-grid">
-      <div class="panel hero">
-        <div class="hero-eyebrow">Indicador principal · Satisfacción general · P17</div>
-        <div class="hero-title">Porcentaje de estudiantes de pregrado satisfechos con su formación académica integral</div>
-        <div class="hero-desc">Para P17, el documento define de forma explícita: <b>Satisfecho = respuesta 4 o 5</b>; <b>No satisfecho = respuesta 1, 2 o 3</b>.</div>
-        <div class="hero-core"><div><div class="hero-score">{pct(GLOBAL)}</div><div class="hero-level" style="color:{GLOBAL_COLOR}">{escape(GLOBAL_LEVEL)}<small>Nivel del porcentaje según la escala del instrumento · {escape(GLOBAL_RANGE)}</small></div></div>
-        <div class="formula"><div class="formula-k">Cálculo</div><div class="formula-eq">({GLOBAL_N:,} / {GLOBAL_D:,}) × 100 <span class="formula-result">= {pct(GLOBAL)}</span></div></div></div>
-        <div class="explain"><div class="headline">Cómo se lee</div><b>{GLOBAL_N:,}</b> estudiantes respondieron 4 o 5 en P17 y son los que entran al numerador del indicador. Los <b>{GLOBAL_NO_N:,}</b> restantes respondieron 1, 2 o 3. El término <b>{escape(GLOBAL_LEVEL)}</b> clasifica el porcentaje obtenido ({pct(GLOBAL)}); no es una respuesta del cuestionario.</div>
-        <div class="hero-foot"><div><b>Satisfechos · P17 = 4–5</b><span>{GLOBAL_N:,} · {pct(GLOBAL)}</span></div><div><b>No satisfechos · P17 = 1–3</b><span>{GLOBAL_NO_N:,} · {pct(GLOBAL_NO)}</span></div><div><b>Promedio P17 · descriptivo</b><span>{GLOBAL_MEAN:.2f}/5</span></div></div>
+def primary_cards_html() -> str:
+    every100 = round(GLOBAL * 100)
+    kpis = [
+        ("Estudiantes analizados", f"{N_TOTAL:,}", "Total de registros", "👥", "#2457B8", "#EEF4FF"),
+        ("Satisfechos P17", f"{N_GLOBAL:,}", "Respuesta 4 o 5", "✓", "#14846C", "#EDF8F5"),
+        ("No satisfechos P17", f"{N_GLOBAL_NO:,}", "Respuesta 1, 2 o 3", "–", "#C55763", "#FCEFF1"),
+        ("Satisfacción general", pct(GLOBAL), "P17", "◉", "#2457B8", "#EEF4FF"),
+        ("Promedio P17", f"{GLOBAL_MEAN:.2f} / 5", "Media descriptiva", "∑", "#5A6475", "#F3F5F7"),
+        ("Nivel del porcentaje", GLOBAL_LEVEL, GLOBAL_INTERVAL, "🚦", GLOBAL_COLOR, "#F7F9FC"),
+    ]
+    kpi_html = []
+    for i, (label, val, foot, icon, accent, soft) in enumerate(kpis):
+        kpi_html.append(f'<div class="kpi" style="--accent:{accent};--soft:{soft}"><div class="kpi-head"><div class="kpi-label">{escape(label)}</div><div class="kpi-icon">{icon}</div></div><div class="kpi-v">{escape(val)}</div><div class="kpi-f">{escape(foot)}</div><div class="spark">{spark_svg(accent,i)}</div></div>')
+
+    return f'''<div class="main-reading-grid">
+      <div class="integral-hero">
+        <div class="integral-top">
+          <div>
+            <div class="integral-eyebrow">INDICADOR GENERAL · P17 · BASE 2026</div>
+            <div class="integral-title">Porcentaje de estudiantes satisfechos con su formación académica integral</div>
+            <div class="integral-text">Para la <b>satisfacción general</b>, el instrumento utiliza el ítem 17. Se considera <b>satisfecho</b> al estudiante que responde <b>4 = De acuerdo</b> o <b>5 = Totalmente de acuerdo</b>; las respuestas <b>1, 2 o 3</b> se clasifican como <b>no satisfecho</b> para P17.</div>
+          </div>
+          <div class="integral-signal">{traffic_svg(GLOBAL_STATE,56)}</div>
+        </div>
+        <div class="integral-core">
+          <div><div class="integral-score">{pct(GLOBAL)}</div><div class="integral-level" style="color:{GLOBAL_COLOR}">{escape(GLOBAL_LEVEL)} · {escape(GLOBAL_INTERVAL)} <span>criterio de interpretación del instrumento</span></div></div>
+          <div class="integral-formula">{formula_html(N_GLOBAL, N_TOTAL, GLOBAL, "Fórmula del indicador general · P17")}</div>
+        </div>
+        <div class="human-box"><div class="headline">¿Cómo se lee este resultado?</div>De <b>{N_TOTAL:,} estudiantes</b>, <b>{N_GLOBAL:,}</b> respondieron 4 o 5 en P17. Por ello, el porcentaje de satisfacción general es <b>{pct(GLOBAL)}</b>: aproximadamente <b>{every100} de cada 100 estudiantes</b>. Al aplicar los rangos del instrumento, este porcentaje se ubica en el nivel <b>{escape(GLOBAL_LEVEL)}</b>.</div>
+        <div class="integral-bottom"><div><b>Satisfechos</b><span>{N_GLOBAL:,}</span></div><div><b>No satisfechos</b><span>{N_GLOBAL_NO:,}</span></div><div><b>Promedio P17</b><span>{GLOBAL_MEAN:.2f}/5</span></div></div>
       </div>
       <div class="side-stack">
-        <div class="panel side"><div class="side-k">Regla literal de P17</div><div class="side-t">Satisfecho / No satisfecho</div><div class="side-x"><b>4 o 5:</b> satisfecho.<br><b>1, 2 o 3:</b> no satisfecho.<br><br>Esta clasificación está escrita de forma explícita para la satisfacción general.</div></div>
-        <div class="panel side"><div class="side-k">Evitar confusiones</div><div class="side-t">La respuesta 3 no se elimina</div><div class="side-x">La opción <b>3 = Ni de acuerdo ni en desacuerdo</b> se conserva en la distribución Likert 1–5. Para el cálculo de P17, el propio instrumento la incluye dentro de <b>No satisfecho</b>.</div></div>
+        <div class="panel p17-card"><div class="p17-head"><div><div class="side-kicker">Regla del instrumento</div><div class="p17-title">Criterio de satisfacción general</div></div>{traffic_svg(GLOBAL_STATE,29)}</div><div class="p17-copy"><b>4–5 = Satisfecho</b><br><b>1–3 = No satisfecho</b><br><br>Esta clasificación corresponde expresamente a la satisfacción general P17.</div></div>
+        <div class="panel pei-mini"><div class="side-kicker">Escala de respuesta</div><div class="pei-mini-title">Likert de 5 puntos</div><div class="pei-mini-note"><b>1</b> Totalmente en desacuerdo<br><b>2</b> En desacuerdo<br><b>3</b> Ni de acuerdo ni en desacuerdo<br><b>4</b> De acuerdo<br><b>5</b> Totalmente de acuerdo</div></div>
       </div>
-    </div>'''
+    </div><div class="kpi-grid">{"".join(kpi_html)}</div>'''
 
 
 def dimension_cards_html() -> str:
@@ -353,235 +948,605 @@ def dimension_cards_html() -> str:
     for _, r in DIMS.sort_values("Código").iterrows():
         code = str(r["Código"])
         meta = DIMENSIONS[code]
-        p = float(r["Satisfacción"])
-        no = float(r["No alcanza"])
-        cards.append(
-            f'''<div class="panel dim" style="--accent:{meta['accent']};--soft:{meta['soft']}">
-              <div class="dim-code">{escape(code)}</div><div class="dim-name">{escape(meta['name'])}</div>
-              <div class="dim-score">{pct(p)}</div><div class="level-badge">{escape(str(r['Nivel']))}</div>
-              <div class="dim-meta"><b>Satisfechos en la dimensión:</b> {int(r['N']):,} de {int(r['D']):,}<br><b>No alcanzan el criterio:</b> {pct(no)}<br><b>Promedio dimensional descriptivo:</b> {float(r['Promedio']):.2f}/5</div>
-              <div class="dim-rule"><b>Regla del instrumento:</b> promedio individual de {', '.join(meta['items'])} ≥ 4. El porcentaje se calcula después de clasificar a cada estudiante.</div>
-            </div>'''
-        )
+        sat = float(r["Satisfacción"])
+        avg = float(r["Promedio"])
+        level, interval, color, state = institutional_level(sat)
+        cards.append(f'''<div class="panel dim-card" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="dim-head"><div><div class="dim-code">{meta['icon']} {code}</div><div class="dim-name">{escape(meta['name'])}</div></div>{traffic_svg(state,30)}</div><div class="dim-body"><div class="donut" style="--p:{sat*100:.2f};--accent:{meta['accent']}"><b>{pct(sat)}</b></div><div><div class="dim-level" style="color:{color}">{escape(level)}</div><div class="dim-meta"><b>Rango:</b> {escape(interval)}<br><b>Estudiantes satisfechos:</b> {int(r['N satisfechos']):,} de {N_TOTAL:,}<br><b>No satisfechos:</b> {int(r['N no satisfechos']):,}<br><b>Promedio dimensional:</b> {avg:.2f}/5</div></div></div><div class="dim-meaning"><b>Qué evalúa:</b> {escape(meta['meaning'])}</div><div class="dim-foot"><span>Regla del Word: promedio de los 4 ítems ≥4</span><b>{', '.join(meta['items'])}</b></div></div>''')
     return '<div class="dim-grid">' + ''.join(cards) + '</div>'
 
 
-def executive_insights_html() -> str:
-    high = DIMS.sort_values("Satisfacción", ascending=False).iloc[0]
-    low = DIMS.sort_values("Satisfacción").iloc[0]
-    p116 = ITEMS_SUM[ITEMS_SUM["Número"] <= 16]
-    high_item = p116.sort_values("Resp 4-5", ascending=False).iloc[0]
-    low_item = p116.sort_values("Resp 4-5").iloc[0]
+def insights_html() -> str:
+    pri = PRIORITY_DIM
+    strong = STRONG_DIM
+    pitem = PRIORITY_ITEM
+    sitem = STRONG_ITEM
     return f'''<div class="insight-grid">
-      <div class="panel insight" style="--accent:#338373"><div class="insight-k">Mayor resultado dimensional</div><div class="insight-t">{escape(str(high['Código']))} · {pct(float(high['Satisfacción']))}</div><div class="insight-x">{escape(str(high['Dimensión']))}. El valor representa estudiantes cuyo promedio individual de la dimensión es ≥4.</div></div>
-      <div class="panel insight" style="--accent:#AF744C"><div class="insight-k">Menor resultado dimensional</div><div class="insight-t">{escape(str(low['Código']))} · {pct(float(low['Satisfacción']))}</div><div class="insight-x">{escape(str(low['Dimensión']))}. Se interpreta con la misma regla de promedio individual ≥4.</div></div>
-      <div class="panel insight" style="--accent:#2F6FA3"><div class="insight-k">Lectura por pregunta P1–P16</div><div class="insight-t">{escape(str(low_item['Ítem']))} {pct(float(low_item['Resp 4-5']))} ↔ {escape(str(high_item['Ítem']))} {pct(float(high_item['Resp 4-5']))}</div><div class="insight-x">Aquí se compara únicamente el porcentaje de <b>respuestas 4–5</b> por ítem. No se aplica la clasificación institucional de niveles a cada pregunta.</div></div>
+      <div class="panel insight" style="--accent:#2457B8"><div class="insight-k">Satisfacción general</div><div class="insight-t">P17 · {pct(GLOBAL)}</div><div class="insight-x"><b>{N_GLOBAL:,} de {N_TOTAL:,}</b> estudiantes respondieron 4 o 5. Según la escala del instrumento, el resultado es <b>{escape(GLOBAL_LEVEL)}</b>.</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Menor resultado dimensional</div><div class="insight-t">{pri['Código']} · {pct(float(pri['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta la menor proporción de estudiantes con promedio dimensional ≥4.</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(strong['Código'])]['accent']}"><div class="insight-k">Mayor resultado dimensional</div><div class="insight-t">{strong['Código']} · {pct(float(strong['Satisfacción']))}</div><div class="insight-x"><b>{escape(str(strong['Dimensión']))}</b> presenta la mayor proporción de estudiantes con promedio dimensional ≥4.</div></div>
+      <div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Lectura por preguntas</div><div class="insight-t">P1–P16 explican las dimensiones</div><div class="insight-x">El menor porcentaje de respuestas 4–5 está en <b>{pitem['Ítem']} ({pct(float(pitem['Respuestas 4–5']))})</b> y el mayor en <b>{sitem['Ítem']} ({pct(float(sitem['Respuestas 4–5']))})</b>. Estos porcentajes por pregunta son descriptivos; la clasificación de cada dimensión se obtiene con el promedio de sus cuatro ítems por estudiante.</div></div>
     </div>'''
 
 
-def filter_items(selected: str) -> pd.DataFrame:
+def _style_for_item(code: str) -> tuple[str, str]:
+    if code in DIMENSIONS:
+        return DIMENSIONS[code]["accent"], DIMENSIONS[code]["soft"]
+    return "#2457B8", "#EEF4FF"
+
+
+def _selected_items(selected: str) -> pd.DataFrame:
     if selected == "Todas":
         return ITEMS_SUM.copy()
-    if selected == "P17":
+    if selected == "SG":
         return ITEMS_SUM[ITEMS_SUM["Ítem"] == "P17"].copy()
     return ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
 
 
 def item_cards_html(selected: str) -> str:
-    d = filter_items(selected)
+    d = _selected_items(selected)
     cards = []
     for _, r in d.sort_values("Número").iterrows():
         code = str(r["Dimensión"])
-        if code in DIMENSIONS:
-            accent = DIMENSIONS[code]["accent"]
-            soft = DIMENSIONS[code]["soft"]
-            label = f"{code} · {DIMENSIONS[code]['name']}"
-        else:
-            accent = "#245DB7"
-            soft = "#EEF4FF"
-            label = "Satisfacción general"
-        p45 = float(r["Resp 4-5"])
-        p13 = float(r["Resp 1-3"])
-        is_p17 = str(r["Ítem"]) == "P17"
-        k45 = "Satisfechos · 4–5" if is_p17 else "Respuestas 4–5 · cumplen criterio"
-        k13 = "No satisfechos · 1–3" if is_p17 else "Respuestas 1–3 · fuera del criterio"
-        note = (
-            "P17 sí tiene clasificación explícita Satisfecho / No satisfecho en el instrumento."
-            if is_p17
-            else "Lectura descriptiva del ítem. El resultado oficial de la dimensión se calcula con el promedio individual de sus cuatro preguntas."
-        )
-        cards.append(
-            f'''<div class="panel item" style="--accent:{accent};--soft:{soft}">
-              <div class="item-top"><div class="item-code">{escape(str(r['Ítem']))} · {escape(label)}</div><div class="item-score">{pct(p45)}</div></div>
-              <div class="item-q">{escape(str(r['Pregunta']))}</div>
-              <div class="binary-pill"><div class="seg13" style="width:{p13*100:.4f}%"></div><div class="seg45" style="width:{p45*100:.4f}%"></div></div>
-              <div class="item-meta"><div><div class="k">{escape(k45)}</div><div class="v">{pct(p45)} · {int(r['N 4-5']):,}</div></div><div><div class="k">{escape(k13)}</div><div class="v">{pct(p13)} · {int(r['N 1-3']):,}</div></div></div>
-              <div class="item-note">{escape(note)} Base válida: {int(r['D']):,}. Promedio descriptivo: {float(r['Promedio']):.2f}/5.</div>
-            </div>'''
-        )
+        accent, soft = _style_for_item(code)
+        p45 = float(r["Respuestas 4–5"])
+        p13 = float(r["Respuestas 1–3"])
+        label45 = "Satisfechos (4–5)" if r["Ítem"] == "P17" else "Respuestas 4–5"
+        label13 = "No satisfechos (1–3)" if r["Ítem"] == "P17" else "Respuestas 1–3"
+        dim_label = "Satisfacción general" if code == "SG" else f"Dimensión {code}"
+        cards.append(f'''<div class="panel item" style="--accent:{accent};--soft:{soft}"><div class="item-top"><div class="item-code">Ítem {r['Ítem']} | {dim_label}</div><div class="item-score">{pct(p45)}</div></div><div class="item-q">{escape(str(r['Pregunta']))}</div><div class="meter"><span style="width:{p45*100:.2f}%"></span></div><div class="item-meta"><div><div class="k">{escape(label45)}</div><div class="v">{pct(p45)}</div></div><div><div class="k">{escape(label13)}</div><div class="v">{pct(p13)}</div></div><div><div class="k">Promedio</div><div class="v">{float(r['Promedio']):.2f}/5</div></div></div></div>''')
     return '<div class="item-grid">' + ''.join(cards) + '</div>'
 
 
-def grouped_distribution_html(selected: str) -> str:
-    d = filter_items(selected)
+def likert_html(selected: str) -> str:
+    d = _selected_items(selected)
     rows = []
     for _, r in d.sort_values("Número").iterrows():
-        p13 = float(r["Resp 1-3"])
-        p45 = float(r["Resp 4-5"])
-        rows.append(
-            f'<div class="bar-row"><div class="bar-code">{escape(str(r["Ítem"]))}</div><div class="bar">'
-            f'<div class="a" style="width:{p13*100:.4f}%">{pct(p13,0) if p13 >= .07 else ""}</div>'
-            f'<div class="b" style="width:{p45*100:.4f}%">{pct(p45,0) if p45 >= .07 else ""}</div>'
-            f'</div></div>'
+        vals = [float(r[f"R{i}"]) for i in range(1, 6)]
+        def label(v: float) -> str:
+            return f"{v*100:.0f}%" if v >= .075 else ""
+        segs = ''.join(
+            f'<div class="seg r{i}" style="width:{vals[i-1]*100:.3f}%" title="Respuesta {i}: {pct(vals[i-1])}">{label(vals[i-1])}</div>'
+            for i in range(1, 6)
         )
-    return '<div class="panel binary-panel"><div class="legend"><span><i class="a"></i>Respuestas 1–3</span><span><i class="b"></i>Respuestas 4–5 · criterio de satisfacción</span></div>' + ''.join(rows) + '</div>'
+        rows.append(f'<div class="likert-row"><div class="likert-code">{r["Ítem"]}</div><div class="likert-pill">{segs}</div></div>')
+    legend = '''<div class="likert-legend"><span>1 · Totalmente en desacuerdo</span><span>2 · En desacuerdo</span><span>3 · Ni de acuerdo ni en desacuerdo</span><span>4 · De acuerdo</span><span>5 · Totalmente de acuerdo</span></div>'''
+    return legend + '<div class="panel likert">' + ''.join(rows) + '</div>'
 
 
-def methodology_cards_html() -> str:
+def selected_insights_html(selected: str) -> str:
+    d = _selected_items(selected)
+    weak = d.sort_values("Respuestas 4–5").iloc[0]
+    strong = d.sort_values("Respuestas 4–5", ascending=False).iloc[0]
+    if selected == "Todas":
+        context = "Se muestran las 17 preguntas del instrumento: P1–P16 explican las cuatro dimensiones y P17 corresponde a satisfacción general."
+        action = "Use los ítems para identificar aspectos específicos. Para D1–D4, la satisfacción se calcula con el promedio de los cuatro ítems; para P17 se usa directamente la respuesta 4–5."
+    elif selected == "SG":
+        context = "P17 corresponde a la satisfacción general con la formación académica."
+        action = "En P17, el Word define 4–5 como satisfecho y 1–3 como no satisfecho."
+    else:
+        context = f"{selected} evalúa {DIMENSIONS[selected]['meaning'].lower()}"
+        action = f"Los porcentajes de cada pregunta describen respuestas. El resultado de {selected} se calcula por estudiante con el promedio de {', '.join(DIMENSIONS[selected]['items'])} ≥4."
+    return f'''<div class="insight-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))"><div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Bloque analizado</div><div class="insight-t">{escape(selected)}</div><div class="insight-x">{escape(context)}</div></div><div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Menor porcentaje 4–5</div><div class="insight-t">Ítem {weak['Ítem']} · {pct(float(weak['Respuestas 4–5']))}</div><div class="insight-x">{escape(str(weak['Pregunta']))}</div></div><div class="panel insight" style="--accent:#16A878"><div class="insight-k">Mayor porcentaje 4–5</div><div class="insight-t">Ítem {strong['Ítem']} · {pct(float(strong['Respuestas 4–5']))}</div><div class="insight-x">{escape(str(strong['Pregunta']))}</div></div><div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Cómo leerlo</div><div class="insight-t">Regla del instrumento</div><div class="insight-x">{escape(action)}</div></div></div>'''
+
+
+def method_cards_html() -> str:
     return '''<div class="method-grid">
-      <div class="panel method"><div class="method-t">1. Escala de respuesta</div><div class="method-x">Likert de 5 puntos: <b>1 Totalmente en desacuerdo</b>, <b>2 En desacuerdo</b>, <b>3 Ni de acuerdo ni en desacuerdo</b>, <b>4 De acuerdo</b> y <b>5 Totalmente de acuerdo</b>.</div></div>
-      <div class="panel method"><div class="method-t">2. Criterio de satisfacción</div><div class="method-x">El instrumento señala que se considera satisfecho al estudiante que marque <b>4 o 5</b>. Para la satisfacción general P17, además especifica: <b>1, 2 o 3 = No satisfecho</b>.</div></div>
-      <div class="panel method"><div class="method-t">3. Dimensiones</div><div class="method-x"><b>D1 = P1–P4</b>, <b>D2 = P5–P8</b>, <b>D3 = P9–P12</b> y <b>D4 = P13–P16</b>. Un estudiante es satisfecho en la dimensión si su <b>promedio individual ≥4</b>.</div></div>
-      <div class="panel method"><div class="method-t">4. Satisfacción general</div><div class="method-x"><b>P17</b> es la pregunta de satisfacción general. El porcentaje global se obtiene con estudiantes que responden 4 o 5 sobre el total de respuestas válidas.</div></div>
-      <div class="panel method"><div class="method-t">5. Fórmula del porcentaje</div><div class="method-x"><b>Porcentaje de satisfacción = (N de estudiantes satisfechos / total de estudiantes evaluados válidos) × 100.</b></div></div>
-      <div class="panel method"><div class="method-t">6. Ficha técnica</div><div class="method-x">Instrumento: <b>Encuesta de satisfacción sobre la formación académica integral</b>. Tipo: cuestionario estructurado. Población objetivo: estudiantes de pregrado de la UNT. Unidad de análisis: estudiante. Aplicación: autoadministrada y anónima.</div></div>
+      <div class="panel method"><div class="method-i">◎</div><div class="method-t">Indicador institucional</div><div class="method-x"><b>Porcentaje de estudiantes de pregrado satisfechos con su formación académica integral.</b> El porcentaje se obtiene como número de estudiantes satisfechos dividido entre el total de estudiantes encuestados, multiplicado por 100.</div></div>
+      <div class="panel method"><div class="method-i">▦</div><div class="method-t">D1–D4</div><div class="method-x"><b>D1:</b> P1–P4 · <b>D2:</b> P5–P8 · <b>D3:</b> P9–P12 · <b>D4:</b> P13–P16. En cada dimensión, un estudiante es satisfecho cuando el <b>promedio de sus cuatro respuestas es ≥4</b>.</div></div>
+      <div class="panel method"><div class="method-i">◉</div><div class="method-t">Satisfacción general · P17</div><div class="method-x"><b>Satisfecho:</b> respuesta 4 o 5.<br><b>No satisfecho:</b> respuesta 1, 2 o 3.</div></div>
     </div>'''
 
+
+def interpretation_cards_html() -> str:
+    return '''<div class="scale4">
+      <div class="scale-step" style="opacity:1"><div class="scale-dot" style="background:#E25B68"></div><div class="scale-name">Insatisfactorio</div><div class="scale-range">0–59%</div></div>
+      <div class="scale-step" style="opacity:1"><div class="scale-dot" style="background:#F2A62C"></div><div class="scale-name">Regular</div><div class="scale-range">60–74%</div></div>
+      <div class="scale-step" style="opacity:1"><div class="scale-dot" style="background:#16A878"></div><div class="scale-name">Satisfactorio</div><div class="scale-range">75–89%</div></div>
+      <div class="scale-step" style="opacity:1"><div class="scale-dot" style="background:#20AABD"></div><div class="scale-name">Muy satisfactorio</div><div class="scale-range">90–100%</div></div>
+    </div>'''
+
+
+def technical_sheet_html() -> str:
+    return '''<div class="method-grid">
+      <div class="panel method"><div class="method-i">📝</div><div class="method-t">Instrumento</div><div class="method-x"><b>Encuesta de satisfacción sobre la formación académica integral</b><br>Cuestionario estructurado · escala Likert de 5 puntos.</div></div>
+      <div class="panel method"><div class="method-i">🎓</div><div class="method-t">Población y unidad de análisis</div><div class="method-x">Población objetivo: <b>estudiantes de pregrado de la Universidad Nacional de Trujillo</b>.<br>Unidad de análisis: estudiante de pregrado.</div></div>
+      <div class="panel method"><div class="method-i">✓</div><div class="method-t">Aplicación y variable</div><div class="method-x">Aplicación <b>autoadministrada y anónima</b>.<br>Variable: <b>satisfacción con la formación académica integral</b>.</div></div>
+    </div>'''
+
+
+def data_quality_html() -> str:
+    total_cells = N_TOTAL * len(ALL_ITEMS)
+    completeness = 1 - MISSING_RESPONSES / total_cells if total_cells else float("nan")
+    validity = 1 - INVALID_RESPONSES / total_cells if total_cells else float("nan")
+    return f'''<div class="quality-grid">
+      <div class="panel quality-card" style="--accent:#16A878"><div class="quality-k">Registros</div><div class="quality-v">{N_TOTAL:,}</div><div class="quality-x">Estudiantes contenidos en la base utilizada por el tablero.</div></div>
+      <div class="panel quality-card" style="--accent:#2F66D8"><div class="quality-k">Completitud P1–P17</div><div class="quality-v">{pct(completeness)}</div><div class="quality-x">{MISSING_RESPONSES:,} valores faltantes en los 17 ítems.</div></div>
+      <div class="panel quality-card" style="--accent:#7C5CE7"><div class="quality-k">Respuestas dentro de 1–5</div><div class="quality-v">{pct(validity)}</div><div class="quality-x">{INVALID_RESPONSES:,} valores fuera de la escala Likert esperada.</div></div>
+      <div class="panel quality-card" style="--accent:#F2A62C"><div class="quality-k">Fuente del tablero</div><div class="quality-v">Excel</div><div class="quality-x">Los resultados se recalculan desde las columnas P1–P17 de basededatos.xlsx.</div></div>
+    </div>'''
+
+# ==============================================================
+# CAPA FINAL DE TIPOGRAFÍA — ESCALA ÚNICA Y LEGIBLE
+# ==============================================================
+st.markdown(r"""
+<style>
+/*
+  Escala tipográfica institucional:
+  12px  = etiquetas auxiliares
+  14px  = texto secundario
+  15px  = cuerpo normal
+  17px  = títulos de tarjeta
+  24px  = títulos de sección
+  34px  = título principal
+  56px  = indicador principal (único dato deliberadamente grande)
+*/
+:root{
+  --fs-xs: .75rem;
+  --fs-sm: .875rem;
+  --fs-body: .94rem;
+  --fs-card: 1.06rem;
+  --fs-section: 1.50rem;
+  --fs-page: 2.15rem;
+  --fs-metric: 3.50rem;
+}
+
+/* Texto base: nada importante por debajo de 12 px aprox. */
+.stApp, .stApp p, .stApp li, .stApp td, .stApp th{
+  font-size:var(--fs-body)!important;
+  line-height:1.55!important;
+}
+
+/* Cabecera */
+.brand-title{font-size:1.00rem!important;line-height:1.18!important}
+.brand-sub{font-size:var(--fs-xs)!important;line-height:1.35!important;letter-spacing:.055em!important}
+.meta-box{font-size:var(--fs-xs)!important;line-height:1.35!important}
+.meta-box b{font-size:var(--fs-sm)!important}
+.kicker{font-size:var(--fs-xs)!important}
+.title{font-size:clamp(1.85rem,2.8vw,var(--fs-page))!important;line-height:1.08!important}
+.sub{font-size:var(--fs-body)!important;line-height:1.58!important}
+.basebox{font-size:var(--fs-xs)!important}
+.basebox b{font-size:var(--fs-sm)!important}
+.chip{font-size:var(--fs-xs)!important;padding:7px 11px!important}
+
+/* Navegación y títulos */
+.stTabs [data-baseweb="tab"]{font-size:var(--fs-sm)!important}
+.section-kicker{font-size:var(--fs-xs)!important}
+.section-title{font-size:clamp(1.28rem,2vw,var(--fs-section))!important;line-height:1.14!important}
+.section-note{font-size:var(--fs-sm)!important;line-height:1.48!important}
+
+/* Resultado principal */
+.integral-eyebrow,.result-eyebrow{font-size:var(--fs-xs)!important}
+.integral-title,.result-title{font-size:clamp(1.55rem,2.4vw,1.95rem)!important;line-height:1.12!important}
+.integral-text,.result-text{font-size:var(--fs-body)!important;line-height:1.58!important}
+.integral-score,.result-score{font-size:clamp(3.0rem,5.2vw,var(--fs-metric))!important;line-height:.98!important}
+.integral-level,.result-level{font-size:var(--fs-sm)!important;line-height:1.38!important}
+.integral-level span{font-size:var(--fs-xs)!important}
+.human-box{font-size:var(--fs-sm)!important;line-height:1.58!important}
+.human-box .headline{font-size:var(--fs-card)!important}
+
+/* Fórmula */
+.formula-k{font-size:var(--fs-xs)!important}
+.formula-eq{font-size:1.00rem!important;line-height:1.35!important}
+.formula-result{font-size:1.28rem!important}
+.diag-pill,.ref-badge,.stat-footnote{font-size:var(--fs-xs)!important;line-height:1.48!important}
+
+/* P17 y tarjetas secundarias */
+.side-kicker,.secondary-k{font-size:var(--fs-xs)!important}
+.p17-title,.pei-mini-title,.secondary-t{font-size:var(--fs-card)!important;line-height:1.28!important}
+.p17-score,.secondary-v{font-size:2.20rem!important;line-height:1!important}
+.p17-level{font-size:var(--fs-sm)!important}
+.p17-copy,.pei-mini-note,.secondary-x,.secondary-note{font-size:var(--fs-sm)!important;line-height:1.55!important}
+.pei-mini-grid b{font-size:var(--fs-sm)!important}
+.pei-mini-grid span{font-size:var(--fs-xs)!important}
+
+/* KPIs: misma jerarquía en las 6 tarjetas */
+.kpi-label{font-size:var(--fs-xs)!important;line-height:1.35!important}
+.kpi-v{font-size:1.42rem!important;line-height:1.1!important}
+.kpi-f{font-size:var(--fs-xs)!important;line-height:1.4!important}
+.kpi-icon{font-size:.92rem!important}
+
+/* Dimensiones */
+.dim-code{font-size:var(--fs-sm)!important}
+.dim-name{font-size:var(--fs-sm)!important;line-height:1.38!important}
+.donut b{font-size:1.20rem!important}
+.dim-level{font-size:var(--fs-sm)!important}
+.dim-meta{font-size:var(--fs-xs)!important;line-height:1.52!important}
+.dim-meaning{font-size:var(--fs-sm)!important;line-height:1.52!important}
+.dim-foot{font-size:var(--fs-xs)!important;line-height:1.4!important}
+
+/* Escala */
+.scale-title{font-size:var(--fs-sm)!important}
+.scale-name{font-size:var(--fs-sm)!important}
+.scale-range,.scale-note{font-size:var(--fs-xs)!important;line-height:1.45!important}
+
+/* Interpretación */
+.insight-k{font-size:var(--fs-xs)!important}
+.insight-t{font-size:var(--fs-card)!important;line-height:1.28!important}
+.insight-x,.interpret-banner{font-size:var(--fs-sm)!important;line-height:1.58!important}
+.stat-evidence{font-size:var(--fs-sm)!important;line-height:1.58!important}
+.stat-evidence .stat-title{font-size:var(--fs-card)!important}
+.stat-evidence .tag,.stat-caveat{font-size:var(--fs-xs)!important}
+
+/* Método, calidad e ítems */
+.method-t{font-size:var(--fs-card)!important}
+.method-x,.method-alert{font-size:var(--fs-sm)!important;line-height:1.58!important}
+.quality-k{font-size:var(--fs-xs)!important}
+.quality-v{font-size:1.42rem!important}
+.quality-x,.quality-warning{font-size:var(--fs-sm)!important;line-height:1.55!important}
+.item-code{font-size:var(--fs-xs)!important}
+.item-q{font-size:var(--fs-sm)!important;line-height:1.52!important}
+.item-score{font-size:1.08rem!important}
+.item-meta .k{font-size:var(--fs-xs)!important}
+.item-meta .v{font-size:var(--fs-sm)!important}
+.likert-code{font-size:var(--fs-xs)!important}
+
+/* Dataframes / expanders / selectbox */
+div[data-testid="stDataFrame"]{font-size:var(--fs-sm)!important}
+div[data-testid="stExpander"] summary, div[data-baseweb="select"]{font-size:var(--fs-sm)!important}
+
+/* Móvil: conservar legibilidad; reducir solo grandes titulares */
+@media(max-width:700px){
+  :root{
+    --fs-xs:.72rem;
+    --fs-sm:.82rem;
+    --fs-body:.88rem;
+    --fs-card:.98rem;
+    --fs-section:1.32rem;
+    --fs-page:1.72rem;
+    --fs-metric:3.05rem;
+  }
+  .brand-title{font-size:.86rem!important}
+  .brand-sub{font-size:.70rem!important}
+  .title{font-size:var(--fs-page)!important}
+  .integral-title,.result-title{font-size:1.42rem!important}
+  .integral-score,.result-score{font-size:var(--fs-metric)!important}
+  .p17-score,.secondary-v{font-size:1.90rem!important}
+  .kpi-v,.quality-v{font-size:1.28rem!important}
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+
+# ==============================================================
+# AJUSTE FINAL — TIPOGRAFÍA LEGIBLE EN TARJETAS D1–D4
+# ==============================================================
+st.markdown(r"""
+<style>
+/*
+  Solo se modifica la sección "Satisfacción en las cuatro dimensiones".
+  El resto de la aplicación conserva la tipografía anterior.
+*/
+
+.dim-card{
+    min-height:340px!important;
+    padding:21px!important;
+}
+
+.dim-head{
+    gap:12px!important;
+}
+
+.dim-code{
+    font-size:.95rem!important;
+    line-height:1.25!important;
+    font-weight:950!important;
+}
+
+.dim-name{
+    font-size:.88rem!important;
+    line-height:1.42!important;
+    min-height:2.65em!important;
+    margin-top:6px!important;
+    color:#667B91!important;
+}
+
+.dim-body{
+    grid-template-columns:116px minmax(0,1fr)!important;
+    gap:15px!important;
+    margin-top:14px!important;
+}
+
+.donut{
+    width:112px!important;
+    height:112px!important;
+}
+
+.donut:after{
+    inset:13px!important;
+}
+
+.donut b{
+    font-size:1.40rem!important;
+    line-height:1!important;
+}
+
+.dim-level{
+    font-size:.92rem!important;
+    line-height:1.30!important;
+    font-weight:950!important;
+    margin-bottom:6px!important;
+}
+
+.dim-meta{
+    font-size:.80rem!important;
+    line-height:1.58!important;
+    color:#667B91!important;
+    margin-top:5px!important;
+}
+
+.dim-meta b{
+    color:#29435E!important;
+    font-weight:850!important;
+}
+
+.dim-meaning{
+    font-size:.83rem!important;
+    line-height:1.58!important;
+    margin-top:13px!important;
+    padding-top:11px!important;
+    color:#536B82!important;
+}
+
+.dim-meaning b{
+    color:#203C58!important;
+}
+
+.dim-foot{
+    font-size:.74rem!important;
+    line-height:1.48!important;
+    margin-top:12px!important;
+    padding-top:10px!important;
+    color:#6A7C8E!important;
+}
+
+.dim-foot b{
+    font-size:.76rem!important;
+    color:#24425F!important;
+}
+
+/* Tablet */
+@media (max-width:1100px){
+    .dim-card{
+        min-height:320px!important;
+        padding:19px!important;
+    }
+    .dim-code{font-size:.91rem!important}
+    .dim-name{font-size:.85rem!important}
+    .dim-body{grid-template-columns:108px minmax(0,1fr)!important}
+    .donut{width:104px!important;height:104px!important}
+    .donut b{font-size:1.30rem!important}
+    .dim-level{font-size:.89rem!important}
+    .dim-meta{font-size:.78rem!important}
+    .dim-meaning{font-size:.80rem!important}
+    .dim-foot{font-size:.72rem!important}
+}
+
+/* Celular */
+@media (max-width:700px){
+    .dim-card{
+        min-height:0!important;
+        padding:18px!important;
+    }
+    .dim-code{font-size:.90rem!important}
+    .dim-name{
+        font-size:.84rem!important;
+        min-height:0!important;
+    }
+    .dim-body{
+        grid-template-columns:104px minmax(0,1fr)!important;
+        gap:14px!important;
+    }
+    .donut{width:100px!important;height:100px!important}
+    .donut b{font-size:1.28rem!important}
+    .dim-level{font-size:.88rem!important}
+    .dim-meta{font-size:.78rem!important;line-height:1.55!important}
+    .dim-meaning{font-size:.80rem!important;line-height:1.55!important}
+    .dim-foot{font-size:.72rem!important;line-height:1.45!important}
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+# ==============================================================
+# AJUSTE FINAL — REFERENCIA PEI LEGIBLE + MÉTRICAS SIN AMBIGÜEDAD
+# ==============================================================
+st.markdown(r"""
+<style>
+/* Títulos métricos: código y resultado en líneas separadas */
+.insight-t .metric-code{
+    display:block!important;
+    font-size:.90rem!important;
+    line-height:1.25!important;
+    font-weight:950!important;
+    letter-spacing:.04em!important;
+    text-transform:uppercase!important;
+    color:#315578!important;
+    margin-bottom:5px!important;
+}
+.insight-t .metric-main{
+    display:block!important;
+    font-size:1.03rem!important;
+    line-height:1.34!important;
+    font-weight:950!important;
+    color:#173650!important;
+}
+.insight-t .metric-sub{
+    display:block!important;
+    font-size:.80rem!important;
+    line-height:1.45!important;
+    font-weight:750!important;
+    color:#6B7E92!important;
+    margin-top:4px!important;
+}
+.metric-detail{
+    margin-top:9px!important;
+    padding-top:8px!important;
+    border-top:1px solid rgba(70,100,130,.15)!important;
+    line-height:1.58!important;
+}
+
+/* Marco documental PEI: antes se veía demasiado pequeño */
+.pei-card{
+    padding:20px 21px!important;
+}
+.pei-banner{
+    gap:14px!important;
+    padding:17px 18px!important;
+    border-radius:17px!important;
+}
+.pei-banner .i{
+    font-size:1.38rem!important;
+    line-height:1.2!important;
+}
+.pei-banner .t{
+    font-size:.92rem!important;
+    line-height:1.35!important;
+    font-weight:950!important;
+}
+.pei-banner .x{
+    font-size:.80rem!important;
+    line-height:1.58!important;
+    margin-top:6px!important;
+}
+
+.route{
+    gap:11px!important;
+    margin-top:15px!important;
+}
+.node{
+    min-height:118px!important;
+    padding:15px 16px!important;
+    border-radius:15px!important;
+}
+.node-y{
+    font-size:.70rem!important;
+    line-height:1.25!important;
+    font-weight:950!important;
+    letter-spacing:.035em!important;
+}
+.node-v{
+    font-size:1.34rem!important;
+    line-height:1.24!important;
+    margin-top:7px!important;
+}
+.node-c{
+    font-size:.72rem!important;
+    line-height:1.52!important;
+    margin-top:7px!important;
+}
+.node.diag .node-v{
+    font-size:1.02rem!important;
+    line-height:1.35!important;
+}
+
+/* Móvil: sigue legible, sin apretar el texto */
+@media(max-width:700px){
+    .pei-card{padding:15px!important}
+    .pei-banner{padding:15px!important}
+    .pei-banner .t{font-size:.88rem!important}
+    .pei-banner .x{font-size:.78rem!important}
+    .route{grid-template-columns:1fr!important}
+    .route .diag{grid-column:auto!important}
+    .node{min-height:0!important;padding:14px 15px!important}
+    .node-y{font-size:.68rem!important}
+    .node-v{font-size:1.20rem!important}
+    .node.diag .node-v{font-size:.96rem!important}
+    .node-c{font-size:.72rem!important}
+    .insight-t .metric-code{font-size:.84rem!important}
+    .insight-t .metric-main{font-size:.96rem!important}
+    .insight-t .metric-sub{font-size:.76rem!important}
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ==============================================================
 # APP
 # ==============================================================
 top_header()
 
-tab1, tab2, tab3, tab4 = st.tabs(["◉ Resumen", "▦ Dimensiones", "☷ Preguntas P1–P17", "ⓘ Metodología y control"])
+tab1, tab2, tab3 = st.tabs(["◉ Visión ejecutiva", "▦ Dimensiones e ítems", "ⓘ Método del instrumento"])
 
 with tab1:
     section_header(
-        "Indicador principal",
-        "Satisfacción general · P17",
-        "El indicador global se calcula con P17; no se sustituye por el promedio P1–P16.",
+        "Indicador general",
+        "Satisfacción general con la formación académica · P17",
+        "P17: 4–5 = satisfecho; 1–3 = no satisfecho. El porcentaje se interpreta con los rangos definidos en el instrumento.",
     )
-    st.markdown(hero_html(), unsafe_allow_html=True)
+    st.markdown(primary_cards_html(), unsafe_allow_html=True)
+    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+    st.markdown(scale_html(GLOBAL), unsafe_allow_html=True)
 
     section_header(
-        "Resultados por dimensión",
-        "Resumen D1–D4",
-        "Cada porcentaje dimensional se obtiene clasificando primero a cada estudiante según su promedio de cuatro ítems ≥4.",
+        "Cálculo por dimensión",
+        "Satisfacción en las cuatro dimensiones",
+        "En D1–D4, cada estudiante se clasifica como satisfecho cuando el promedio de los cuatro ítems de la dimensión es ≥4.",
     )
     st.markdown(dimension_cards_html(), unsafe_allow_html=True)
 
-    section_header("Lectura ejecutiva", "Resultados que conviene observar")
-    st.markdown(executive_insights_html(), unsafe_allow_html=True)
+    section_header(
+        "Lectura de resultados",
+        "Resumen para interpretación",
+        "Los porcentajes global y dimensionales se calculan con reglas distintas porque así está estructurado el instrumento.",
+    )
+    st.markdown(insights_html(), unsafe_allow_html=True)
 
 with tab2:
-    section_header(
-        "Cálculo dimensional",
-        "D1–D4: promedio individual ≥4",
-        "No se promedian porcentajes de preguntas. Se promedian respuestas por estudiante dentro de cada dimensión.",
-    )
-    st.markdown(dimension_cards_html(), unsafe_allow_html=True)
-    st.markdown('<div class="info"><b>Importante:</b> la clasificación “Insatisfactorio / Regular / Satisfactorio / Muy satisfactorio” corresponde al <b>porcentaje final de satisfacción</b> de cada dimensión; no corresponde a las opciones 1–5 del cuestionario.</div>', unsafe_allow_html=True)
-
-with tab3:
-    section_header(
-        "Análisis por pregunta",
-        "P1–P17 sin inventar categorías",
-        "P1–P16 se presentan descriptivamente como respuestas 4–5 y respuestas 1–3. Solo P17 usa de forma explícita la etiqueta Satisfecho / No satisfecho del documento.",
-    )
+    section_header("Explorador", "Preguntas del instrumento", "P1–P16 explican las dimensiones; P17 corresponde a satisfacción general.")
     selected = st.selectbox(
-        "Bloque a mostrar",
-        ["Todas", "D1", "D2", "D3", "D4", "P17"],
+        "Bloque a analizar",
+        ["Todas", "D1", "D2", "D3", "D4", "SG"],
         format_func=lambda x: (
-            "Todas las preguntas P1–P17" if x == "Todas" else
-            "P17 · Satisfacción general" if x == "P17" else
+            "Todas las preguntas (P1–P17)" if x == "Todas" else
+            "Satisfacción general (P17)" if x == "SG" else
             f"{x} · {DIMENSIONS[x]['name']}"
         ),
         label_visibility="collapsed",
     )
+    section_header("Lectura del bloque", "Qué destaca y cómo debe interpretarse")
+    st.markdown(selected_insights_html(selected), unsafe_allow_html=True)
+
+    section_header(
+        "Resultados por pregunta",
+        "Respuestas 4–5 en cada ítem",
+        "Para P1–P16 se muestra descriptivamente el porcentaje de respuestas 4–5 y 1–3; la satisfacción dimensional no se obtiene promediando estos porcentajes, sino por estudiante con promedio dimensional ≥4.",
+    )
     st.markdown(item_cards_html(selected), unsafe_allow_html=True)
 
     section_header(
-        "Comparación agrupada",
-        "Respuestas 1–3 | Respuestas 4–5",
-        "Esta agrupación sirve para visualizar el criterio 4–5. No crea una categoría 'neutral'.",
+        "Distribución de respuestas",
+        "Escala Likert original de 1 a 5",
+        "Se muestran las cinco alternativas originales; no se crean categorías adicionales como favorable, neutral o desfavorable.",
     )
-    st.markdown(grouped_distribution_html(selected), unsafe_allow_html=True)
+    st.markdown(likert_html(selected), unsafe_allow_html=True)
 
-    with st.expander("Ver distribución original Likert 1–5"):
-        st.caption("Aquí se conserva exactamente la escala original del instrumento. La respuesta 3 mantiene su nombre: 'Ni de acuerdo ni en desacuerdo'.")
-        dshow = filter_items(selected)
-        out = dshow[["Ítem", "Pregunta", "D", "Resp 1", "Resp 2", "Resp 3", "Resp 4", "Resp 5", "Resp 4-5", "Resp 1-3"]].copy()
-        for c in ["Resp 1", "Resp 2", "Resp 3", "Resp 4", "Resp 5", "Resp 4-5", "Resp 1-3"]:
-            out[c] = out[c].map(lambda x: f"{x*100:.1f}%")
-        out = out.rename(columns={
-            "D": "N válido",
-            "Resp 1": "1 Totalmente en desacuerdo",
-            "Resp 2": "2 En desacuerdo",
-            "Resp 3": "3 Ni de acuerdo ni en desacuerdo",
-            "Resp 4": "4 De acuerdo",
-            "Resp 5": "5 Totalmente de acuerdo",
-            "Resp 4-5": "Respuestas 4–5",
-            "Resp 1-3": "Respuestas 1–3",
-        })
-        st.dataframe(out, use_container_width=True, hide_index=True, height=min(680, 52 + len(out) * 38))
+    with st.expander("Ver detalle técnico de las preguntas"):
+        dshow = _selected_items(selected).sort_values("Número").copy()
+        table = dshow[["Ítem", "Dimensión", "Pregunta", "Respuestas 4–5", "Respuestas 1–3", "Promedio", "R1", "R2", "R3", "R4", "R5"]].copy()
+        for c in ["Respuestas 4–5", "Respuestas 1–3", "R1", "R2", "R3", "R4", "R5"]:
+            table[c] = table[c].map(lambda x: f"{x*100:.1f}%")
+        table["Promedio"] = table["Promedio"].map(lambda x: f"{x:.2f}")
+        table = table.rename(columns={"R1":"Resp. 1", "R2":"Resp. 2", "R3":"Resp. 3", "R4":"Resp. 4", "R5":"Resp. 5"})
+        st.dataframe(table, use_container_width=True, hide_index=True, height=min(650, 45 + 36*len(table)))
 
-with tab4:
-    section_header("Base metodológica", "Reglas tomadas del instrumento")
-    st.markdown(methodology_cards_html(), unsafe_allow_html=True)
+with tab3:
+    section_header("Definición y cálculo", "Reglas del instrumento aplicadas al Excel")
+    st.markdown(method_cards_html(), unsafe_allow_html=True)
+    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+    st.markdown(formula_html(N_GLOBAL, N_TOTAL, GLOBAL, "Aplicación de la fórmula al indicador general P17"), unsafe_allow_html=True)
 
-    section_header(
-        "Interpretación institucional",
-        "Niveles aplicados al porcentaje ya calculado",
-        "Estos rangos pertenecen al documento. No se usan para recodificar las respuestas 1–5.",
-    )
-    st.markdown(interpretation_scale_html(), unsafe_allow_html=True)
-    st.markdown(
-        f'<div class="note"><b>Ejemplo con P17:</b> el porcentaje calculado es <b>{pct(GLOBAL)}</b>. Como está dentro del intervalo 60–74%, el nivel del porcentaje es <b>{escape(GLOBAL_LEVEL)}</b>. Esto no significa que exista una respuesta “Regular” en la encuesta.</div>',
-        unsafe_allow_html=True,
-    )
+    section_header("Interpretación institucional", "Rangos definidos en la propuesta del instrumento", "Estos rangos clasifican el porcentaje ya calculado; no clasifican las alternativas 1–5.")
+    st.markdown(f'<div class="panel scale-wrap">{interpretation_cards_html()}<div class="scale-note">0–59% Insatisfactorio · 60–74% Regular · 75–89% Satisfactorio · 90–100% Muy satisfactorio. La propuesta señala que estos rangos pueden ajustarse según lineamientos institucionales.</div></div>', unsafe_allow_html=True)
 
-    section_header("Estructura de datos", "Cómo se relaciona el Word con tu Excel")
-    st.markdown(
-        '''<div class="method-grid">
-          <div class="panel method"><div class="method-t">Ítems originales</div><div class="method-x"><b>P1 a P17</b> son las respuestas de la escala 1–5 y constituyen la base para todos los cálculos.</div></div>
-          <div class="panel method"><div class="method-t">Variables calculadas</div><div class="method-x"><b>D1_Promedio, D2_Promedio, D3_Promedio y D4_Promedio</b> representan el promedio de los cuatro ítems de cada dimensión.</div></div>
-          <div class="panel method"><div class="method-t">Variables dicotómicas</div><div class="method-x"><b>D1_Satisfecho a D4_Satisfecho</b> codifican 1 si el promedio de la dimensión es ≥4 y 0 en caso contrario. <b>Global_Satisfecho</b> se obtiene de P17.</div></div>
-        </div>''',
-        unsafe_allow_html=True,
-    )
+    section_header("Ficha técnica", "Características del instrumento")
+    st.markdown(technical_sheet_html(), unsafe_allow_html=True)
 
-    section_header("Control del Excel", "Comprobación automática antes de mostrar resultados")
-    total_cells = N_ROWS * len(ITEMS)
-    valid_cells = total_cells - missing_responses - invalid_responses
-    valid_pct = valid_cells / total_cells if total_cells else float("nan")
-    checks_ok = DERIVED_MISMATCHES == 0
-    st.markdown(
-        f'''<div class="audit-grid">
-          <div class="panel audit"><div class="audit-k">Registros</div><div class="audit-v">{N_ROWS:,}</div><div class="audit-x">Filas analizadas en la hoja {escape(SHEET_NAME)}.</div></div>
-          <div class="panel audit"><div class="audit-k">Respuestas válidas P1–P17</div><div class="audit-v">{pct(valid_pct)}</div><div class="audit-x">{missing_responses:,} faltantes y {invalid_responses:,} valores fuera de 1–5.</div></div>
-          <div class="panel audit"><div class="audit-k">Columnas derivadas</div><div class="audit-v">{'Coinciden' if checks_ok else 'Revisar'}</div><div class="audit-x">{DERIVED_CHECKED} columnas del Excel contrastadas; {DERIVED_MISMATCHES:,} discrepancias.</div></div>
-          <div class="panel audit"><div class="audit-k">Indicador global</div><div class="audit-v">P17</div><div class="audit-x">El promedio P1–P16 no se utiliza como sustituto del indicador global.</div></div>
-        </div>''',
-        unsafe_allow_html=True,
-    )
+    section_header("Control de la base", "Verificación mínima antes de interpretar")
+    st.markdown(data_quality_html(), unsafe_allow_html=True)
 
-    section_header("Resumen verificable", "Resultados obtenidos con las reglas del instrumento")
-    summary_rows = [[
-        "P17 · Satisfacción general",
-        f"{GLOBAL_N:,} / {GLOBAL_D:,}",
-        pct(GLOBAL),
-        GLOBAL_LEVEL,
-        "P17 = 4 o 5",
-    ]]
-    for _, r in DIMS.sort_values("Código").iterrows():
-        summary_rows.append([
-            f"{r['Código']} · {r['Dimensión']}",
-            f"{int(r['N']):,} / {int(r['D']):,}",
-            pct(float(r['Satisfacción'])),
-            str(r['Nivel']),
-            "Promedio individual de 4 ítems ≥4",
-        ])
-    summary = pd.DataFrame(summary_rows, columns=["Medida", "N / D", "% satisfacción", "Nivel del porcentaje", "Regla"])
+    section_header("Resumen", "Indicador general y dimensiones")
+    summary = pd.DataFrame([
+        ["Satisfacción general · P17", pct(GLOBAL), GLOBAL_LEVEL, f"{N_GLOBAL:,} / {N_TOTAL:,}", "P17 = 4 o 5"],
+        *[[f"{r['Código']} · {r['Dimensión']}", pct(float(r['Satisfacción'])), str(r['Nivel']), f"{int(r['N satisfechos']):,} / {N_TOTAL:,}", "Promedio de 4 ítems ≥4"] for _, r in DIMS.sort_values("Código").iterrows()],
+    ], columns=["Medida", "Porcentaje de satisfacción", "Nivel", "N satisfechos / total", "Regla"])
     st.dataframe(summary, use_container_width=True, hide_index=True)
-
-    st.markdown('<div class="info"><b>Validación y confiabilidad:</b> el Word plantea como pasos posteriores la V de Aiken y el Alfa de Cronbach. Esos análisis evalúan el instrumento y no cambian la regla de cálculo del porcentaje de satisfacción mostrada en este tablero.</div>', unsafe_allow_html=True)

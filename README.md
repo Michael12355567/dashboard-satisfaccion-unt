@@ -1,28 +1,22 @@
-# Dashboard UNT — versión Word + Excel auditada
+# Dashboard UNT — Word como base, diseño conservado
 
-Esta versión toma el **Word como base metodológica** y el **Excel como base de datos**.
+Esta versión parte del `app.py` entregado por el usuario y **conserva el diseño visual existente**, especialmente:
 
-## Lógica implementada
+- semáforos 3D;
+- fórmula tipografiada N/D × 100 con fracción;
+- glassmorphism, tarjetas, tipografía, colores y comportamiento responsive.
 
-- **Satisfacción general:** P17.
-  - Satisfecho: respuesta 4 o 5.
-  - No satisfecho: respuesta 1, 2 o 3.
-- **Dimensiones D1–D4:** se calcula el promedio individual de los 4 ítems de cada dimensión.
-  - Satisfecho en la dimensión: promedio >= 4.
-- **Preguntas P1–P16:** se muestran de forma descriptiva como respuestas 4–5 y respuestas 1–3.
-  - No se crea una categoría "Neutral".
-  - No se usa "Favorable / Neutral / Desfavorable" como clasificación del indicador.
-- **Criterios de interpretación del porcentaje:**
-  - 0–59% Insatisfactorio
-  - 60–74% Regular
-  - 75–89% Satisfactorio
-  - 90–100% Muy satisfactorio
-- Estos niveles se aplican al **porcentaje ya calculado**, no a las respuestas individuales 1–5.
-- Se eliminó de la interfaz el bloque de **Marco documental / PEI**.
+## Correcciones metodológicas
 
-## Control del Excel
-
-El tablero recalcula los resultados desde P1–P17 y contrasta las columnas derivadas del Excel cuando existen.
+1. **Indicador general:** se muestra P17 como satisfacción general.
+   - 4 o 5 = Satisfecho.
+   - 1, 2 o 3 = No satisfecho.
+2. **Dimensiones D1–D4:** satisfacción por estudiante cuando el promedio de los cuatro ítems de la dimensión es ≥4.
+3. **Preguntas P1–P16:** se presentan descriptivamente como porcentaje de respuestas 4–5 y 1–3, sin inventar las categorías "Favorable / Neutral / Desfavorable".
+4. **Distribución Likert:** se muestran las cinco respuestas originales 1, 2, 3, 4 y 5.
+5. **Interpretación institucional:** 0–59% Insatisfactorio; 60–74% Regular; 75–89% Satisfactorio; 90–100% Muy satisfactorio.
+6. Se retiró de la interfaz el bloque de **Marco documental / PEI**, porque no forma parte del cálculo de la encuesta solicitado para este tablero.
+7. No se usa un promedio P1–P16 como indicador global, porque esa regla no está definida de forma explícita en el instrumento proporcionado.
 
 ## Ejecutar
 
