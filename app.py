@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+# BUILD 2026-09-10 FINAL: clasificación binaria del indicador (4–5 satisfecho; 1–3 no satisfecho).
+
 from html import escape
 from pathlib import Path
 import math
@@ -85,14 +87,6 @@ ITEM_TEXT = {
     "P17": "En general, me siento satisfecho(a) con el proceso de formación académica que recibo en la Universidad Nacional de Trujillo.",
 }
 
-# Ficha técnica PEI compartida por el usuario:
-# - 2026: diseño, estandarización y validación; sin valor medible oficial.
-# - medición efectiva a partir de 2027.
-# - valor referencial del indicador de satisfacción: >=60%.
-# - logros esperados 2027-2030: 60%, 65%, 70%, 75%.
-PEI_REFERENCE = 0.60
-PEI_TARGETS = {2027: 0.60, 2028: 0.65, 2029: 0.70, 2030: 0.75}
-
 
 # ==============================================================
 # CSS — SISTEMA INSTITUCIONAL + PROFUNDIDAD / RESPONSIVE
@@ -156,7 +150,7 @@ section[data-testid="stSidebar"],[data-testid="stSidebarCollapsedControl"]{displ
 /* INTERPRETATION */
 .insight-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.insight{padding:14px 15px;position:relative;overflow:hidden}.insight:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}.insight-k{font-size:.52rem;letter-spacing:.10em;text-transform:uppercase;color:#8290A1;font-weight:950}.insight-t{font-size:.80rem;color:#1A3551;font-weight:950;line-height:1.25;margin-top:5px}.insight-x{font-size:.60rem;color:#687B90;line-height:1.47;margin-top:6px}
 
-/* PEI ROUTE */
+/* BLOQUES AUXILIARES */
 .pei-card{padding:15px 16px}.pei-banner{display:flex;gap:11px;align-items:flex-start;padding:12px;border-radius:14px;background:linear-gradient(135deg,#FFF8E7,#FFFDF7);border:1px solid #F0DFB4;color:#71591E}.pei-banner .i{font-size:1.12rem}.pei-banner .t{font-size:.64rem;font-weight:950}.pei-banner .x{font-size:.56rem;line-height:1.45;margin-top:3px}.route{display:grid;grid-template-columns:1.15fr repeat(4,1fr);gap:8px;margin-top:11px}.node{padding:11px;border-radius:13px;background:linear-gradient(145deg,#fff,#F7FAFE);border:1px solid var(--line);box-shadow:0 8px 18px rgba(31,70,126,.06);position:relative;overflow:hidden}.node:before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--accent)}.node-y{font-size:.49rem;color:#8190A1;text-transform:uppercase;font-weight:900}.node-v{font-size:1rem;font-weight:950;color:#214DA6;margin-top:4px}.node-c{font-size:.47rem;color:#8A97A7;margin-top:3px;line-height:1.35}.node.diag .node-v{font-size:.74rem;color:#82651F;line-height:1.2}
 
 /* SELECT */
@@ -515,7 +509,7 @@ header[data-testid="stHeader"]{
   -webkit-backdrop-filter:blur(12px)!important;
 }
 
-/* Marco PEI: vidrio neutro para que no compita con el resultado */
+/* Bloques auxiliares: vidrio neutro */
 .pei-banner,.pei-official{
   background:linear-gradient(145deg,rgba(255,255,255,.68),rgba(249,251,255,.43))!important;
   border:1px solid rgba(255,255,255,.82)!important;
@@ -790,8 +784,6 @@ N_TOTAL = int(len(df))
 GLOBAL = float(df["P17_Sat"].mean())
 N_GLOBAL = int(df["P17_Sat"].sum())
 GLOBAL_MEAN = float(df["P17"].mean())
-REFERENCE_DELTA = GLOBAL - PEI_REFERENCE
-GAP_TO_SATISFACTORY = max(0.0, 0.75 - GLOBAL)
 
 MISSING_RESPONSES = int(df[ALL_ITEMS].isna().sum().sum())
 INVALID_RESPONSES = int((~df[ALL_ITEMS].isin([1, 2, 3, 4, 5]) & df[ALL_ITEMS].notna()).sum().sum())
@@ -998,7 +990,7 @@ def top_header() -> None:
           <div class="brand"><div class="brand-mark" aria-label="Universidad Nacional de Trujillo">UNT</div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · Formación académica integral</div></div></div>
           <div class="top-meta"><div class="meta-box">Periodo de encuesta<b>{period}</b></div><div class="meta-box">Base analizada<b>{N_TOTAL:,} estudiantes</b></div><div class="meta-box">Instrumento<b>17 ítems · 4 dimensiones</b></div></div>
         </div>
-        <div class="pagehead"><div><div class="kicker">Tablero ejecutivo · encuesta 2026</div><div class="title">Satisfacción con la formación académica integral</div><div class="sub">El tablero sigue la regla del instrumento: <b>en cada pregunta, 4 o 5 = satisfecho y 1, 2 o 3 = no satisfecho</b>. Para las dimensiones D1–D4, cada estudiante se clasifica como satisfecho cuando el <b>promedio de sus cuatro respuestas es ≥4</b>. La <b>satisfacción general corresponde a P17</b>.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} estudiantes</span><span class="chip">◉ P17 · satisfacción general</span><span class="chip">D1–D4 · promedio de 4 ítems ≥4</span><span class="chip">P1–P17 · análisis por pregunta</span></div></div><div class="basebox">Encuesta 2026<b>{period}</b></div></div>''',
+        <div class="pagehead"><div><div class="kicker">Tablero ejecutivo · encuesta 2026</div><div class="title">Satisfacción con la formación académica integral</div><div class="sub">El tablero sigue la regla del instrumento: <b>en cada pregunta, 4 o 5 = satisfecho y 1, 2 o 3 = no satisfecho</b>. Para las dimensiones D1–D4, cada estudiante se clasifica como satisfecho cuando el <b>promedio de sus cuatro respuestas es ≥4</b>. La <b>satisfacción general corresponde a P17</b>.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} estudiantes</span><span class="chip">◉ P17 · satisfacción general</span><span class="chip">D1–D4 · promedio de 4 ítems ≥4</span><span class="chip">P1–P17 · análisis por pregunta</span><span class="chip">Regla: 4–5 satisfecho · 1–3 no satisfecho</span></div></div><div class="basebox">Encuesta 2026<b>{period}</b></div></div>''',
         unsafe_allow_html=True,
     )
 
@@ -1015,7 +1007,7 @@ def scale_html(value: float) -> str:
     for name, rng, color in levels:
         active = " active" if name == level else ""
         cards.append(f'<div class="scale-step{active}" style="--lvl:{color}"><div class="scale-dot" style="background:{color}"></div><div class="scale-name">{name}</div><div class="scale-range">{rng}</div></div>')
-    return f'''<div class="panel scale-wrap"><div class="scale-title">Escala interpretativa PROPUESTA del instrumento · Clasificación descriptiva: <span style="color:{color_now}">{escape(level)} ({escape(interval)})</span></div><div class="scale4">{"".join(cards)}</div><div class="scale-note"><b>No confundir con el PEI:</b> la ficha técnica oficial fija un <b>valor referencial ≥60%</b>, pero no establece estas cuatro categorías. Los rangos provienen de la propuesta del instrumento y pueden ajustarse según lineamientos institucionales.</div></div>'''
+    return f'''<div class="panel scale-wrap"><div class="scale-title">Criterios de interpretación del instrumento · Resultado: <span style="color:{color_now}">{escape(level)} ({escape(interval)})</span></div><div class="scale4">{"".join(cards)}</div><div class="scale-note">Rangos definidos en la propuesta del instrumento: <b>0–59% Insatisfactorio</b>, <b>60–74% Regular</b>, <b>75–89% Satisfactorio</b> y <b>90–100% Muy satisfactorio</b>.</div></div>'''
 
 
 def primary_cards_html() -> str:
@@ -1067,34 +1059,23 @@ def dimension_cards_html() -> str:
         code=r["Código"]; meta=DIMENSIONS[code]; sat=float(r["Satisfacción"]); avg=float(r["Promedio"])
         level,interval,color,state=institutional_level(sat)
         ci_low=float(r["IC95 inferior"]); ci_high=float(r["IC95 superior"])
-        cards.append(f'''<div class="panel dim-card" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="dim-head"><div><div class="dim-code">{meta['icon']} {code}</div><div class="dim-name">{escape(meta['name'])}</div></div>{traffic_svg(state,30)}</div><div class="dim-body"><div class="donut" style="--p:{sat*100:.2f};--accent:{meta['accent']}"><b>{pct(sat)}</b></div><div><div class="dim-level" style="color:{color}">{escape(level)}</div><div class="dim-meta"><b>Rango de la escala propuesta:</b> {escape(interval)}<br><b>Estudiantes que cumplen el criterio:</b> {int(r['N satisfechos']):,} de {N_TOTAL:,}<br><b>IC 95% aprox.*:</b> {pct(ci_low)}–{pct(ci_high)}<br><b>Promedio dimensional:</b> {avg:.2f}/5</div></div></div><div class="dim-meaning"><b>Qué evalúa:</b> {escape(meta['meaning'])}</div><div class="dim-foot"><span>Regla documental: promedio de 4 ítems ≥4</span><b>{', '.join(meta['items'])}</b></div></div>''')
+        cards.append(f'''<div class="panel dim-card" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="dim-head"><div><div class="dim-code">{meta['icon']} {code}</div><div class="dim-name">{escape(meta['name'])}</div></div>{traffic_svg(state,30)}</div><div class="dim-body"><div class="donut" style="--p:{sat*100:.2f};--accent:{meta['accent']}"><b>{pct(sat)}</b></div><div><div class="dim-level" style="color:{color}">{escape(level)}</div><div class="dim-meta"><b>Rango de la escala propuesta:</b> {escape(interval)}<br><b>Estudiantes que cumplen el criterio:</b> {int(r['N satisfechos']):,} de {N_TOTAL:,}<br><b>IC 95% aprox.*:</b> {pct(ci_low)}–{pct(ci_high)}<br><b>Promedio dimensional:</b> {avg:.2f}/5</div></div></div><div class="dim-meaning"><b>Qué evalúa:</b> {escape(meta['meaning'])}</div><div class="dim-foot"><span>Regla del instrumento: promedio de 4 ítems ≥4</span><b>{', '.join(meta['items'])}</b></div></div>''')
     return '<div class="dim-grid">'+''.join(cards)+'</div>'
 
 def insights_html() -> str:
-    pri=PRIORITY_DIM
-    strong_dim=STRONG_DIM
-    pitem=PRIORITY_ITEM
-    strong_item=STRONG_ITEM
-    qtxt = p_text(COCHRAN_P)
-    d3_pair_p = max([r["p_holm"] for r in PAIRWISE_DIM if "D3" in (r["A"], r["B"])])
-    d4_pair_p = max([r["p_holm"] for r in PAIRWISE_DIM if "D4" in (r["A"], r["B"])])
+    pri = PRIORITY_DIM
+    strong_dim = STRONG_DIM
+    pitem = PRIORITY_ITEM
+    strong_item = STRONG_ITEM
     return f'''<div class="insight-grid">
-      <div class="panel insight" style="--accent:#2457B8"><div class="insight-k">Satisfacción general</div><div class="insight-t"><span class="metric-code">P17</span><span class="metric-main">Estudiantes satisfechos: {pct(GLOBAL)}</span><span class="metric-sub">{N_GLOBAL:,} de {N_TOTAL:,}</span></div><div class="insight-x">P17 es la pregunta de satisfacción general definida en el instrumento. La clasificación es directa: <b>4 o 5 = satisfecho</b>; <b>1, 2 o 3 = no satisfecho</b>.</div></div>
-      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Dimensión con menor satisfacción</div><div class="insight-t"><span class="metric-code">{pri['Código']}</span><span class="metric-main">Satisfechos: {pct(float(pri['Satisfacción']))}</span></div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta el menor porcentaje dimensional. La comparación conjunta de D1–D4 muestra diferencias entre dimensiones (<b>Cochran Q={COCHRAN_Q:.1f}; {qtxt}</b>). Para D3, las comparaciones pareadas frente a las demás dimensiones permanecen significativas con corrección de Holm (<b>{p_text(d3_pair_p)}</b>).</div></div>
-      <div class="panel insight" style="--accent:{DIMENSIONS[str(strong_dim['Código'])]['accent']}"><div class="insight-k">Dimensión con mayor satisfacción</div><div class="insight-t"><span class="metric-code">{strong_dim['Código']}</span><span class="metric-main">Satisfechos: {pct(float(strong_dim['Satisfacción']))}</span></div><div class="insight-x"><b>{escape(str(strong_dim['Dimensión']))}</b> registra el mayor porcentaje dimensional. D4 también supera a las otras dimensiones en las comparaciones pareadas ajustadas (<b>{p_text(d4_pair_p)}</b>). Su pregunta con mayor satisfacción es <b>{strong_item['Ítem']}</b> con {pct(float(strong_item['Satisfecho']))}.</div></div>
-      <div class="panel insight" style="--accent:#B9794E"><div class="insight-k">Pregunta que requiere mayor atención</div><div class="insight-t"><span class="metric-code">{pitem['Ítem']}</span><span class="metric-main">Satisfechos: {pct(float(pitem['Satisfecho']))}</span><span class="metric-sub">No satisfechos: {pct(float(pitem['No satisfecho']))}</span></div><div class="insight-x">{escape(str(pitem['Pregunta']))} Es la pregunta P1–P16 con menor proporción de respuestas 4 o 5 y ayuda a explicar la principal brecha diagnóstica.</div></div>
+      <div class="panel insight" style="--accent:#2457B8"><div class="insight-k">Satisfacción general</div><div class="insight-t"><span class="metric-code">P17</span><span class="metric-main">Estudiantes satisfechos: {pct(GLOBAL)}</span><span class="metric-sub">{N_GLOBAL:,} de {N_TOTAL:,}</span></div><div class="insight-x">P17 es la pregunta de satisfacción general. Para el indicador: <b>4 o 5 = satisfecho</b> y <b>1, 2 o 3 = no satisfecho</b>.</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(pri['Código'])]['accent']}"><div class="insight-k">Dimensión con menor satisfacción</div><div class="insight-t"><span class="metric-code">{pri['Código']}</span><span class="metric-main">Satisfechos: {pct(float(pri['Satisfacción']))}</span></div><div class="insight-x"><b>{escape(str(pri['Dimensión']))}</b> presenta el menor porcentaje de estudiantes que alcanzan el criterio dimensional de <b>promedio ≥4</b>. Es la principal dimensión a revisar.</div></div>
+      <div class="panel insight" style="--accent:{DIMENSIONS[str(strong_dim['Código'])]['accent']}"><div class="insight-k">Dimensión con mayor satisfacción</div><div class="insight-t"><span class="metric-code">{strong_dim['Código']}</span><span class="metric-main">Satisfechos: {pct(float(strong_dim['Satisfacción']))}</span></div><div class="insight-x"><b>{escape(str(strong_dim['Dimensión']))}</b> registra el mayor porcentaje dimensional. Dentro de P1–P16, la pregunta con mayor satisfacción es <b>{strong_item['Ítem']}</b> con {pct(float(strong_item['Satisfecho']))}.</div></div>
+      <div class="panel insight" style="--accent:#B9794E"><div class="insight-k">Pregunta que requiere mayor atención</div><div class="insight-t"><span class="metric-code">{pitem['Ítem']}</span><span class="metric-main">Satisfechos: {pct(float(pitem['Satisfecho']))}</span><span class="metric-sub">No satisfechos: {pct(float(pitem['No satisfecho']))}</span></div><div class="insight-x">{escape(str(pitem['Pregunta']))} Es la pregunta P1–P16 con menor porcentaje de respuestas 4 o 5.</div></div>
     </div>
-    <div class="stat-evidence"><div class="stat-title">Evidencia estadística para comparar D1–D4</div>Las cuatro dimensiones fueron respondidas por los mismos estudiantes. Por ello se utiliza <b>Cochran Q</b> para contrastar las cuatro proporciones binarias de satisfacción y <b>McNemar pareado</b> para comparaciones entre dimensiones, con corrección de Holm. <span class="tag">Q={COCHRAN_Q:.1f}</span><span class="tag">gl=3</span><span class="tag">{qtxt}</span><div class="stat-caveat">Estas pruebas complementan la lectura descriptiva. La generalización a toda la población depende del diseño de selección y cobertura de la encuesta.</div></div>
-    <div class="interpret-banner"><b>Lectura para decisión:</b> la satisfacción general se reporta con P17; las cuatro dimensiones explican dónde se concentran fortalezas y brechas. <b>D3 es la prioridad diagnóstica</b> y <b>D4 presenta el mejor resultado dimensional</b>. El análisis por pregunta permite localizar con precisión qué aspectos deben intervenirse.</div>'''
+    <div class="interpret-banner"><b>Lectura para decisión:</b> primero se reporta la satisfacción general con <b>P17</b>; luego D1–D4 permiten identificar en qué dimensión se concentra la mayor brecha; finalmente, las preguntas P1–P16 muestran el aspecto específico que debe revisarse.</div>'''
 
 
-
-def pei_route_html() -> str:
-    nodes=[f'''<div class="node diag" style="--accent:#D7A53B"><div class="node-y">2026</div><div class="node-v">Diseño, estandarización y validación</div><div class="node-c">La ficha PEI indica que no se generan todavía valores medibles oficiales del indicador.</div></div>''']
-    for y,t in PEI_TARGETS.items():
-        abs_target={2027:"8,400 / 14,000",2028:"9,100 / 14,000",2029:"9,800 / 14,000",2030:"10,500 / 14,000"}[y]
-        nodes.append(f'''<div class="node" style="--accent:#2F66D8"><div class="node-y">{y}</div><div class="node-v">{pct(t,0)}</div><div class="node-c">Logro esperado: {abs_target}</div></div>''')
-    return f'''<div class="panel pei-card"><div class="pei-banner"><div class="i">⚠</div><div><div class="t">Cómo debe leerse el PEI frente a estas encuestas 2026</div><div class="x">La base 2026 puede utilizarse como diagnóstico o línea base preliminar. No debe presentarse como cumplimiento oficial del PEI 2026, porque la ficha técnica señala que la medición efectiva inicia a partir de 2027. El 60% funciona como valor referencial y como logro esperado para 2027, no como meta oficial del año 2026.</div></div></div><div class="route">{''.join(nodes)}</div></div>'''
 
 
 def item_cards_html(selected: str) -> str:
@@ -1110,22 +1091,29 @@ def item_cards_html(selected: str) -> str:
             label_dim="Satisfacción general"
         sat=float(r["Satisfecho"])
         no_sat=float(r["No satisfecho"])
-        cards.append(f'''<div class="panel item" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="item-top"><div class="item-code">Ítem {r['Ítem']} | {label_dim}</div><div class="item-score">{pct(sat)}</div></div><div class="item-q">{escape(str(r['Pregunta']))}</div><div class="meter"><span style="width:{sat*100:.2f}%"></span></div><div class="item-meta"><div><div class="k">Satisfechos 4–5</div><div class="v">{pct(sat)}</div></div><div><div class="k">No satisfechos 1–3</div><div class="v">{pct(no_sat)}</div></div><div><div class="k">Promedio</div><div class="v">{float(r['Promedio']):.2f}/5</div></div></div></div>''')
+        cards.append(f'''<div class="panel item" style="--accent:{meta['accent']};--soft:{meta['soft']}"><div class="item-top"><div class="item-code">Ítem {r['Ítem']} | {label_dim}</div><div class="item-score">{pct(sat)}</div></div><div class="item-q">{escape(str(r['Pregunta']))}</div><div class="meter"><span style="width:{sat*100:.2f}%"></span></div><div class="item-meta item-meta-two"><div><div class="k">SATISFECHOS · RESPUESTAS 4–5</div><div class="v">{pct(sat)}</div></div><div><div class="k">NO SATISFECHOS · RESPUESTAS 1–3</div><div class="v">{pct(no_sat)}</div></div></div><div class="item-footline"><span>Promedio descriptivo Likert</span><b>{float(r['Promedio']):.2f}/5</b></div></div>''')
     return '<div class="item-grid">'+''.join(cards)+'</div>'
 
 
 
-def likert_html(selected: str) -> str:
+def binary_distribution_html(selected: str) -> str:
+    """Distribución binaria usada por el indicador: 1–3 vs 4–5."""
     d = ITEMS_SUM.copy() if selected == "Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
-    rows=[]
-    for _,r in d.sort_values("Número").iterrows():
-        vals=[float(r[f"Resp {i}"]) for i in range(1,6)]
-        def label(v: float) -> str:
-            return f"{v*100:.0f}%" if v >= .055 else ""
-        segs=''.join([f'<div class="seg r{i}" style="width:{vals[i-1]*100:.3f}%" title="Respuesta {i}: {pct(vals[i-1])}">{label(vals[i-1])}</div>' for i in range(1,6)])
-        rows.append(f'<div class="likert-row"><div class="likert-code">{r["Ítem"]}</div><div class="likert-pill">{segs}</div></div>')
-    legend='<div class="likert-legend"><span><i class="r1"></i>1 · Totalmente en desacuerdo</span><span><i class="r2"></i>2 · En desacuerdo</span><span><i class="r3"></i>3 · Ni de acuerdo ni en desacuerdo</span><span><i class="r4"></i>4 · De acuerdo</span><span><i class="r5"></i>5 · Totalmente de acuerdo</span></div>'
-    return '<div class="panel likert">'+legend+''.join(rows)+'</div>'
+    rows = []
+    for _, r in d.sort_values("Número").iterrows():
+        no_sat = float(r["No satisfecho"])
+        sat = float(r["Satisfecho"])
+        no_label = f"{no_sat*100:.0f}%" if no_sat >= .055 else ""
+        sat_label = f"{sat*100:.0f}%" if sat >= .055 else ""
+        rows.append(
+            f'<div class="binary-row"><div class="binary-code">{r["Ítem"]}</div>'
+            f'<div class="binary-pill">'
+            f'<div class="binary-seg no-sat" style="width:{no_sat*100:.3f}%" title="No satisfechos (1–3): {pct(no_sat)}">{no_label}</div>'
+            f'<div class="binary-seg sat" style="width:{sat*100:.3f}%" title="Satisfechos (4–5): {pct(sat)}">{sat_label}</div>'
+            f'</div></div>'
+        )
+    legend = '<div class="binary-legend"><span><i class="no-sat"></i>No satisfechos · respuestas 1–3</span><span><i class="sat"></i>Satisfechos · respuestas 4–5</span></div>'
+    return '<div class="panel binary-panel">' + legend + ''.join(rows) + '</div>'
 
 
 
@@ -1442,7 +1430,7 @@ st.markdown(r"""
 
 
 # ==============================================================
-# AJUSTE FINAL — REFERENCIA PEI LEGIBLE + MÉTRICAS SIN AMBIGÜEDAD
+# AJUSTE FINAL — MÉTRICAS SIN AMBIGÜEDAD
 # ==============================================================
 st.markdown(r"""
 <style>
@@ -1479,7 +1467,7 @@ st.markdown(r"""
     line-height:1.58!important;
 }
 
-/* Marco documental PEI: antes se veía demasiado pequeño */
+/* Ajustes de legibilidad de tarjetas auxiliares */
 .pei-card{
     padding:20px 21px!important;
 }
@@ -1555,19 +1543,28 @@ st.markdown(r"""
 
 
 # ==============================================================
-# DISTRIBUCIÓN LIKERT 1–5 — TERMINOLOGÍA EXACTA DEL INSTRUMENTO
+# ==============================================================
+# DISTRIBUCIÓN DEL INDICADOR — SATISFECHO / NO SATISFECHO
 # ==============================================================
 st.markdown(r'''<style>
-.likert-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 12px 56px;font-size:.68rem;color:#60758C;line-height:1.35}
-.likert-legend span{display:inline-flex;align-items:center;gap:6px}
-.likert-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
-.r1{background:linear-gradient(180deg,#D65D6A,#BD4655)!important}
-.r2{background:linear-gradient(180deg,#E89268,#D67650)!important}
-.r3{background:linear-gradient(180deg,#B7C1CC,#98A6B4)!important}
-.r4{background:linear-gradient(180deg,#66B49E,#40957F)!important}
-.r5{background:linear-gradient(180deg,#2F9C84,#237C69)!important}
-.likert-pill .seg{font-size:.45rem!important}
-@media(max-width:700px){.likert-legend{margin-left:0;font-size:.61rem}.likert-pill .seg{font-size:.39rem!important}}
+.binary-panel{padding:15px 16px}
+.binary-legend{display:flex;flex-wrap:wrap;gap:9px 18px;margin:0 0 12px 56px;font-size:.70rem;color:#60758C;line-height:1.35}
+.binary-legend span{display:inline-flex;align-items:center;gap:7px;font-weight:850}
+.binary-legend i{display:inline-block;width:12px;height:12px;border-radius:4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)}
+.binary-row{display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;align-items:center;padding:7px 0}
+.binary-code{font-size:.61rem;font-weight:950;color:#48627E}
+.binary-pill{height:28px;border-radius:999px;overflow:hidden;display:flex;background:#EDF2F7;box-shadow:inset 0 2px 4px rgba(28,50,78,.08)}
+.binary-seg{height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.48rem;font-weight:950;white-space:nowrap;overflow:hidden}
+.no-sat{background:linear-gradient(180deg,#D76A75,#C55361)!important}
+.sat{background:linear-gradient(180deg,#46A58D,#2E8872)!important}
+@media(max-width:700px){.binary-legend{margin-left:0;font-size:.62rem}.binary-row{grid-template-columns:36px minmax(0,1fr)}.binary-pill{height:24px}.binary-seg{font-size:.40rem}}
+.item-meta.item-meta-two{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}
+.item-meta.item-meta-two>div{padding:9px 7px!important}
+.item-meta.item-meta-two .k{font-size:.55rem!important;line-height:1.30!important}
+.item-meta.item-meta-two .v{font-size:.78rem!important;margin-top:3px!important}
+.item-footline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding-top:7px;border-top:1px solid rgba(221,230,240,.9);font-size:.60rem;color:#75869A}
+.item-footline b{color:#314A64;font-size:.66rem}
+@media(max-width:700px){.item-meta.item-meta-two{grid-template-columns:1fr!important}.item-footline{font-size:.58rem}}
 </style>''', unsafe_allow_html=True)
 
 # ==============================================================
@@ -1575,7 +1572,7 @@ st.markdown(r'''<style>
 # ==============================================================
 top_header()
 
-tab1, tab2, tab3 = st.tabs(["◉ Visión ejecutiva", "▦ Dimensiones y preguntas", "ⓘ Método, PEI y calidad"])
+tab1, tab2, tab3 = st.tabs(["◉ Visión ejecutiva", "▦ Dimensiones y preguntas", "ⓘ Método y calidad"])
 
 with tab1:
     section_header(
@@ -1601,15 +1598,8 @@ with tab1:
     )
     st.markdown(insights_html(), unsafe_allow_html=True)
 
-    section_header(
-        "Marco documental",
-        "Referencia de la ficha PEI",
-        "Esta sección contextualiza el indicador y se mantiene separada de los resultados observados en la encuesta.",
-    )
-    st.markdown(pei_route_html(), unsafe_allow_html=True)
-
 with tab2:
-    section_header("Explorador", "Dimensiones y preguntas", "La lectura por pregunta conserva la escala Likert original y calcula satisfacción como respuestas 4 o 5.")
+    section_header("Explorador", "Dimensiones y preguntas", "Clasificación del indicador: 4 o 5 = satisfecho; 1, 2 o 3 = no satisfecho. La escala Likert 1–5 se muestra solo como detalle descriptivo.")
     selected = st.selectbox(
         "Bloque a analizar",
         ["Todas", "D1", "D2", "D3", "D4", "GLOBAL"],
@@ -1631,13 +1621,13 @@ with tab2:
     st.markdown(item_cards_html(selected), unsafe_allow_html=True)
 
     section_header(
-        "Distribución de respuestas",
-        "Escala Likert original 1–5",
-        "Se muestran las cinco alternativas originales de la escala Likert, sin crear agrupaciones adicionales.",
+        "Distribución del indicador",
+        "No satisfechos | Satisfechos",
+        "La gráfica usa únicamente la clasificación definida para el indicador: respuestas 1, 2 o 3 = no satisfecho; respuestas 4 o 5 = satisfecho.",
     )
-    st.markdown(likert_html(selected), unsafe_allow_html=True)
+    st.markdown(binary_distribution_html(selected), unsafe_allow_html=True)
 
-    with st.expander("Ver detalle técnico por pregunta"):
+    with st.expander("Ver respuestas originales 1–5 y detalle técnico por pregunta"):
         dshow = ITEMS_SUM.copy() if selected == "Todas" else ITEMS_SUM[ITEMS_SUM["Dimensión"] == selected].copy()
         dshow = dshow.sort_values("Número")
         table = dshow[["Ítem", "Dimensión", "Pregunta", "Satisfecho", "No satisfecho", "Resp 1", "Resp 2", "Resp 3", "Resp 4", "Resp 5", "Promedio", "N válido"]].copy()
