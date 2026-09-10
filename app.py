@@ -776,10 +776,17 @@ def prepare_data(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+# Cacheamos SOLO la lectura cruda del Excel.
+# Las columnas derivadas se reconstruyen en cada ejecución para evitar que
+# Streamlit reutilice desde caché un DataFrame antiguo sin columnas nuevas
+# (por ejemplo, Integral_P1P16_Sat).
+DATA_SCHEMA_VERSION = "2026-09-10-keyerror-fix-v1"
+
+
 @st.cache_data(show_spinner=False)
-def load_data(path: str, mtime: float) -> pd.DataFrame:
-    raw = pd.read_excel(path, sheet_name=SHEET_NAME)
-    return prepare_data(raw)
+def load_raw_data(path: str, mtime: float, schema_version: str) -> pd.DataFrame:
+    # mtime y schema_version forman parte de la clave de caché.
+    return pd.read_excel(path, sheet_name=SHEET_NAME)
 
 
 if not DATA_FILE.exists():
@@ -787,9 +794,10 @@ if not DATA_FILE.exists():
     st.stop()
 
 try:
-    df = load_data(str(DATA_FILE), DATA_FILE.stat().st_mtime)
+    raw_df = load_raw_data(str(DATA_FILE), DATA_FILE.stat().st_mtime, DATA_SCHEMA_VERSION)
+    df = prepare_data(raw_df)
 except Exception as exc:
-    st.error(f"No pude leer basededatos.xlsx: {exc}")
+    st.error(f"No pude leer o preparar basededatos.xlsx: {exc}")
     st.stop()
 
 N_TOTAL = int(len(df))
