@@ -1,78 +1,72 @@
-# Auditoría metodológica Word → Excel → Dashboard
+# Auditoría metodológica — Word → Excel → Dashboard
 
-## 1. Qué define el Word
+## 1. Qué mide el instrumento
 
-El documento separa tres niveles de lectura:
+La variable es satisfacción con la formación académica integral. El cuestionario usa una escala Likert de cinco puntos: 1 Totalmente en desacuerdo, 2 En desacuerdo, 3 Ni de acuerdo ni en desacuerdo, 4 De acuerdo y 5 Totalmente de acuerdo.
 
-1. **Ítems P1–P17:** respuestas en escala Likert 1–5.
-2. **Dimensiones D1–D4:** satisfacción determinada por el promedio individual de cuatro ítems; promedio >=4 = satisfecho.
-3. **Satisfacción general:** P17; 4 o 5 = satisfecho, 1, 2 o 3 = no satisfecho.
+## 2. Ítems P1–P16
 
-Después de clasificar a los estudiantes se calcula el porcentaje N/D × 100. La tabla 0–59 / 60–74 / 75–89 / 90–100 interpreta ese porcentaje resultante.
+Los porcentajes visibles en cada tarjeta (por ejemplo P1=79.2% o P13=80.5%) representan la proporción de estudiantes que respondió 4 o 5 a esa pregunta específica. Son resultados descriptivos por ítem.
 
-## 2. Punto crítico: 1, 2 y 3 en las dimensiones
+Para evitar confundir la respuesta 3 con desacuerdo, el tablero separa:
+- 4–5: acuerdo / total acuerdo;
+- 3: ni de acuerdo ni en desacuerdo;
+- 1–2: desacuerdo / total desacuerdo.
 
-No es correcto decir que una dimensión se calcula sumando directamente todas las respuestas 1, 2 y 3 de sus cuatro preguntas. La unidad de clasificación es el estudiante:
+No se asigna un nivel institucional individual a P1–P16, porque el Word desarrolla el indicador por dimensión y global, pero no formaliza la aplicación de los rangos institucionales a cada pregunta aislada.
 
-- se promedian sus cuatro respuestas de la dimensión;
-- si el promedio >=4, queda clasificado como satisfecho;
-- si el promedio <4, queda clasificado como no satisfecho.
+## 3. Dimensiones D1–D4
 
-Por ejemplo, respuestas 5, 5, 3, 3 producen promedio 4.0 y, por la regla del Word, ese estudiante es satisfecho en la dimensión aunque dos ítems tengan respuesta 3.
+La unidad de clasificación es el estudiante:
 
-## 3. Cómo se interpretan los ítems
+1. Se calcula el promedio de sus cuatro respuestas de la dimensión.
+2. Promedio >=4: satisfecho.
+3. Promedio <4: no satisfecho.
+4. El porcentaje dimensional es N de satisfechos / N válido × 100.
 
-El documento formula el indicador “por dimensión y global”; por ello el dashboard no presenta P1–P16 como 16 indicadores institucionales independientes. Para cada ítem se reporta:
+Por eso un porcentaje de una pregunta no debe confundirse con el resultado de la dimensión. Ejemplo: P1=79.2% indica respuestas 4–5 en P1; D1=55.0% indica estudiantes cuyo promedio P1–P4 es >=4.
 
-- porcentaje de respuestas 4–5;
-- porcentaje de respuestas 1–3;
-- distribución completa 1, 2, 3, 4, 5;
-- promedio del ítem;
-- posición descriptiva del ítem dentro de su dimensión.
+## 4. Satisfacción general P17
 
-No se coloca una etiqueta institucional Insatisfactorio/Regular/Satisfactorio/Muy satisfactorio a cada P1–P16. Esa etiqueta se reserva para D1–D4 y P17, que son las medidas definidas por el documento para cálculo dimensional/global.
+El Word define expresamente:
+- 4 o 5 = satisfecho;
+- 1, 2 o 3 = no satisfecho.
 
-## 4. Verificación de la base Excel
+P17 se utiliza como satisfacción general / resultado global directo del instrumento.
 
-Registros: 7,677.
+## 5. Escala de interpretación
 
-La revisión directa de las respuestas P1–P17 confirma que las columnas calculadas del archivo coinciden con las reglas del Word:
+Se usa la escala propuesta en el Word:
+- 0–59%: Insatisfactorio
+- 60–74%: Regular
+- 75–89%: Satisfactorio
+- 90–100%: Muy satisfactorio
 
-- `D1_Promedio`, `D2_Promedio`, `D3_Promedio`, `D4_Promedio`: 0 diferencias.
-- `D1_Satisfecho`, `D2_Satisfecho`, `D3_Satisfecho`, `D4_Satisfecho`: 0 diferencias.
-- `Global_Satisfecho`: 0 diferencias.
-- `Categoria_Global`: coincide con P17 (4–5 satisfecho; 1–3 no satisfecho).
+Como la base produce porcentajes con decimales, el dashboard operacionaliza los cortes como intervalos continuos:
+- 0 <= p < 60
+- 60 <= p < 75
+- 75 <= p < 90
+- 90 <= p <= 100
 
-## 5. Resultados institucionales calculados
+Esto evita huecos como 74.8%.
 
-| Medida | Satisfechos | Porcentaje | Nivel |
-|---|---:|---:|---|
-| P17 Satisfacción general | 5,482 / 7,677 | 71.4% | Regular |
-| D1 Calidad del proceso académico | 4,222 / 7,677 | 55.0% | Insatisfactorio |
-| D2 Desempeño docente y estrategias pedagógicas | 4,647 / 7,677 | 60.5% | Regular |
-| D3 Servicios y gestión educativa | 3,182 / 7,677 | 41.4% | Insatisfactorio |
-| D4 Formación integral y desarrollo personal | 4,989 / 7,677 | 65.0% | Regular |
+## 6. Interpretación de los resultados 2026
 
-La clasificación se realiza con el porcentaje sin redondear y luego se muestra redondeado a una decimal.
+- **P17 = 71.4% (Regular):** 5,482 de 7,677 estudiantes respondieron 4 o 5. El resultado está 3.6 puntos porcentuales por debajo del 75% que inicia el nivel Satisfactorio.
+- **D1 = 55.0% (Insatisfactorio):** no alcanza el 60% que inicia el nivel Regular; se encuentra 5.0 puntos porcentuales por debajo de ese límite.
+- **D2 = 60.5% (Regular):** se ubica apenas dentro del rango Regular y está 14.5 puntos porcentuales por debajo del nivel Satisfactorio.
+- **D3 = 41.4% (Insatisfactorio):** es la dimensión con menor satisfacción y constituye la principal prioridad diagnóstica.
+- **D4 = 65.0% (Regular):** es la dimensión con mejor resultado, aunque aún está 10.0 puntos porcentuales por debajo del nivel Satisfactorio.
 
-## 6. Correcciones frente a versiones previas
+Ninguna de las cuatro dimensiones alcanza 75%.
 
-- Eliminado el supuesto indicador global P1–P16 = 44.6%, porque no está definido como regla global en el Word.
-- P17 vuelve a su función documental de satisfacción general, sin presentarlo con una jerarquía tipográfica exagerada.
-- Eliminadas las categorías “Favorable / Neutral / Desfavorable”.
-- Conservados los semáforos 3D y el diseño tipográfico de la fórmula N/D × 100.
-- Eliminado el bloque visual “Marco documental / PEI”.
-- Eliminadas del tablero principal pruebas inferenciales que no forman parte de la definición del instrumento.
-- Añadida interpretación explícita para cada dimensión y lectura descriptiva para cada ítem.
+## 7. Ítems destacados
 
-## 7. Confiabilidad y validez
+- Mayor porcentaje de respuestas 4–5: **P13 = 80.5%**.
+- Menor porcentaje de respuestas 4–5: **P11 = 47.5%**.
 
-Alfa de Cronbach en la base:
+Estos valores sirven para localizar fortalezas y debilidades específicas dentro de las dimensiones; no sustituyen el indicador dimensional.
 
-- P1–P16: ≈0.968
-- D1: ≈0.917
-- D2: ≈0.942
-- D3: ≈0.913
-- D4: ≈0.942
+## 8. Precaución inferencial
 
-Estos resultados describen consistencia interna y no prueban validez. El propio documento señala V de Aiken como siguiente paso; esa prueba requiere evaluaciones de jueces expertos y no puede calcularse a partir de la base de respuestas estudiantiles.
+La base permite describir las respuestas observadas. Los intervalos de confianza incluidos en el tablero son complementarios. Su interpretación hacia toda la población requiere que el diseño de selección de participantes permita inferencia estadística; el Word disponible no documenta completamente ese diseño muestral.

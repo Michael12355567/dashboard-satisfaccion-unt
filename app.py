@@ -897,6 +897,8 @@ def item_summary() -> pd.DataFrame:
             "Resp 4": counts[4] / n if n else float("nan"),
             "Resp 5": counts[5] / n if n else float("nan"),
             "Respuestas 4–5": r45,
+            "Respuestas 1–2": (counts[1] + counts[2]) / n if n else float("nan"),
+            "Respuesta 3": counts[3] / n if n else float("nan"),
             "Respuestas 1–3": r13,
         })
     return pd.DataFrame(rows)
@@ -924,7 +926,7 @@ def top_header() -> None:
           <div class="brand"><div class="brand-mark" aria-label="Universidad Nacional de Trujillo">UNT</div><div><div class="brand-title">Tablero Ejecutivo de Satisfacción</div><div class="brand-sub">Universidad Nacional de Trujillo · formación académica integral</div></div></div>
           <div class="top-meta"><div class="meta-box">Periodo de encuesta<b>{period}</b></div><div class="meta-box">Base analizada<b>{N_TOTAL:,} estudiantes</b></div><div class="meta-box">Instrumento<b>17 ítems · 4 dimensiones</b></div></div>
         </div>
-        <div class="pagehead"><div><div class="kicker">Tablero ejecutivo · encuesta de satisfacción 2026</div><div class="title">Satisfacción con la formación académica integral</div><div class="sub">El tablero sigue la estructura del instrumento: <b>D1–D4 se calculan con el promedio individual de sus cuatro ítems y criterio ≥4</b>; la <b>satisfacción general se obtiene con P17</b>, donde 4–5 = satisfecho y 1–3 = no satisfecho. Los porcentajes se interpretan con los rangos propuestos en el documento.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} estudiantes</span><span class="chip">D1–D4 · promedio individual ≥4</span><span class="chip">P17 · satisfacción general</span><span class="chip warn">Ítems · diagnóstico descriptivo</span></div></div><div class="basebox">Encuesta 2026<b>{period}</b></div></div>''',
+        <div class="pagehead"><div><div class="kicker">Tablero ejecutivo · encuesta de satisfacción 2026</div><div class="title">Satisfacción con la formación académica integral</div><div class="sub">El tablero sigue la estructura del instrumento: <b>D1–D4 se calculan con el promedio individual de sus cuatro ítems y criterio ≥4</b>; la <b>satisfacción general se obtiene con P17</b>, donde 4–5 = satisfecho y 1–3 = no satisfecho. Solo los resultados de <b>D1–D4 y P17</b> se interpretan con los rangos propuestos en el documento; los ítems P1–P16 se leen de forma descriptiva.</div><div class="chips"><span class="chip">👥 {N_TOTAL:,} estudiantes</span><span class="chip">D1–D4 · promedio individual ≥4</span><span class="chip">P17 · satisfacción general</span><span class="chip warn">Ítems · diagnóstico descriptivo</span></div></div><div class="basebox">Encuesta 2026<b>{period}</b></div></div>''',
         unsafe_allow_html=True,
     )
 
@@ -970,15 +972,29 @@ def global_card_html() -> str:
 
 
 def dimension_interpretation(code: str, sat: float, level: str) -> str:
-    if code == "D1":
-        focus = "pertinencia curricular, actualización del plan, carga académica y coherencia de contenidos"
-    elif code == "D2":
-        focus = "desempeño docente, metodologías, participación y retroalimentación"
-    elif code == "D3":
-        focus = "servicios académicos, información, infraestructura y aseguramiento de la calidad"
+    # Interpretación basada en la regla del Word y en la posición observada en la base.
+    row = DIMS[DIMS["Código"] == code].iloc[0]
+    no_sat = float(row["No satisfacción"])
+    rank = int(DIMS["Satisfacción"].rank(method="min", ascending=False)[DIMS["Código"] == code].iloc[0])
+    rank_txt = "el resultado más alto de las cuatro dimensiones" if rank == 1 else ("el resultado más bajo de las cuatro dimensiones" if rank == 4 else f"el {rank}.º resultado entre las cuatro dimensiones")
+
+    if level == "Insatisfactorio":
+        gap = max(0.0, 0.60 - sat)
+        level_txt = f"No alcanza el 60% que inicia el nivel Regular; la distancia es de {gap*100:.1f} puntos porcentuales."
+    elif level == "Regular":
+        gap = max(0.0, 0.75 - sat)
+        level_txt = f"Se ubica en el nivel Regular y está a {gap*100:.1f} puntos porcentuales del 75% que inicia el nivel Satisfactorio."
+    elif level == "Satisfactorio":
+        gap = max(0.0, 0.90 - sat)
+        level_txt = f"Se ubica en el nivel Satisfactorio y está a {gap*100:.1f} puntos porcentuales del nivel Muy satisfactorio."
     else:
-        focus = "competencias profesionales, valores, desarrollo personal y preparación profesional"
-    return f"{pct(sat)} de estudiantes alcanza promedio ≥4 en {code}; según la escala propuesta, el nivel es {level}. La lectura se refiere al conjunto de {focus}, no a una sola pregunta."
+        level_txt = "Se ubica en el nivel Muy satisfactorio de la escala propuesta."
+
+    return (
+        f"{pct(sat)} de los estudiantes alcanza el criterio dimensional (promedio individual ≥4) y "
+        f"{pct(no_sat)} no lo alcanza. Según la escala propuesta, el nivel es {level}. "
+        f"Es {rank_txt}. {level_txt}"
+    )
 
 
 def dimension_cards_html() -> str:
@@ -997,36 +1013,77 @@ def dimension_cards_html() -> str:
 
 
 def item_interpretation(r: pd.Series) -> str:
-    p45=float(r["Respuestas 4–5"]); p13=float(r["Respuestas 1–3"])
-    item=str(r["Ítem"]); code=str(r["Dimensión"])
+    # Lectura descriptiva por ítem; evita confundir el porcentaje 4–5 con el indicador dimensional.
+    p45 = float(r["Respuestas 4–5"])
+    p12 = float(r["Respuestas 1–2"])
+    p3 = float(r["Respuesta 3"])
+    p13 = float(r["Respuestas 1–3"])
+    item = str(r["Ítem"])
+    code = str(r["Dimensión"])
+
     if item == "P17":
-        return f"{pct(p45)} satisfechos y {pct(p13)} no satisfechos. Esta clasificación 4–5 / 1–3 es la regla global explícita del documento."
+        return (
+            f"{pct(p45)} de los estudiantes está satisfecho con su formación académica general porque respondió 4 o 5; "
+            f"{pct(p13)} se clasifica como no satisfecho porque respondió 1, 2 o 3. "
+            f"Dentro de este último grupo, {pct(p3)} marcó 3 y {pct(p12)} marcó 1 o 2."
+        )
+
     block = ITEMS_16_SUM[ITEMS_16_SUM["Dimensión"] == code].sort_values("Respuestas 4–5", ascending=False).reset_index(drop=True)
     rank = int(block.index[block["Ítem"] == item][0]) + 1
-    pos = "mayor" if rank == 1 else ("menor" if rank == len(block) else f"{rank}.º de 4")
-    return f"{pct(p45)} marcó 4–5 y {pct(p13)} marcó 1–3. Dentro de {code}, este ítem presenta el {pos} porcentaje de respuestas 4–5. El nivel Insatisfactorio/Regular/Satisfactorio/Muy satisfactorio se asigna a la dimensión calculada por promedio individual, no a este ítem por separado."
+    pos = "el mayor" if rank == 1 else ("el menor" if rank == len(block) else f"el {rank}.º mayor")
+    dr = DIMS[DIMS["Código"] == code].iloc[0]
+    dim_sat = float(dr["Satisfacción"])
+    dim_level = str(dr["Nivel"])
+    return (
+        f"{pct(p45)} respondió 4 o 5; {pct(p3)} respondió 3 (ni de acuerdo ni en desacuerdo) y "
+        f"{pct(p12)} respondió 1 o 2. Es {pos} porcentaje 4–5 dentro de {code}. "
+        f"Este {pct(p45)} describe únicamente este ítem; no es la satisfacción de {code}. "
+        f"La dimensión {code} es {pct(dim_sat)} ({dim_level}) porque se calcula estudiante por estudiante con el promedio de sus cuatro ítems ≥4."
+    )
 
 
 def item_cards_html(selected: str) -> str:
     if selected == "P17":
-        d=ITEMS_SUM[ITEMS_SUM["Número"]==17].copy()
+        d = ITEMS_SUM[ITEMS_SUM["Número"] == 17].copy()
     elif selected == "Todas":
-        d=ITEMS_16_SUM.copy()
+        d = ITEMS_16_SUM.copy()
     else:
-        d=ITEMS_16_SUM[ITEMS_16_SUM["Dimensión"]==selected].copy()
-    cards=[]
-    for _,r in d.sort_values("Número").iterrows():
-        code=str(r["Dimensión"]); meta=DIMENSIONS[code] if code in DIMENSIONS else {"accent":"#3573A3","soft":"#EAF3FA"}
-        p45=float(r["Respuestas 4–5"]); p13=float(r["Respuestas 1–3"]); color=meta["accent"]
-        suffix=f" · {code}" if code in DIMENSIONS else " · satisfacción general"
+        d = ITEMS_16_SUM[ITEMS_16_SUM["Dimensión"] == selected].copy()
+
+    cards = []
+    for _, r in d.sort_values("Número").iterrows():
+        code = str(r["Dimensión"])
+        meta = DIMENSIONS[code] if code in DIMENSIONS else {"accent": "#3573A3", "soft": "#EAF3FA"}
+        p45 = float(r["Respuestas 4–5"])
+        p12 = float(r["Respuestas 1–2"])
+        p3 = float(r["Respuesta 3"])
+        p13 = float(r["Respuestas 1–3"])
+        color = meta["accent"]
+        suffix = f" · {code}" if code in DIMENSIONS else " · satisfacción general"
+
+        if str(r["Ítem"]) == "P17":
+            metrics = f'''<div class="item-meta item-meta-4">
+              <div><div class="k">Satisfechos 4–5</div><div class="v">{pct(p45)}</div></div>
+              <div><div class="k">No satisfechos 1–3</div><div class="v">{pct(p13)}</div></div>
+              <div><div class="k">Respuesta 3</div><div class="v">{pct(p3)}</div></div>
+              <div><div class="k">Promedio</div><div class="v">{float(r['Promedio']):.2f}/5</div></div>
+            </div>'''
+        else:
+            metrics = f'''<div class="item-meta item-meta-4">
+              <div><div class="k">4–5 · acuerdo</div><div class="v">{pct(p45)}</div></div>
+              <div><div class="k">3 · ni acuerdo ni desacuerdo</div><div class="v">{pct(p3)}</div></div>
+              <div><div class="k">1–2 · desacuerdo</div><div class="v">{pct(p12)}</div></div>
+              <div><div class="k">Promedio</div><div class="v">{float(r['Promedio']):.2f}/5</div></div>
+            </div>'''
+
         cards.append(f'''<div class="panel item" style="--accent:{meta['accent']};--soft:{meta['soft']}">
           <div class="item-top"><div class="item-code">Ítem {r['Ítem']}{suffix}</div><div class="item-score">{pct(p45)}</div></div>
           <div class="item-q">{escape(str(r['Pregunta']))}</div>
           <div class="meter"><span style="width:{p45*100:.2f}%"></span></div>
-          <div class="item-meta item-meta-3"><div><div class="k">Respuestas 4–5</div><div class="v">{pct(p45)}</div></div><div><div class="k">Respuestas 1–3</div><div class="v">{pct(p13)}</div></div><div><div class="k">Promedio</div><div class="v">{float(r['Promedio']):.2f}/5</div></div></div>
+          {metrics}
           <div class="item-read" style="border-left-color:{color}"><b>Interpretación:</b> {escape(item_interpretation(r))}</div>
         </div>''')
-    return '<div class="item-grid">'+''.join(cards)+'</div>'
+    return '<div class="item-grid">' + ''.join(cards) + '</div>'
 
 
 def likert_html(selected: str) -> str:
@@ -1049,20 +1106,32 @@ def likert_html(selected: str) -> str:
 
 def selected_insights_html(selected: str) -> str:
     if selected == "P17":
-        r=P17_ROW
-        return f'''<div class="insight-grid"><div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Resultado global</div><div class="insight-t">P17 · {pct(float(r['Respuestas 4–5']))}</div><div class="insight-x">{escape(item_interpretation(r))}</div></div><div class="panel insight" style="--accent:#F2A62C"><div class="insight-k">Regla</div><div class="insight-t">4–5 / 1–3</div><div class="insight-x">En P17 sí corresponde llamar satisfecho a 4–5 y no satisfecho a 1–3, porque el documento lo define expresamente.</div></div></div>'''
-    d=ITEMS_16_SUM.copy() if selected=="Todas" else ITEMS_16_SUM[ITEMS_16_SUM["Dimensión"]==selected].copy()
-    weak=d.sort_values("Respuestas 4–5").iloc[0]; strong=d.sort_values("Respuestas 4–5",ascending=False).iloc[0]
-    if selected=="Todas":
-        context="P1–P16 diagnostican los cuatro componentes del instrumento. El documento no define un indicador global adicional basado en el promedio de las 16 preguntas."
+        r = P17_ROW
+        gap75 = max(0.0, 0.75 - GLOBAL)
+        return f'''<div class="insight-grid">
+          <div class="panel insight" style="--accent:{GLOBAL_COLOR}"><div class="insight-k">Satisfacción general</div><div class="insight-t">P17 · {pct(GLOBAL)} · {escape(GLOBAL_LEVEL)}</div><div class="insight-x">{N_GLOBAL:,} de {GLOBAL_VALID:,} estudiantes respondieron 4 o 5. El resultado está a <b>{gap75*100:.1f} puntos porcentuales</b> del 75% que inicia el nivel Satisfactorio.</div></div>
+          <div class="panel insight" style="--accent:#F2A62C"><div class="insight-k">Regla explícita del Word</div><div class="insight-t">4–5 satisfecho · 1–3 no satisfecho</div><div class="insight-x">En P17 sí corresponde esta dicotomía porque el documento la define expresamente.</div></div>
+          <div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Respuesta 3</div><div class="insight-t">{pct(float(r['Respuesta 3']))}</div><div class="insight-x">Aunque la alternativa 3 significa “Ni de acuerdo ni en desacuerdo”, el Word la incluye dentro de “No satisfecho” únicamente para la clasificación global P17.</div></div>
+          <div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Lectura</div><div class="insight-t">Resultado global directo</div><div class="insight-x">P17 resume la percepción global del estudiante; no debe confundirse con los porcentajes 4–5 de P1–P16 ni con los porcentajes dimensionales.</div></div>
+        </div>'''
+
+    d = ITEMS_16_SUM.copy() if selected == "Todas" else ITEMS_16_SUM[ITEMS_16_SUM["Dimensión"] == selected].copy()
+    weak = d.sort_values("Respuestas 4–5").iloc[0]
+    strong = d.sort_values("Respuestas 4–5", ascending=False).iloc[0]
+
+    if selected == "Todas":
+        first_title = "P1–P16 · lectura descriptiva"
+        first_text = "Los porcentajes 4–5 muestran acuerdo con cada afirmación. No forman por sí solos un indicador global P1–P16 definido en el Word."
     else:
-        dr=DIMS[DIMS["Código"]==selected].iloc[0]
-        context=dimension_interpretation(selected,float(dr["Satisfacción"]),str(dr["Nivel"]))
+        dr = DIMS[DIMS["Código"] == selected].iloc[0]
+        first_title = f"{selected} · {pct(float(dr['Satisfacción']))} · {dr['Nivel']}"
+        first_text = dimension_interpretation(selected, float(dr["Satisfacción"]), str(dr["Nivel"]))
+
     return f'''<div class="insight-grid" style="grid-template-columns:repeat(4,minmax(0,1fr))">
-      <div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Lectura del bloque</div><div class="insight-t">{escape(selected)}</div><div class="insight-x">{escape(context)}</div></div>
-      <div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Menor porcentaje 4–5</div><div class="insight-t">Ítem {weak['Ítem']} · {pct(float(weak['Respuestas 4–5']))}</div><div class="insight-x">{escape(str(weak['Pregunta']))}<div class="metric-detail">Respuestas 1–3: <b>{pct(float(weak['Respuestas 1–3']))}</b> · promedio: <b>{float(weak['Promedio']):.2f}/5</b></div></div></div>
-      <div class="panel insight" style="--accent:#16A878"><div class="insight-k">Mayor porcentaje 4–5</div><div class="insight-t">Ítem {strong['Ítem']} · {pct(float(strong['Respuestas 4–5']))}</div><div class="insight-x">{escape(str(strong['Pregunta']))}<div class="metric-detail">Respuestas 1–3: <b>{pct(float(strong['Respuestas 1–3']))}</b> · promedio: <b>{float(strong['Promedio']):.2f}/5</b></div></div></div>
-      <div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Regla estadística</div><div class="insight-t">Ítem ≠ dimensión</div><div class="insight-x">Los porcentajes 4–5 de cada pregunta describen respuestas. La satisfacción de una dimensión se clasifica estudiante por estudiante mediante el promedio de sus cuatro ítems ≥4.</div></div>
+      <div class="panel insight" style="--accent:#3265CF"><div class="insight-k">Lectura del bloque</div><div class="insight-t">{escape(first_title)}</div><div class="insight-x">{escape(first_text)}</div></div>
+      <div class="panel insight" style="--accent:#E25B68"><div class="insight-k">Menor porcentaje 4–5</div><div class="insight-t">Ítem {weak['Ítem']} · {pct(float(weak['Respuestas 4–5']))}</div><div class="insight-x">{escape(str(weak['Pregunta']))}<div class="metric-detail">3: <b>{pct(float(weak['Respuesta 3']))}</b> · 1–2: <b>{pct(float(weak['Respuestas 1–2']))}</b> · promedio: <b>{float(weak['Promedio']):.2f}/5</b></div></div></div>
+      <div class="panel insight" style="--accent:#16A878"><div class="insight-k">Mayor porcentaje 4–5</div><div class="insight-t">Ítem {strong['Ítem']} · {pct(float(strong['Respuestas 4–5']))}</div><div class="insight-x">{escape(str(strong['Pregunta']))}<div class="metric-detail">3: <b>{pct(float(strong['Respuesta 3']))}</b> · 1–2: <b>{pct(float(strong['Respuestas 1–2']))}</b> · promedio: <b>{float(strong['Promedio']):.2f}/5</b></div></div></div>
+      <div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Cómo no confundirlos</div><div class="insight-t">Ítem ≠ dimensión</div><div class="insight-x">Ejemplo: P1=79.2% significa que 79.2% respondió 4–5 a P1. D1=55.0% significa que 55.0% de estudiantes alcanzó promedio P1–P4 ≥4. Son cálculos distintos y ambos son correctos.</div></div>
     </div>'''
 
 
@@ -1485,7 +1554,8 @@ st.markdown(r"""
 .integral-core{grid-template-columns:210px minmax(0,1fr)!important}
 /* Interpretación dentro de cada ítem */
 .item-read{margin-top:10px;padding:9px 10px;border-radius:10px;background:rgba(247,249,252,.72);border:1px solid rgba(222,231,241,.88);border-left:4px solid;font-size:.66rem;line-height:1.48;color:#60758C}
-.item-read b{color:#193B5E}.item-meta-3{grid-template-columns:repeat(3,1fr)!important}
+.item-read b{color:#193B5E}.item-meta-3{grid-template-columns:repeat(3,1fr)!important}.item-meta-4{grid-template-columns:repeat(4,minmax(0,1fr))!important}.item-meta-4 .k{line-height:1.25!important}
+@media(max-width:1200px){.item-meta-4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 /* Distribución Likert exacta 1-5 */
 .likert-legend{display:flex;flex-wrap:wrap;gap:8px 14px;padding:2px 0 10px 56px;font-size:.62rem;color:#62778C}
 .likert-legend span{display:flex;align-items:center;gap:5px}.lg{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -1523,10 +1593,18 @@ with tab1:
         "Lectura de los cinco resultados definidos por el instrumento",
         "Se interpretan P17 y cada dimensión con la escala 0–59 / 60–74 / 75–89 / 90–100 del documento.",
     )
-    executive = []
-    executive.append(f'''<div class="panel insight" style="--accent:{GLOBAL_COLOR}"><div class="insight-k">Satisfacción general · P17</div><div class="insight-t">{pct(GLOBAL)} · {escape(GLOBAL_LEVEL)}</div><div class="insight-x">{N_GLOBAL:,} de {GLOBAL_VALID:,} estudiantes respondieron 4 o 5. El resultado global se ubica en el nivel <b>{escape(GLOBAL_LEVEL)}</b>.</div></div>''')
-    for _,r in DIMS.sort_values("Código").iterrows():
-        executive.append(f'''<div class="panel insight" style="--accent:{r['Color']}"><div class="insight-k">{r['Código']} · {escape(str(r['Dimensión']))}</div><div class="insight-t">{pct(float(r['Satisfacción']))} · {escape(str(r['Nivel']))}</div><div class="insight-x">{escape(dimension_interpretation(str(r['Código']), float(r['Satisfacción']), str(r['Nivel'])))}</div></div>''')
+    # Síntesis ejecutiva: interpreta sin repetir todas las tarjetas de dimensión.
+    n_insat = int((DIMS["Nivel"] == "Insatisfactorio").sum())
+    n_reg = int((DIMS["Nivel"] == "Regular").sum())
+    gap_global_75 = max(0.0, 0.75 - GLOBAL)
+    priority = PRIORITY_DIM
+    strong = STRONG_DIM
+    executive = [
+        f'''<div class="panel insight" style="--accent:{GLOBAL_COLOR}"><div class="insight-k">Satisfacción general · P17</div><div class="insight-t">{pct(GLOBAL)} · {escape(GLOBAL_LEVEL)}</div><div class="insight-x">{N_GLOBAL:,} de {GLOBAL_VALID:,} estudiantes respondieron 4 o 5. El resultado está a <b>{gap_global_75*100:.1f} puntos porcentuales</b> del nivel Satisfactorio.</div></div>''',
+        f'''<div class="panel insight" style="--accent:{priority['Color']}"><div class="insight-k">Principal prioridad</div><div class="insight-t">{priority['Código']} · {pct(float(priority['Satisfacción']))} · {priority['Nivel']}</div><div class="insight-x">Es la dimensión con menor porcentaje de estudiantes que alcanza promedio ≥4. Su lectura señala el bloque con mayor necesidad de revisión dentro del instrumento.</div></div>''',
+        f'''<div class="panel insight" style="--accent:{strong['Color']}"><div class="insight-k">Mejor resultado dimensional</div><div class="insight-t">{strong['Código']} · {pct(float(strong['Satisfacción']))} · {strong['Nivel']}</div><div class="insight-x">Es la dimensión con mayor satisfacción observada; aun así, permanece por debajo del 75% que inicia el nivel Satisfactorio.</div></div>''',
+        f'''<div class="panel insight" style="--accent:#7C5CE7"><div class="insight-k">Panorama de dimensiones</div><div class="insight-t">{n_insat} Insatisfactorias · {n_reg} Regulares</div><div class="insight-x">Ninguna dimensión alcanza todavía el nivel Satisfactorio (≥75%). Esta conclusión se refiere a los porcentajes dimensionales calculados con promedio individual ≥4.</div></div>'''
+    ]
     st.markdown('<div class="insight-grid">'+''.join(executive)+'</div>', unsafe_allow_html=True)
 
 with tab2:
@@ -1542,8 +1620,8 @@ with tab2:
 
     section_header(
         "Análisis por pregunta",
-        "Respuestas 4–5 y 1–3 por ítem",
-        "En P1–P16 se trata de una lectura diagnóstica del ítem. En P17, 4–5 / 1–3 sí constituye la clasificación global explícita de satisfecho / no satisfecho.",
+        "Lectura por ítem",
+        "P1–P16: se muestran 4–5, la respuesta 3 y 1–2 por separado. P17: el Word sí agrupa 4–5 como satisfecho y 1–3 como no satisfecho.",
     )
     st.markdown(item_cards_html(selected), unsafe_allow_html=True)
 
@@ -1562,9 +1640,9 @@ with tab2:
         else:
             dshow=ITEMS_16_SUM[ITEMS_16_SUM["Dimensión"]==selected].copy()
         dshow=dshow.sort_values("Número")
-        cols=["Ítem","Dimensión","Pregunta","Respuestas 4–5","Respuestas 1–3","Resp 1","Resp 2","Resp 3","Resp 4","Resp 5","Promedio"]
+        cols=["Ítem","Dimensión","Pregunta","Respuestas 4–5","Respuesta 3","Respuestas 1–2","Respuestas 1–3","Resp 1","Resp 2","Resp 3","Resp 4","Resp 5","Promedio"]
         table=dshow[cols].copy()
-        for c in ["Respuestas 4–5","Respuestas 1–3","Resp 1","Resp 2","Resp 3","Resp 4","Resp 5"]:
+        for c in ["Respuestas 4–5","Respuesta 3","Respuestas 1–2","Respuestas 1–3","Resp 1","Resp 2","Resp 3","Resp 4","Resp 5"]:
             table[c]=table[c].map(lambda x:f"{x*100:.1f}%")
         table["Promedio"]=table["Promedio"].map(lambda x:f"{x:.2f}")
         st.dataframe(table,use_container_width=True,hide_index=True,height=min(660,45+36*len(table)))
@@ -1580,7 +1658,7 @@ with tab3:
 
     section_header("Interpretación institucional", "Rangos del porcentaje de satisfacción")
     st.markdown(scale_html(GLOBAL, "el porcentaje de satisfacción"), unsafe_allow_html=True)
-    st.markdown('''<div class="method-alert"><b>Importante:</b> estos rangos clasifican el <b>porcentaje final de satisfacción</b>, no las respuestas individuales 1–5. En las dimensiones, el porcentaje se obtiene después de clasificar a cada estudiante mediante su promedio dimensional. Los ítems P1–P16 se describen con sus respuestas 1–5 y su porcentaje 4–5, pero no reciben una categoría institucional propia porque el documento formula el indicador por dimensión y global.</div>''', unsafe_allow_html=True)
+    st.markdown('''<div class="method-alert"><b>Importante:</b> estos rangos clasifican el <b>porcentaje final de satisfacción de D1–D4 y P17</b>, no cada respuesta individual ni cada porcentaje 4–5 de P1–P16. En las dimensiones, el porcentaje se obtiene después de clasificar a cada estudiante mediante su promedio dimensional. Por eso, por ejemplo, <b>P1=79.2%</b> y <b>D1=55.0%</b> no se contradicen: 79.2% es acuerdo 4–5 en una sola pregunta; 55.0% es la proporción de estudiantes cuyo promedio P1–P4 es ≥4. Los ítems P1–P16 se interpretan descriptivamente y no reciben una categoría institucional propia porque el Word no formaliza ese uso por ítem.</div>''', unsafe_allow_html=True)
 
     section_header("Calidad estadística", "Controles de la base y confiabilidad")
     st.markdown(quality_html(), unsafe_allow_html=True)
