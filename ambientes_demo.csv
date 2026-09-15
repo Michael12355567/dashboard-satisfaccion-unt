@@ -1,0 +1,22 @@
+﻿piso,codigo,ambiente,tipo,x0,y0,x1,y1,capacidad
+1,ENT,Ingreso,Acceso,0,0,18,8,0
+1,A101,Aula 101,Aula,0,10,25,30,40
+1,A102,Aula 102,Aula,27,10,52,30,40
+1,LAB1,Laboratorio 1,Laboratorio,54,10,82,30,30
+1,OF1,Oficina Académica,Oficina,0,34,20,52,8
+1,A103,Aula 103,Aula,22,34,48,52,45
+1,SSHH,Servicios higiénicos,Servicio,50,34,65,52,0
+1,ESC,Escaleras,Circulación,67,34,82,52,0
+2,A201,Aula 201,Aula,0,10,25,30,42
+2,A202,Aula 202,Aula,27,10,52,30,42
+2,LAB2,Laboratorio de Cómputo,Laboratorio,54,10,82,30,32
+2,OF2,Oficina docente,Oficina,0,34,20,52,10
+2,A203,Aula 203,Aula,22,34,48,52,45
+2,SSHH2,Servicios higiénicos,Servicio,50,34,65,52,0
+2,ESC2,Escaleras,Circulación,67,34,82,52,0
+3,A301,Aula 301,Aula,0,10,25,30,40
+3,A302,Aula 302,Aula,27,10,52,30,40
+3,LAB3,Laboratorio especializado,Laboratorio,54,10,82,30,24
+3,OF3,Sala de docentes,Oficina,0,34,20,52,12
+3,AUD,Auditorio,Auditorio,22,34,65,52,120
+3,ESC3,Escaleras,Circulación,67,34,82,52,0

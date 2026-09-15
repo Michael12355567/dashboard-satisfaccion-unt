@@ -1,0 +1,13 @@
+﻿id,nombre,tipo,pisos,aulas,laboratorios,capacidad,lat,lon,ancho_m,largo_m,angulo,altura_m
+B01,Biblioteca Central (DEMO),Biblioteca,3,8,1,620,-8.11455,-79.03852,80,52,0,16
+B02,Facultad de Ingeniería (DEMO),Facultad,4,34,10,1450,-8.11492,-79.0392,90,46,8,20
+B03,Ciencias Físicas y Matemáticas (DEMO),Facultad,3,22,8,980,-8.11422,-79.03978,72,42,-5,16
+B04,Ingeniería Química (DEMO),Facultad,4,28,11,1120,-8.11378,-79.03893,78,48,10,20
+B05,Ciencias Económicas (DEMO),Facultad,3,26,5,1100,-8.11408,-79.03795,75,45,0,16
+B06,Derecho y Ciencias Políticas (DEMO),Facultad,3,24,3,960,-8.11462,-79.03742,74,44,-8,16
+B07,Educación y CC. Comunicación (DEMO),Facultad,3,30,4,1250,-8.1152,-79.03788,90,45,5,16
+B08,Farmacia y Bioquímica (DEMO),Facultad,3,18,12,760,-8.11348,-79.0373,68,42,0,16
+B09,Escuela de Posgrado (DEMO),Posgrado,3,20,2,700,-8.11545,-79.03872,74,40,0,15
+B10,Bienestar Universitario (DEMO),Servicio,2,10,1,420,-8.11568,-79.03955,58,36,-7,11
+B11,Comedor Universitario (DEMO),Servicio,2,5,2,850,-8.1153,-79.04018,62,45,0,10
+B12,Estadio UNT,Deporte,1,0,0,3500,-8.11532,-79.0411,145,92,-15,6

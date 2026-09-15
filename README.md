@@ -1,30 +1,56 @@
-# Dashboard UNT — versión final metodológicamente alineada al Word
+# SIG UNT — Prototipo Streamlit
 
-Esta versión usa el Word como base metodológica y `basededatos.xlsx` como fuente de datos. No modifica la base Excel.
+Este proyecto es un prototipo funcional para demostrar:
+- campus 3D con edificios extruidos;
+- plano general superpuesto a coordenadas reales de referencia;
+- selección de edificio/facultad;
+- rutas demostrativas entre edificios;
+- plano interior por pisos;
+- ambientes (aulas, laboratorios, oficinas, servicios);
+- indicadores de infraestructura.
 
-## Reglas implementadas
+## Importante
+Las geometrías de edificios y las cuatro esquinas usadas para el plano son **PROVISIONALES / DEMO**.
+No deben emplearse como catastro oficial ni para mediciones.
 
-- **P1–P16 (ítems):** se muestran de forma descriptiva. Para cada pregunta se presenta el porcentaje de respuestas 4–5, la respuesta 3 por separado, las respuestas 1–2 por separado y el promedio. No se asigna a cada ítem la categoría institucional Insatisfactorio/Regular/Satisfactorio/Muy satisfactorio, porque el Word no formaliza esa aplicación por ítem.
-- **D1–D4 (dimensiones):** para cada estudiante se calcula el promedio de los cuatro ítems de la dimensión. `promedio >= 4` = satisfecho; `promedio < 4` = no satisfecho. Luego se calcula el porcentaje de estudiantes satisfechos.
-- **P17 (satisfacción general):** 4–5 = satisfecho; 1–3 = no satisfecho, tal como lo establece expresamente el Word.
-- **Interpretación institucional:** los rangos 0–59, 60–74, 75–89 y 90–100 se aplican a los porcentajes finales de D1–D4 y P17. Para trabajar con decimales se operacionalizan como 0–<60, 60–<75, 75–<90 y 90–100.
+La Ciudad Universitaria de la UNT se ubica en Av. Juan Pablo II s/n, Trujillo.
+La app usa como centro de referencia: latitud -8.114656, longitud -79.038595.
 
-## Resultados principales recalculados desde el Excel
+## Instalación en Windows
 
-- P17 satisfacción general: **71.4% — Regular**
-- D1 Calidad del proceso académico: **55.0% — Insatisfactorio**
-- D2 Desempeño docente y estrategias pedagógicas: **60.5% — Regular**
-- D3 Servicios y gestión educativa: **41.4% — Insatisfactorio**
-- D4 Formación integral y desarrollo personal: **65.0% — Regular**
+1. Descomprimir la carpeta.
+2. Abrir CMD o PowerShell dentro de la carpeta.
+3. Crear entorno virtual (recomendado):
 
-El tablero explica explícitamente por qué, por ejemplo, **P1 = 79.2%** y **D1 = 55.0%** no se contradicen: P1 es una sola pregunta, mientras que D1 clasifica a cada estudiante usando el promedio P1–P4.
+    python -m venv .venv
+    .venv\Scripts\activate
 
-## Diseño conservado
+4. Instalar dependencias:
 
-Se mantienen los semáforos 3D, la fórmula tipografiada N/D × 100, el estilo glassmorphism, las tarjetas y la distribución Likert original 1–5. P17 no se presenta como una cifra gigante que domine visualmente el tablero.
+    pip install -r requirements.txt
 
-## Ejecutar
+5. Ejecutar:
 
-```bash
-python -m streamlit run app.py
-```
+    streamlit run app.py
+
+6. Abrir la dirección que aparece, normalmente:
+
+    http://localhost:8501
+
+## Para convertirlo en SIG real de la UNT
+
+Reemplazar:
+- `data/edificios_demo.csv` por geometrías reales del DWG/DXF;
+- `data/puntos_control_provisionales.csv` por puntos medidos;
+- `data/ambientes_demo.csv` por inventario oficial de ambientes;
+- `assets/plano_campus_unt_referencia.png` por raster georreferenciado o capas vectoriales.
+
+Lo más recomendable para producción es:
+PostgreSQL/PostGIS + Python/FastAPI + Streamlit o frontend web + ArcGIS/QGIS para edición cartográfica.
+
+## Próxima versión sugerida
+1. Importar DXF real.
+2. Convertir capas a GeoJSON.
+3. Crear códigos únicos de edificio/piso/ambiente.
+4. Agregar red peatonal y rutas.
+5. Vincular estadísticas institucionales.
