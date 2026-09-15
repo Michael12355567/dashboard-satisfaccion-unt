@@ -1,19 +1,20 @@
-# SIG UNT - versión para Streamlit Cloud
+# SIG UNT Streamlit V2
 
-Esta versión es AUTOCONTENIDA:
-- no necesita carpeta `data/`
-- no necesita carpeta `assets/`
-- el plano y los datos demo están embebidos en `app.py`
+Versión visual mejorada, inspirada en ArcGIS Indoors.
 
-## Subir a Streamlit Cloud
-
-En el repositorio debes tener, como mínimo:
-
+## Subir a GitHub / Streamlit Cloud
 - app.py
 - requirements.txt
 
-Luego en Streamlit Cloud selecciona `app.py` como Main file.
+La app es autocontenida: el plano y los polígonos aproximados están embebidos.
+
+## Ejecutar
+pip install -r requirements.txt
+streamlit run app.py
 
 ## Importante
-Las coordenadas y edificios son demostrativos. Para precisión real se necesita
-el DWG/DXF oficial o puntos de control levantados en campo.
+La geometría V2 fue inferida visualmente desde el plano del campus para mejorar el prototipo.
+No es todavía cartografía oficial.
+
+El DWG recibido es AutoCAD 2007/2008/2009.
+Para la siguiente etapa, exportarlo a DXF permitirá leer la geometría CAD real.
