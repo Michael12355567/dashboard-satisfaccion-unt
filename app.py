@@ -108,11 +108,11 @@ h1,h2,h3 {letter-spacing:-.02em;}
   color:#687782;font-weight:800;margin-bottom:.25rem;
 }
 .phone {
-  border:9px solid #171a1c;border-radius:28px;padding:8px;background:#f7f9fa;
+  border:5px solid #22282c;border-radius:22px;padding:10px;background:#f7f9fa;
   box-shadow:0 10px 26px rgba(0,0,0,.13);
 }
 .phone-notch {
-  width:46%;height:14px;border-radius:0 0 10px 10px;
+  width:34%;height:10px;border-radius:0 0 8px 8px;
   background:#171a1c;margin:-8px auto 8px auto;
 }
 .route-card {
@@ -200,14 +200,6 @@ with center:
     with st.container(border=True):
         st.markdown('<div class="panel-title">Campus 3D</div>', unsafe_allow_html=True)
 
-        bitmap = pdk.Layer(
-            "BitmapLayer",
-            data=None,
-            image="data:image/jpeg;base64," + PLAN_B64,
-            bounds=[BBOX["west"], BBOX["south"], BBOX["east"], BBOX["north"]],
-            opacity=0.42
-        )
-
         polys = pdk.Layer(
             "PolygonLayer",
             data=BUILDINGS,
@@ -270,7 +262,7 @@ with center:
         )
 
         deck = pdk.Deck(
-            layers=[bitmap, polys, labels, route_layer, points],
+            layers=[polys, labels, route_layer, points],
             initial_view_state=view,
             map_provider="carto",
             map_style="light",
@@ -297,6 +289,8 @@ with center:
         )
 
 with right:
+    st.markdown('<div class="panel-title">Mapa interior</div>', unsafe_allow_html=True)
+    st.caption("Demo visual. Se reemplazará por el plano real del pabellón.")
     floor = st.segmented_control("Piso", [1,2,3], default=1)
     rdf = room_data(int(floor))
     room_name = st.selectbox("Buscar ambiente", rdf["ambiente"].tolist(), index=2)
