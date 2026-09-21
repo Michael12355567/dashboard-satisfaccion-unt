@@ -1,15 +1,14 @@
-# Flores Amarillas - 21 de septiembre 🌻
+# Flores Amarillas - Ramo grande interactivo 🌻
 
-Versión Streamlit con ramo grande e interacción tipo mini experiencia.
+Versión pensada para que al entrar se vea inmediatamente un ramo grande de flores amarillas.
 
-## Incluye
-- Mensaje principal por el 21 de septiembre y las flores amarillas.
-- Enfoque de amistad, sin tono romántico.
-- Flores clickeables.
-- Cada flor vuela hacia el ramo.
-- El ramo se construye visualmente y es protagonista.
-- Mensajes distintos por cada flor.
-- Sorpresa final desbloqueable.
+## Dinámica
+- El ramo aparece completo desde el inicio.
+- La persona hace clic directamente sobre cada flor.
+- Cada flor queda marcada con un check y brillo.
+- Cada clic muestra un mensaje diferente.
+- Al descubrir todas las flores se desbloquea el mensaje final.
+- Sin flores volando ni necesidad de armar el ramo.
 
 ## Ejecutar
 ```bash

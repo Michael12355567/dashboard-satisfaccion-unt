@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="21 de Septiembre 🌻",
+    page_title="Flores Amarillas 🌻",
     page_icon="🌻",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -11,12 +11,12 @@ st.set_page_config(
 st.markdown("""
 <style>
 .stApp{
-    background:linear-gradient(180deg,#fffdf6 0%,#fff4b7 100%);
+    background:linear-gradient(180deg,#fffdf7 0%,#fff2aa 100%);
 }
 .block-container{
-    max-width:1120px;
-    padding-top:.3rem;
-    padding-bottom:.3rem;
+    max-width:1100px;
+    padding-top:.25rem;
+    padding-bottom:.25rem;
 }
 header,footer,#MainMenu{visibility:hidden}
 iframe{border-radius:26px}
@@ -24,225 +24,239 @@ iframe{border-radius:26px}
 """, unsafe_allow_html=True)
 
 html = r"""
-<div id="flores21">
+<div id="ramo-app">
 <style>
-#flores21{
-  --ink:#5e4b09;
-  --muted:#786b37;
+#ramo-app{
+  --ink:#5d4a08;
+  --muted:#776936;
   --line:#dec153;
-  --yellow:#ffd225;
-  --yellow2:#ffe878;
-  --green:#4d9944;
-  width:min(1020px,96%);
+  width:min(1020px,97%);
   margin:0 auto;
-  padding:6px 0;
+  padding:5px 0;
   font-family:Segoe UI,Arial,sans-serif;
   color:var(--ink);
 }
-#flores21 *{box-sizing:border-box}
-.main{
+#ramo-app *{box-sizing:border-box}
+.wrap{
   position:relative;
   overflow:hidden;
   border:1px solid var(--line);
   border-radius:30px;
-  padding:17px;
   background:
-    radial-gradient(circle at 12% 9%,rgba(255,255,255,.96),transparent 22%),
-    radial-gradient(circle at 87% 12%,rgba(255,218,57,.3),transparent 25%),
-    linear-gradient(155deg,#fffef8,#fff0a0);
-  box-shadow:0 20px 46px rgba(105,73,0,.13);
+    radial-gradient(circle at 12% 10%,rgba(255,255,255,.95),transparent 23%),
+    radial-gradient(circle at 88% 15%,rgba(255,218,58,.30),transparent 25%),
+    linear-gradient(155deg,#fffef8,#fff0a1);
+  box-shadow:0 20px 48px rgba(100,70,0,.13);
+  padding:14px;
 }
-.head{
+.top{
   text-align:center;
-  padding:3px 10px 12px;
+  padding:3px 10px 8px;
 }
 .date{
   display:inline-block;
-  border:1px solid #ddb936;
+  border:1px solid #ddb938;
   background:#fff0a0;
   border-radius:999px;
   padding:6px 12px;
   font-size:12px;
   font-weight:900;
-  letter-spacing:.25px;
 }
-.head h1{
-  margin:9px 0 5px;
-  font-size:clamp(31px,4.6vw,52px);
+.top h1{
+  margin:8px 0 4px;
+  font-size:clamp(30px,4.5vw,50px);
   line-height:1;
   color:#675008;
 }
-.head p{
-  max-width:700px;
+.top p{
   margin:0 auto;
+  max-width:720px;
   color:var(--muted);
-  font-size:15px;
-  line-height:1.5;
+  font-size:14px;
+  line-height:1.45;
 }
-.layout{
+.content{
   display:grid;
-  grid-template-columns:1.55fr .65fr;
-  gap:13px;
+  grid-template-columns:1.5fr .6fr;
+  gap:12px;
+  margin-top:6px;
 }
-.field{
+.visual{
   position:relative;
-  height:540px;
-  overflow:hidden;
+  height:610px;
   border:1px solid #dec66a;
   border-radius:24px;
-  background:linear-gradient(180deg,#eaf8ff 0%,#fff8c9 71%,#cee9aa 72%,#8cbe59 100%);
+  overflow:hidden;
+  background:
+    linear-gradient(180deg,#edf9ff 0%,#fff8c8 70%,#d2eaaa 71%,#8ebe5a 100%);
 }
 .sun{
   position:absolute;
-  right:25px;top:22px;
+  right:28px;top:24px;
   width:68px;height:68px;
   border-radius:50%;
-  background:#ffe259;
-  box-shadow:0 0 35px rgba(255,204,0,.4);
+  background:#ffe15b;
+  box-shadow:0 0 36px rgba(255,202,0,.4);
 }
 .cloud{
   position:absolute;
-  width:84px;height:25px;
+  width:86px;height:26px;
   border-radius:30px;
-  background:white;
+  background:#fff;
   opacity:.92;
 }
 .cloud:before,.cloud:after{
   content:"";
   position:absolute;
+  background:#fff;
   border-radius:50%;
-  background:white;
 }
-.cloud:before{width:35px;height:35px;left:12px;top:-14px}
-.cloud:after{width:44px;height:44px;left:37px;top:-20px}
-.c1{left:8%;top:52px}
-.c2{right:20%;top:88px;transform:scale(.76)}
+.cloud:before{width:36px;height:36px;left:12px;top:-14px}
+.cloud:after{width:45px;height:45px;left:38px;top:-20px}
+.c1{left:8%;top:56px}
+.c2{right:20%;top:95px;transform:scale(.76)}
 .tip{
   position:absolute;
   left:50%;top:15px;
   transform:translateX(-50%);
-  z-index:20;
-  padding:7px 11px;
-  border-radius:13px;
-  border:1px solid #e4cf7a;
+  z-index:30;
   background:rgba(255,255,255,.9);
+  border:1px solid #e4ce78;
+  border-radius:14px;
+  padding:7px 11px;
   font-size:12px;
   font-weight:900;
   white-space:nowrap;
 }
-.pick{
+.bouquet{
   position:absolute;
-  border:none;
-  background:transparent;
-  font-size:49px;
-  line-height:1;
-  cursor:pointer;
-  padding:5px;
-  filter:drop-shadow(0 6px 5px rgba(80,55,0,.12));
-  animation:float 2.8s ease-in-out infinite alternate;
-  transition:transform .15s ease,opacity .2s ease;
-  z-index:10;
-}
-.pick:hover{transform:scale(1.13) rotate(7deg)}
-.pick.used{opacity:0;pointer-events:none}
-@keyframes float{
-  from{translate:0 -5px;rotate:-4deg}
-  to{translate:0 7px;rotate:5deg}
-}
-.p1{left:8%;top:23%;animation-delay:.1s}
-.p2{left:36%;top:18%;animation-delay:.8s}
-.p3{right:9%;top:28%;animation-delay:1.3s}
-.p4{left:15%;top:51%;animation-delay:1.6s}
-.p5{right:15%;top:51%;animation-delay:.45s}
-.p6{left:45%;top:38%;animation-delay:1s}
-
-.bouquet-zone{
-  position:absolute;
-  left:50%;bottom:6px;
+  left:50%;bottom:8px;
   transform:translateX(-50%);
-  width:410px;height:310px;
-  z-index:4;
+  width:590px;height:515px;
 }
-.aura{
+.glow{
   position:absolute;
   left:50%;top:45%;
   transform:translate(-50%,-50%);
-  width:300px;height:230px;
+  width:470px;height:390px;
   border-radius:50%;
-  background:radial-gradient(circle,rgba(255,226,81,.35),transparent 70%);
+  background:radial-gradient(circle,rgba(255,226,82,.34),transparent 69%);
 }
 .paper{
   position:absolute;
   left:50%;bottom:0;
   transform:translateX(-50%);
-  width:230px;height:160px;
-  clip-path:polygon(7% 0,93% 0,72% 100%,28% 100%);
-  background:linear-gradient(145deg,#fff9e1,#e5c96e);
-  filter:drop-shadow(0 15px 14px rgba(93,63,0,.13));
-  z-index:3;
+  width:300px;height:210px;
+  clip-path:polygon(6% 0,94% 0,72% 100%,28% 100%);
+  background:linear-gradient(145deg,#fff8dc,#e5c66a);
+  filter:drop-shadow(0 17px 16px rgba(90,62,0,.14));
+  z-index:2;
 }
 .ribbon{
   position:absolute;
-  left:50%;bottom:70px;
+  left:50%;bottom:90px;
   transform:translateX(-50%);
-  width:105px;height:18px;
+  width:125px;height:20px;
   border-radius:20px;
-  background:#c69e18;
-  z-index:6;
+  background:#c79d18;
+  z-index:8;
 }
 .stem{
   position:absolute;
-  left:50%;bottom:85px;
-  width:6px;height:145px;
-  background:linear-gradient(#62aa4c,#377f38);
-  border-radius:5px;
+  left:50%;bottom:110px;
+  width:7px;height:230px;
+  border-radius:6px;
+  background:linear-gradient(#63ad4c,#367b36);
   transform-origin:bottom;
-  opacity:0;
-  transition:.35s ease;
+  z-index:1;
 }
-.stem.on{opacity:1}
-.st1{transform:rotate(-28deg)}
-.st2{transform:rotate(-18deg)}
-.st3{transform:rotate(-7deg)}
-.st4{transform:rotate(8deg)}
-.st5{transform:rotate(19deg)}
-.st6{transform:rotate(30deg)}
+.s1{transform:rotate(-33deg)}
+.s2{transform:rotate(-24deg)}
+.s3{transform:rotate(-15deg)}
+.s4{transform:rotate(-7deg)}
+.s5{transform:rotate(1deg)}
+.s6{transform:rotate(10deg)}
+.s7{transform:rotate(20deg)}
+.s8{transform:rotate(30deg)}
 
-.bf{
+.flower{
   position:absolute;
-  left:50%;
-  font-size:56px;
-  opacity:0;
-  transform:translateX(-50%) scale(.15);
-  transition:.42s cubic-bezier(.15,.9,.2,1);
-  z-index:7;
-  filter:drop-shadow(0 7px 5px rgba(80,55,0,.11));
+  width:118px;height:118px;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  z-index:10;
+  padding:0;
+  filter:drop-shadow(0 8px 7px rgba(76,52,0,.14));
+  transition:transform .2s ease,filter .2s ease;
 }
-.bf.on{opacity:1;transform:translateX(-50%) scale(1)}
-.b1{bottom:178px;margin-left:-90px}
-.b2{bottom:215px;margin-left:-55px}
-.b3{bottom:188px;margin-left:-18px}
-.b4{bottom:220px;margin-left:35px}
-.b5{bottom:178px;margin-left:82px}
-.b6{bottom:245px;margin-left:-5px}
+.flower:hover{transform:scale(1.07)}
+.flower.marked{
+  filter:drop-shadow(0 0 16px rgba(255,193,0,.8));
+}
+.flower.marked:after{
+  content:"✓";
+  position:absolute;
+  right:-2px;top:-2px;
+  width:29px;height:29px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#fff8cc;
+  border:2px solid #d8ac12;
+  color:#7d6300;
+  font-weight:1000;
+  font-size:17px;
+  z-index:20;
+}
+.flower.pop{animation:pop .35s ease}
+@keyframes pop{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.18) rotate(5deg)}
+  100%{transform:scale(1)}
+}
+.pet{
+  position:absolute;
+  left:41px;top:17px;
+  width:36px;height:53px;
+  border-radius:58% 58% 48% 48%;
+  background:linear-gradient(#ffeb77,#ffc817);
+  transform-origin:18px 39px;
+  box-shadow:0 2px 5px rgba(0,0,0,.04);
+}
+.p1{transform:rotate(0deg) translateY(-15px)}
+.p2{transform:rotate(45deg) translateY(-15px)}
+.p3{transform:rotate(90deg) translateY(-15px)}
+.p4{transform:rotate(135deg) translateY(-15px)}
+.p5{transform:rotate(180deg) translateY(-15px)}
+.p6{transform:rotate(225deg) translateY(-15px)}
+.p7{transform:rotate(270deg) translateY(-15px)}
+.p8{transform:rotate(315deg) translateY(-15px)}
+.center{
+  position:absolute;
+  left:40px;top:40px;
+  width:38px;height:38px;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#a36d18,#69400c 72%);
+  z-index:5;
+}
+.f1{left:36px;top:220px}
+.f2{left:95px;top:110px}
+.f3{left:185px;top:38px}
+.f4{left:255px;top:154px}
+.f5{left:330px;top:54px}
+.f6{left:414px;top:135px}
+.f7{left:438px;top:245px}
+.f8{left:160px;top:230px}
 
-.fly{
-  position:absolute;
-  z-index:50;
-  font-size:50px;
-  pointer-events:none;
-  transition:left .58s cubic-bezier(.2,.8,.2,1), top .58s cubic-bezier(.2,.8,.2,1), transform .58s ease, opacity .58s ease;
-  filter:drop-shadow(0 7px 6px rgba(70,50,0,.15));
-}
 .panel{
   border:1px solid #dec45d;
   border-radius:24px;
-  background:rgba(255,255,255,.68);
   padding:14px;
+  background:rgba(255,255,255,.69);
   display:flex;
   flex-direction:column;
   gap:10px;
-  min-width:0;
 }
 .progress-row{
   display:flex;
@@ -253,130 +267,150 @@ html = r"""
 .track{
   height:9px;
   border-radius:999px;
-  background:#eee2a9;
+  background:#eee1a7;
   overflow:hidden;
 }
 .bar{
   width:0%;
   height:100%;
-  border-radius:999px;
-  background:linear-gradient(90deg,#d9aa00,#ffe16b);
+  background:linear-gradient(90deg,#d9aa00,#ffe36f);
   transition:.3s ease;
 }
-.msg{
-  min-height:180px;
+.message{
+  min-height:230px;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:14px;
-  border:1px solid #e0c65a;
+  text-align:center;
+  padding:15px;
+  border:1px solid #dfc55b;
   border-radius:17px;
   background:#fff9db;
-  text-align:center;
+  color:#645827;
   font-size:14px;
-  line-height:1.55;
-  color:#655927;
+  line-height:1.58;
 }
-.surprise{
-  text-align:center;
+.finalBox{
   padding:13px;
-  border:1px dashed #d3b437;
+  text-align:center;
+  border:1px dashed #d2b337;
   border-radius:17px;
-  background:rgba(255,255,255,.7);
+  background:rgba(255,255,255,.72);
 }
-.lock{font-size:31px;display:block}
-.surprise strong{display:block;margin:4px 0}
-.surprise small{color:#827642}
+.finalBox .lock{
+  display:block;
+  font-size:31px;
+}
 .finalBtn{
   display:none;
   width:100%;
-  margin-top:9px;
-  padding:11px 12px;
   border:none;
+  margin-top:8px;
+  padding:11px;
   border-radius:13px;
-  background:linear-gradient(90deg,#ffc817,#ffe775);
+  cursor:pointer;
+  background:linear-gradient(90deg,#ffc817,#ffe777);
   color:#584400;
   font-weight:900;
-  cursor:pointer;
 }
 .finalMsg{
   display:none;
-  padding:13px;
-  border:1px solid #dfc155;
-  border-radius:17px;
-  background:linear-gradient(160deg,#fffdf3,#fff0a4);
-  text-align:center;
-  font-size:14px;
-  line-height:1.55;
+  margin-top:9px;
+  padding:12px;
+  border-radius:14px;
+  background:linear-gradient(160deg,#fffdf3,#fff0a5);
+  border:1px solid #dfc055;
+  font-size:13px;
+  line-height:1.5;
 }
 .reset{
   border:none;
   background:transparent;
-  color:#927818;
   text-decoration:underline;
-  cursor:pointer;
+  color:#927718;
   font-size:12px;
-  padding:4px;
+  cursor:pointer;
 }
 .spark{
   position:absolute;
   top:-25px;
-  z-index:80;
   pointer-events:none;
+  z-index:100;
   animation:fall 3s linear forwards;
 }
 @keyframes fall{
-  to{transform:translateY(620px) rotate(500deg);opacity:.1}
+  to{transform:translateY(650px) rotate(500deg);opacity:.1}
 }
+
 @media(max-width:780px){
-  .layout{grid-template-columns:1fr}
-  .field{height:520px}
-  .panel{padding:12px}
-  .msg{min-height:90px}
-  .bouquet-zone{transform:translateX(-50%) scale(.84);transform-origin:bottom center}
-  .pick{font-size:44px}
+  .content{grid-template-columns:1fr}
+  .visual{height:570px}
+  .bouquet{
+    transform:translateX(-50%) scale(.84);
+    transform-origin:bottom center;
+  }
+  .message{min-height:95px}
 }
 @media(prefers-reduced-motion:reduce){
-  .pick{animation:none}
   .spark{animation:none}
 }
 </style>
 
-<section class="main">
-  <header class="head">
+<section class="wrap">
+  <header class="top">
     <span class="date">🌻 21 DE SEPTIEMBRE</span>
-    <h1>Hoy toca flores amarillas</h1>
+    <h1>Flores amarillas para ti</h1>
     <p>
-      Y como este detalle también se puede compartir con una buena amistad,
-      aquí tienes un ramo que tendrás que descubrir flor por flor.
+      Hoy toca flores amarillas. Haz clic directamente en cada flor del ramo;
+      cada una guarda un mensaje distinto.
     </p>
   </header>
 
-  <div class="layout">
-    <div class="field" id="field">
+  <div class="content">
+    <div class="visual" id="visual">
       <div class="sun"></div>
       <div class="cloud c1"></div>
       <div class="cloud c2"></div>
-      <div class="tip" id="tip">Toca una flor para empezar 🌻</div>
+      <div class="tip" id="tip">Toca cualquier flor del ramo 🌻</div>
 
-      <button type="button" class="pick p1" data-i="0" aria-label="Flor amarilla 1">🌻</button>
-      <button type="button" class="pick p2" data-i="1" aria-label="Flor amarilla 2">🌼</button>
-      <button type="button" class="pick p3" data-i="2" aria-label="Flor amarilla 3">🌻</button>
-      <button type="button" class="pick p4" data-i="3" aria-label="Flor amarilla 4">🌼</button>
-      <button type="button" class="pick p5" data-i="4" aria-label="Flor amarilla 5">🌻</button>
-      <button type="button" class="pick p6" data-i="5" aria-label="Flor amarilla 6">🌼</button>
+      <div class="bouquet">
+        <div class="glow"></div>
 
-      <div class="bouquet-zone" id="bouquetZone">
-        <div class="aura"></div>
-        <div class="stem st1"></div><div class="stem st2"></div><div class="stem st3"></div>
-        <div class="stem st4"></div><div class="stem st5"></div><div class="stem st6"></div>
+        <div class="stem s1"></div><div class="stem s2"></div><div class="stem s3"></div><div class="stem s4"></div>
+        <div class="stem s5"></div><div class="stem s6"></div><div class="stem s7"></div><div class="stem s8"></div>
 
-        <div class="bf b1">🌻</div>
-        <div class="bf b2">🌼</div>
-        <div class="bf b3">🌻</div>
-        <div class="bf b4">🌼</div>
-        <div class="bf b5">🌻</div>
-        <div class="bf b6">🌼</div>
+        <button type="button" class="flower f1" data-i="0" aria-label="Flor 1">
+          <span class="pet p1"></span><span class="pet p2"></span><span class="pet p3"></span><span class="pet p4"></span>
+          <span class="pet p5"></span><span class="pet p6"></span><span class="pet p7"></span><span class="pet p8"></span><span class="center"></span>
+        </button>
+        <button type="button" class="flower f2" data-i="1" aria-label="Flor 2">
+          <span class="pet p1"></span><span class="pet p2"></span><span class="pet p3"></span><span class="pet p4"></span>
+          <span class="pet p5"></span><span class="pet p6"></span><span class="pet p7"></span><span class="pet p8"></span><span class="center"></span>
+        </button>
+        <button type="button" class="flower f3" data-i="2" aria-label="Flor 3">
+          <span class="pet p1"></span><span class="pet p2"></span><span class="pet p3"></span><span class="pet p4"></span>
+          <span class="pet p5"></span><span class="pet p6"></span><span class="pet p7"></span><span class="pet p8"></span><span class="center"></span>
+        </button>
+        <button type="button" class="flower f4" data-i="3" aria-label="Flor 4">
+          <span class="pet p1"></span><span class="pet p2"></span><span class="pet p3"></span><span class="pet p4"></span>
+          <span class="pet p5"></span><span class="pet p6"></span><span class="pet p7"></span><span class="pet p8"></span><span class="center"></span>
+        </button>
+        <button type="button" class="flower f5" data-i="4" aria-label="Flor 5">
+          <span class="pet p1"></span><span class="pet p2"></span><span class="pet p3"></span><span class="pet p4"></span>
+          <span class="pet p5"></span><span class="pet p6"></span><span class="pet p7"></span><span class="pet p8"></span><span class="center"></span>
+        </button>
+        <button type="button" class="flower f6" data-i="5" aria-label="Flor 6">
+          <span class="pet p1"></span><span class="pet p2"></span><span class="pet p3"></span><span class="pet p4"></span>
+          <span class="pet p5"></span><span class="pet p6"></span><span class="pet p7"></span><span class="pet p8"></span><span class="center"></span>
+        </button>
+        <button type="button" class="flower f7" data-i="6" aria-label="Flor 7">
+          <span class="pet p1"></span><span class="pet p2"></span><span class="pet p3"></span><span class="pet p4"></span>
+          <span class="pet p5"></span><span class="pet p6"></span><span class="pet p7"></span><span class="pet p8"></span><span class="center"></span>
+        </button>
+        <button type="button" class="flower f8" data-i="7" aria-label="Flor 8">
+          <span class="pet p1"></span><span class="pet p2"></span><span class="pet p3"></span><span class="pet p4"></span>
+          <span class="pet p5"></span><span class="pet p6"></span><span class="pet p7"></span><span class="pet p8"></span><span class="center"></span>
+        </button>
 
         <div class="paper"></div>
         <div class="ribbon"></div>
@@ -386,136 +420,109 @@ html = r"""
     <aside class="panel">
       <div>
         <div class="progress-row">
-          <span>Tu ramo amarillo</span>
-          <span id="counter">0 / 6</span>
+          <span>Flores descubiertas</span>
+          <span id="counter">0 / 8</span>
         </div>
         <div class="track"><div class="bar" id="bar"></div></div>
       </div>
 
-      <div class="msg" id="msg" aria-live="polite">
-        Cada flor tiene un mensaje distinto. Haz clic en la primera que quieras ✨
+      <div class="message" id="message" aria-live="polite">
+        🌻 Elige cualquier flor. Al tocarla quedará marcada y aparecerá su mensaje.
       </div>
 
-      <div class="surprise">
+      <div class="finalBox">
         <span class="lock" id="lock">🔒</span>
-        <strong id="surpriseTitle">Detalle final</strong>
-        <small id="surpriseText">Se desbloquea al completar el ramo.</small>
-        <button type="button" class="finalBtn" id="finalBtn">Abrir sorpresa 🌻</button>
+        <strong id="finalTitle">Mensaje final</strong><br>
+        <small id="finalHint">Se desbloquea al descubrir las 8 flores.</small>
+        <button type="button" class="finalBtn" id="finalBtn">Abrir mensaje final ✨</button>
+
+        <div class="finalMsg" id="finalMsg">
+          <b>🌻 Feliz día de las flores amarillas.</b><br><br>
+          Te dejo este ramo como un detalle de buena amistad:
+          por las risas, las conversaciones, la confianza y todos esos momentos
+          simples que terminan siendo buenos recuerdos.<br><br>
+          <b>Que hoy te sobren motivos para sonreír. ✨</b>
+        </div>
       </div>
 
-      <div class="finalMsg" id="finalMsg">
-        <b>🌻 Feliz día de las flores amarillas.</b><br><br>
-        Te dejo este ramo porque una buena amistad también merece detalles,
-        risas y buenos deseos.<br><br>
-        Que hoy te sobren motivos para sonreír y que sigan llegando buenos momentos. ✨
-      </div>
-
-      <button type="button" class="reset" id="reset">Volver a empezar</button>
+      <button type="button" class="reset" id="reset">Volver a descubrir las flores</button>
     </aside>
   </div>
 </section>
 
 <script>
 (() => {
-  const root = document.getElementById("flores21");
-  if (!root || root.dataset.ready === "1") return;
-  root.dataset.ready = "1";
+  const root=document.getElementById("ramo-app");
+  if(!root || root.dataset.ready==="1") return;
+  root.dataset.ready="1";
 
-  const field = root.querySelector("#field");
-  const picks = [...root.querySelectorAll(".pick")];
-  const stems = [...root.querySelectorAll(".stem")];
-  const built = [...root.querySelectorAll(".bf")];
-  const msg = root.querySelector("#msg");
-  const counter = root.querySelector("#counter");
-  const bar = root.querySelector("#bar");
-  const tip = root.querySelector("#tip");
-  const lock = root.querySelector("#lock");
-  const surpriseText = root.querySelector("#surpriseText");
-  const finalBtn = root.querySelector("#finalBtn");
-  const finalMsg = root.querySelector("#finalMsg");
-  const reset = root.querySelector("#reset");
-  const bouquetZone = root.querySelector("#bouquetZone");
+  const flowers=[...root.querySelectorAll(".flower")];
+  const message=root.querySelector("#message");
+  const counter=root.querySelector("#counter");
+  const bar=root.querySelector("#bar");
+  const tip=root.querySelector("#tip");
+  const lock=root.querySelector("#lock");
+  const finalHint=root.querySelector("#finalHint");
+  const finalBtn=root.querySelector("#finalBtn");
+  const finalMsg=root.querySelector("#finalMsg");
+  const reset=root.querySelector("#reset");
+  const visual=root.querySelector("#visual");
 
-  const messages = [
-    "🌻 Para que hoy no te falte un poquito de amarillo y buena energía.",
-    "🌼 Por esas conversaciones que siempre terminan mejorando el día.",
-    "😂 Por las risas espontáneas que hacen más buenos los momentos simples.",
-    "🤝 Por la confianza y la buena onda que hacen valiosa una amistad.",
-    "✨ Por todos esos planes improvisados que terminan siendo buenas historias.",
-    "🌻 Y esta última por todos los buenos momentos que todavía faltan por llegar."
+  const messages=[
+    "🌻 Una flor para empezar el día con buena energía.",
+    "✨ Una por esas conversaciones que siempre terminan alegrando el momento.",
+    "😂 Otra por las risas que salen de la nada y se quedan como recuerdo.",
+    "🤝 Esta es por la confianza y la buena onda de una amistad sincera.",
+    "☀️ Una más para que hoy te sobren motivos para sonreír.",
+    "🌼 Esta va por todos los planes simples que terminan siendo los mejores.",
+    "💛 Otra por estar presente de una forma sencilla, pero valiosa.",
+    "🌻 Y la última, por todos los buenos momentos que todavía faltan por llegar."
   ];
 
-  let caught = new Set();
+  const selected=new Set();
 
-  function petals(n=8){
-    const icons=["🌻","🌼","✨"];
+  function sparkle(n=8){
+    const icons=["✨","🌻","🌼"];
     for(let i=0;i<n;i++){
       const e=document.createElement("span");
       e.className="spark";
       e.textContent=icons[Math.floor(Math.random()*icons.length)];
       e.style.left=(8+Math.random()*84)+"%";
-      e.style.fontSize=(14+Math.random()*13)+"px";
+      e.style.fontSize=(14+Math.random()*14)+"px";
       e.style.animationDelay=(Math.random()*.45)+"s";
-      field.appendChild(e);
+      visual.appendChild(e);
       setTimeout(()=>e.remove(),3500);
     }
   }
 
-  function flyToBouquet(btn,index){
-    const fieldRect=field.getBoundingClientRect();
-    const btnRect=btn.getBoundingClientRect();
-    const targetRect=bouquetZone.getBoundingClientRect();
-
-    const clone=document.createElement("span");
-    clone.className="fly";
-    clone.textContent=btn.textContent;
-    clone.style.left=(btnRect.left-fieldRect.left)+"px";
-    clone.style.top=(btnRect.top-fieldRect.top)+"px";
-    field.appendChild(clone);
-
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
-        const tx=(targetRect.left-fieldRect.left)+(targetRect.width/2)-25 + ((index-2.5)*9);
-        const ty=(targetRect.top-fieldRect.top)+58+(index%2)*18;
-        clone.style.left=tx+"px";
-        clone.style.top=ty+"px";
-        clone.style.transform="scale(.75) rotate(280deg)";
-        clone.style.opacity=".3";
-      });
-    });
-
-    setTimeout(()=>{
-      clone.remove();
-      stems[index].classList.add("on");
-      built[index].classList.add("on");
-    },610);
-  }
-
   function update(){
-    const n=caught.size;
-    counter.textContent=n+" / 6";
-    bar.style.width=(n/6*100)+"%";
-    tip.textContent=n===0 ? "Toca una flor para empezar 🌻" :
-                    n<6 ? "Sigue armando tu ramo · faltan "+(6-n) :
-                    "¡Ramo completo! 🌻";
+    const n=selected.size;
+    counter.textContent=n+" / 8";
+    bar.style.width=(n/8*100)+"%";
+    tip.textContent=n===0 ? "Toca cualquier flor del ramo 🌻" :
+                    n<8 ? "Muy bien · faltan "+(8-n)+" flores" :
+                    "¡Descubriste todo el ramo! 🌻";
 
-    if(n===6){
+    if(n===8){
       lock.textContent="🔓";
-      surpriseText.textContent="Tu sorpresa ya está lista.";
+      finalHint.textContent="Ya puedes abrirlo.";
       finalBtn.style.display="block";
-      petals(18);
+      sparkle(18);
     }
   }
 
-  picks.forEach(btn=>{
+  flowers.forEach(btn=>{
     btn.addEventListener("click",()=>{
       const i=Number(btn.dataset.i);
-      if(caught.has(i)) return;
-      caught.add(i);
-      flyToBouquet(btn,i);
-      btn.classList.add("used");
-      msg.textContent=messages[i];
-      petals(5);
+      if(!selected.has(i)){
+        selected.add(i);
+        btn.classList.add("marked");
+      }
+      btn.classList.remove("pop");
+      void btn.offsetWidth;
+      btn.classList.add("pop");
+      message.textContent=messages[i];
+      sparkle(5);
       update();
     });
   });
@@ -523,19 +530,17 @@ html = r"""
   finalBtn.addEventListener("click",()=>{
     finalMsg.style.display="block";
     finalBtn.style.display="none";
-    petals(28);
+    sparkle(28);
   });
 
   reset.addEventListener("click",()=>{
-    caught.clear();
-    picks.forEach(p=>p.classList.remove("used"));
-    stems.forEach(s=>s.classList.remove("on"));
-    built.forEach(b=>b.classList.remove("on"));
+    selected.clear();
+    flowers.forEach(f=>f.classList.remove("marked","pop"));
+    message.textContent="🌻 Elige cualquier flor. Al tocarla quedará marcada y aparecerá su mensaje.";
+    lock.textContent="🔒";
+    finalHint.textContent="Se desbloquea al descubrir las 8 flores.";
     finalBtn.style.display="none";
     finalMsg.style.display="none";
-    lock.textContent="🔒";
-    surpriseText.textContent="Se desbloquea al completar el ramo.";
-    msg.textContent="Cada flor tiene un mensaje distinto. Haz clic en la primera que quieras ✨";
     update();
   });
 
@@ -545,4 +550,4 @@ html = r"""
 </div>
 """
 
-components.html(html, height=830, scrolling=False)
+components.html(html, height=870, scrolling=False)
