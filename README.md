@@ -1,14 +1,13 @@
-# Flores Amarillas - Ramo grande interactivo 🌻
+# Flores Amarillas - Ramo grande + preguntas 🌻
 
-Versión pensada para que al entrar se vea inmediatamente un ramo grande de flores amarillas.
-
-## Dinámica
-- El ramo aparece completo desde el inicio.
-- La persona hace clic directamente sobre cada flor.
-- Cada flor queda marcada con un check y brillo.
-- Cada clic muestra un mensaje diferente.
-- Al descubrir todas las flores se desbloquea el mensaje final.
-- Sin flores volando ni necesidad de armar el ramo.
+Esta versión combina:
+- Ramo grande de flores amarillas visible apenas entra.
+- Botón para iniciar una dinámica de preguntas.
+- 4 preguntas con opciones para marcar.
+- Retroalimentación distinta según la opción elegida.
+- Barra de avance.
+- Al terminar todas las preguntas aparece el mensaje final.
+- Enfoque por el 21 de septiembre / flores amarillas y amistad.
 
 ## Ejecutar
 ```bash
