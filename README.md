@@ -1,13 +1,12 @@
-# Flores Amarillas - Ramo grande + preguntas 🌻
+# Flores Amarillas - Ramo + preguntas personalizadas 🌻
 
-Esta versión combina:
-- Ramo grande de flores amarillas visible apenas entra.
-- Botón para iniciar una dinámica de preguntas.
+Incluye:
+- Ramo grande visible al entrar.
 - 4 preguntas con opciones para marcar.
-- Retroalimentación distinta según la opción elegida.
-- Barra de avance.
-- Al terminar todas las preguntas aparece el mensaje final.
-- Enfoque por el 21 de septiembre / flores amarillas y amistad.
+- Cada opción seleccionada genera un mensaje diferente.
+- Las respuestas se guardan durante la interacción.
+- El mensaje final cambia según las elecciones realizadas.
+- Enfoque de amistad y día de las flores amarillas.
 
 ## Ejecutar
 ```bash
