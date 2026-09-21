@@ -1,20 +1,18 @@
-# Flores Amarillas - Mini juego de amistad 🌻
+# Flores Amarillas - 21 de septiembre 🌻
 
-Aplicación Streamlit compacta e interactiva.
+Versión Streamlit con ramo grande e interacción tipo mini experiencia.
 
-## Dinámica
-- La persona entra y ve un jardín.
-- Debe tocar 6 flores amarillas.
-- Cada flor muestra un mensaje distinto.
-- El ramo se arma visualmente con cada clic.
-- Al completar las 6 flores se desbloquea una sorpresa final.
-- Incluye animaciones y opción para volver a empezar.
+## Incluye
+- Mensaje principal por el 21 de septiembre y las flores amarillas.
+- Enfoque de amistad, sin tono romántico.
+- Flores clickeables.
+- Cada flor vuela hacia el ramo.
+- El ramo se construye visualmente y es protagonista.
+- Mensajes distintos por cada flor.
+- Sorpresa final desbloqueable.
 
 ## Ejecutar
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
-
-## Streamlit Community Cloud
-Sube `app.py` y `requirements.txt` a GitHub, crea una nueva app y selecciona `app.py`.
