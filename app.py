@@ -2,372 +2,365 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="Flores Amarillas - Modo Amistad",
+    page_title="Flores Amarillas para una Amistad",
     page_icon="🌻",
     layout="centered"
 )
 
 st.markdown('''
 <style>
-    .stApp {
-        background:
-        radial-gradient(circle at 15% 10%, rgba(255,230,74,.35), transparent 25%),
-        radial-gradient(circle at 90% 20%, rgba(255,194,0,.20), transparent 23%),
-        linear-gradient(180deg, #fffef6 0%, #fff7c7 100%);
-    }
-    .block-container {
-        max-width: 900px;
-        padding-top: 1.5rem;
-        padding-bottom: 3rem;
-    }
-    .hero {
-        text-align: center;
-        background: rgba(255,255,255,.78);
-        border: 2px solid #f1d158;
-        border-radius: 28px;
-        padding: 24px 20px;
-        box-shadow: 0 14px 36px rgba(116, 88, 0, .10);
-        margin-bottom: 18px;
-    }
-    .hero h1 {
-        margin: 0;
-        color: #6c5600;
-        font-size: 2.7rem;
-    }
-    .hero p {
-        color: #6b623d;
-        font-size: 1.08rem;
-        margin: 10px 0 0 0;
-    }
-    .tag {
-        display:inline-block;
-        background:#fff0a3;
-        border:1px solid #e1be35;
-        color:#6c5600;
-        padding:6px 12px;
-        border-radius:999px;
-        font-weight:700;
-        margin-bottom:10px;
-    }
-    footer, #MainMenu, header {visibility:hidden;}
+.stApp{
+    background:
+      radial-gradient(circle at top left, rgba(255,230,110,.30), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(255,208,70,.22), transparent 25%),
+      linear-gradient(180deg,#fffdf6 0%,#fff8dd 100%);
+}
+.block-container{
+    max-width:900px;
+    padding-top:1.2rem;
+    padding-bottom:2rem;
+}
+footer,#MainMenu,header{visibility:hidden;}
 </style>
 ''', unsafe_allow_html=True)
 
-st.markdown('''
-<div class="hero">
-    <div class="tag">🌻 MODO AMIGOS ACTIVADO</div>
-    <h1>Un detalle amarillo para ti</h1>
-    <p>No es una carta romántica 😄. Es un mini juego para recordarte que una buena amistad también se celebra.</p>
-</div>
-''', unsafe_allow_html=True)
-
-interactive_html = r'''
+html = r'''
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <style>
 *{box-sizing:border-box}
 body{
     margin:0;
     font-family:Arial, Helvetica, sans-serif;
+    color:#514a28;
     background:transparent;
-    color:#4f471f;
 }
-.panel{
-    background:rgba(255,255,255,.92);
-    border:2px solid #efd04f;
-    border-radius:26px;
-    padding:22px;
-    box-shadow:0 12px 28px rgba(103,81,0,.10);
-    margin-bottom:18px;
-}
-h2{
-    margin:0 0 8px 0;
+.wrapper{padding:4px}
+.hero{
     text-align:center;
-    color:#6a5400;
+    padding:30px 18px 20px;
 }
-.sub{
-    text-align:center;
-    margin:0 0 18px 0;
-    color:#766b3c;
+.badge{
+    display:inline-block;
+    padding:7px 13px;
+    border-radius:999px;
+    background:#fff3a8;
+    border:1px solid #e4c84d;
+    font-size:14px;
+    font-weight:700;
+    color:#705d10;
+    margin-bottom:12px;
 }
-.counter{
-    text-align:center;
-    font-weight:bold;
-    margin:10px 0 16px;
+h1{
+    margin:0;
+    font-size:44px;
+    color:#6a570d;
+    line-height:1.08;
+}
+.lead{
+    max-width:680px;
+    margin:14px auto 0;
     font-size:18px;
-    color:#735c00;
+    line-height:1.6;
+    color:#746a3e;
+}
+.section{
+    background:rgba(255,255,255,.86);
+    border:1px solid rgba(224,190,58,.55);
+    border-radius:28px;
+    padding:24px;
+    margin:18px 0;
+    box-shadow:0 14px 34px rgba(107,83,0,.08);
+}
+.section h2{
+    text-align:center;
+    margin:0 0 7px;
+    color:#6b570d;
+    font-size:25px;
+}
+.section p.note{
+    text-align:center;
+    margin:0 0 18px;
+    color:#807647;
 }
 .garden{
     position:relative;
-    height:300px;
+    min-height:360px;
+    border-radius:24px;
     overflow:hidden;
-    border-radius:22px;
-    background:linear-gradient(#dff3ff 0%,#fff6b7 70%);
-    border:1px solid #e4cc63;
+    background:linear-gradient(#eaf7ff 0%,#fff8d1 68%,#d9efbc 69%,#9bc76c 100%);
+    border:1px solid #e8d27a;
 }
-.ground{
+.sun{
     position:absolute;
-    left:-5%;right:-5%;bottom:-18px;
-    height:95px;
-    background:linear-gradient(#91cf68,#6baa49);
-    border-radius:50% 50% 0 0;
+    width:74px;height:74px;
+    right:30px;top:25px;
+    border-radius:50%;
+    background:#ffe46c;
+    box-shadow:0 0 40px rgba(255,205,50,.45);
 }
-.flower{
-    position:absolute;
-    font-size:58px;
-    cursor:pointer;
-    user-select:none;
-    transition:transform .15s ease, opacity .2s ease;
-    filter:drop-shadow(0 5px 5px rgba(0,0,0,.12));
-    animation:sway 2.6s ease-in-out infinite alternate;
-}
-.flower:hover{transform:scale(1.15) rotate(5deg)}
-.flower.clicked{
-    animation:pop .35s ease forwards;
-}
-@keyframes sway{from{rotate:-4deg}to{rotate:4deg}}
-@keyframes pop{
-    0%{transform:scale(1)}
-    50%{transform:scale(1.35)}
-    100%{transform:scale(.2);opacity:0}
-}
-.f1{left:7%;bottom:48px}
-.f2{left:22%;bottom:78px;animation-delay:.3s}
-.f3{left:39%;bottom:42px;animation-delay:.7s}
-.f4{left:57%;bottom:88px;animation-delay:1.1s}
-.f5{left:74%;bottom:50px;animation-delay:.5s}
-.f6{left:87%;bottom:85px;animation-delay:1.5s}
 .cloud{
     position:absolute;
-    width:90px;height:28px;
+    width:96px;height:30px;
     background:white;
     border-radius:30px;
-    opacity:.9;
+    opacity:.92;
 }
 .cloud:before,.cloud:after{
-    content:"";position:absolute;background:white;border-radius:50%;
+    content:"";
+    position:absolute;
+    background:white;
+    border-radius:50%;
 }
-.cloud:before{width:38px;height:38px;left:12px;top:-17px}
-.cloud:after{width:48px;height:48px;left:38px;top:-23px}
-.c1{top:48px;left:8%}
-.c2{top:70px;right:13%;transform:scale(.8)}
-.sun{
-    position:absolute;right:32px;top:22px;width:68px;height:68px;
-    border-radius:50%;background:#ffe44e;
-    box-shadow:0 0 35px rgba(255,206,0,.45);
+.cloud:before{width:42px;height:42px;left:15px;top:-17px}
+.cloud:after{width:52px;height:52px;left:42px;top:-26px}
+.c1{left:9%;top:56px}
+.c2{right:18%;top:92px;transform:scale(.78)}
+.flower{
+    position:absolute;
+    bottom:54px;
+    cursor:pointer;
+    user-select:none;
+    transition:transform .25s ease, filter .25s ease;
+    animation:sway 3.2s ease-in-out infinite alternate;
 }
-.messagebox{
-    margin-top:14px;
-    min-height:58px;
-    padding:14px;
-    border-radius:16px;
-    background:#fff7cf;
+.flower:hover{
+    transform:translateY(-6px) scale(1.06);
+    filter:drop-shadow(0 8px 8px rgba(0,0,0,.12));
+}
+.flower .emoji{
+    font-size:66px;
+    display:block;
+}
+.f1{left:8%;animation-delay:.1s}
+.f2{left:25%;bottom:82px;animation-delay:.8s}
+.f3{left:44%;bottom:54px;animation-delay:1.4s}
+.f4{left:63%;bottom:88px;animation-delay:.5s}
+.f5{left:81%;bottom:58px;animation-delay:1.1s}
+@keyframes sway{
+    from{rotate:-3deg}
+    to{rotate:3deg}
+}
+.reveal{
+    margin-top:16px;
+    background:#fff9dc;
+    border:1px solid #e2c85b;
+    border-radius:18px;
+    padding:16px 18px;
+    min-height:64px;
     text-align:center;
-    font-weight:700;
-    color:#5f500e;
-    border:1px dashed #d1ae25;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1.55;
+    color:#5e521f;
+    transition:.3s ease;
 }
-.cards{
+.details{
     display:grid;
     grid-template-columns:repeat(3,1fr);
     gap:12px;
 }
-.card{
-    min-height:125px;
+.detail{
+    border:1px solid #e4c85f;
+    background:#fffdf2;
     border-radius:18px;
-    background:linear-gradient(145deg,#ffe25a,#ffd337);
-    border:0;
-    padding:14px;
+    padding:18px 14px;
     cursor:pointer;
-    font-weight:800;
-    color:#5b4700;
-    box-shadow:0 8px 16px rgba(102,79,0,.10);
+    text-align:center;
     transition:.2s ease;
 }
-.card:hover{transform:translateY(-4px)}
-.card.open{
-    background:#fff8d8;
-    font-weight:700;
-}
-.quiz{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-}
-.choice{
-    border:1px solid #dfbf39;
-    background:#fffbed;
-    padding:13px;
-    border-radius:14px;
-    cursor:pointer;
-    font-weight:700;
-    color:#5c511d;
-}
-.choice:hover{background:#fff1a6}
-.result{
-    margin-top:12px;
-    padding:13px;
-    border-radius:14px;
-    background:#f7ffd9;
-    border:1px solid #b8cf62;
+.detail:hover{transform:translateY(-3px);background:#fff8d4}
+.detail .icon{font-size:29px;margin-bottom:8px}
+.detail strong{display:block;color:#6a570d;margin-bottom:6px}
+.detail span{font-size:14px;color:#776c3d}
+.hidden-text{
     display:none;
+    margin-top:14px;
+    padding:17px;
+    border-radius:16px;
+    background:#fff7cf;
+    border:1px solid #dec25c;
     text-align:center;
-    font-weight:700;
+    line-height:1.6;
 }
-.bigbtn{
+.final-btn{
     width:100%;
-    padding:16px;
-    border:0;
+    border:none;
+    padding:16px 20px;
     border-radius:18px;
-    cursor:pointer;
-    background:linear-gradient(90deg,#ffce22,#ffe66d);
-    color:#544000;
-    font-size:18px;
+    background:linear-gradient(90deg,#f5c928,#ffe26d);
+    color:#5c4900;
+    font-size:17px;
     font-weight:800;
-    box-shadow:0 10px 20px rgba(117,87,0,.15);
+    cursor:pointer;
+    transition:.2s ease;
 }
+.final-btn:hover{transform:translateY(-2px)}
 .final{
     display:none;
-    margin-top:15px;
+    margin-top:16px;
+    padding:22px;
+    border-radius:20px;
+    background:linear-gradient(180deg,#fffbea,#fff4b9);
+    border:1px solid #dfc153;
     text-align:center;
-    font-size:19px;
-    line-height:1.6;
-    background:#fff8d1;
-    border-radius:18px;
-    padding:18px;
-    border:1px solid #e0bd35;
+    font-size:18px;
+    line-height:1.7;
 }
-.confetti{
+.petals{
     position:fixed;
-    top:-20px;
-    font-size:22px;
+    top:-30px;
     pointer-events:none;
-    animation:fall 2.8s linear forwards;
     z-index:9999;
+    animation:fall 4s linear forwards;
 }
 @keyframes fall{
-    to{transform:translateY(110vh) rotate(720deg);opacity:.9}
+    to{transform:translateY(110vh) rotate(540deg);opacity:.85}
 }
-@media(max-width:650px){
-    .cards{grid-template-columns:1fr}
-    .quiz{grid-template-columns:1fr}
-    .flower{font-size:48px}
+.small{
+    text-align:center;
+    margin-top:16px;
+    color:#8a7d48;
+    font-size:13px;
+}
+@media(max-width:700px){
+    h1{font-size:34px}
+    .details{grid-template-columns:1fr}
+    .flower .emoji{font-size:54px}
+    .f1{left:4%}.f2{left:23%}.f3{left:43%}.f4{left:63%}.f5{left:82%}
 }
 </style>
 </head>
 <body>
+<div class="wrapper">
 
-<div class="panel">
-    <h2>🌻 1. Atrapa las flores</h2>
-    <p class="sub">Haz clic en las 6 flores. Cada una guarda una frase de amistad.</p>
-    <div class="counter">Flores encontradas: <span id="count">0</span>/6</div>
+<section class="hero">
+    <div class="badge">🌻 Para una buena amistad</div>
+    <h1>Un detalle amarillo para alegrarte el día</h1>
+    <p class="lead">
+        No hace falta una fecha especial para recordar que hay personas cuya amistad se valora de verdad.
+        Así que estas flores son simplemente para sacarte una sonrisa.
+    </p>
+</section>
+
+<section class="section">
+    <h2>Haz clic en las flores</h2>
+    <p class="note">Cada una guarda un pequeño detalle.</p>
 
     <div class="garden">
         <div class="sun"></div>
         <div class="cloud c1"></div>
         <div class="cloud c2"></div>
-        <div class="flower f1" data-msg="Amigo de verdad: aparece para sumar, no para complicar 😎">🌻</div>
-        <div class="flower f2" data-msg="Gracias por las risas que salen de la nada 😂">🌼</div>
-        <div class="flower f3" data-msg="Una buena amistad hace más ligeros los días pesados 💪">🌻</div>
-        <div class="flower f4" data-msg="Que nunca falten planes simples que terminan siendo buenos recuerdos 🙌">🌼</div>
-        <div class="flower f5" data-msg="Aquí tienes una flor por aguantar mis ocurrencias 😅">🌻</div>
-        <div class="flower f6" data-msg="Las amistades sinceras valen más que cualquier regalo 💛">🌼</div>
-        <div class="ground"></div>
-    </div>
-    <div class="messagebox" id="flowerMessage">👇 Toca una flor para descubrir su mensaje.</div>
-</div>
 
-<div class="panel">
-    <h2>🎁 2. Elige una tarjeta sorpresa</h2>
-    <p class="sub">No sabes qué te tocará hasta hacer clic.</p>
-    <div class="cards">
-        <button class="card" onclick="openCard(this,0)">❓<br><br>ABRIR</button>
-        <button class="card" onclick="openCard(this,1)">❓<br><br>ABRIR</button>
-        <button class="card" onclick="openCard(this,2)">❓<br><br>ABRIR</button>
+        <div class="flower f1" data-msg="🌻 Gracias por esas conversaciones que empiezan con cualquier cosa y terminan arreglando el día.">
+            <span class="emoji">🌻</span>
+        </div>
+        <div class="flower f2" data-msg="🌼 Una buena amistad se nota en la confianza, en las risas y también en los momentos simples.">
+            <span class="emoji">🌼</span>
+        </div>
+        <div class="flower f3" data-msg="🌻 Gracias por sumar buenas energías, buenos consejos y muchas anécdotas.">
+            <span class="emoji">🌻</span>
+        </div>
+        <div class="flower f4" data-msg="🌼 Hay amistades que no necesitan grandes discursos; simplemente se sienten sinceras.">
+            <span class="emoji">🌼</span>
+        </div>
+        <div class="flower f5" data-msg="🌻 Que nunca falten motivos para reír, conversar y seguir creando buenos recuerdos.">
+            <span class="emoji">🌻</span>
+        </div>
     </div>
-</div>
 
-<div class="panel">
-    <h2>😄 3. Mini reto de amistad</h2>
-    <p class="sub">Elige la respuesta que más nos representa.</p>
-    <div class="quiz">
-        <button class="choice" onclick="quiz('A')">😂 Reírnos por cualquier tontería</button>
-        <button class="choice" onclick="quiz('B')">🍟 Comer algo y conversar horas</button>
-        <button class="choice" onclick="quiz('C')">📱 Mandarnos memes sin contexto</button>
-        <button class="choice" onclick="quiz('D')">🤝 Apoyarnos cuando toca</button>
+    <div class="reveal" id="flowerText">
+        Toca una flor y aparecerá su mensaje aquí ✨
     </div>
-    <div class="result" id="quizResult"></div>
-</div>
+</section>
 
-<div class="panel">
-    <h2>✨ 4. Botón final</h2>
-    <p class="sub">Después de completar el juego, este botón tiene la conclusión.</p>
-    <button class="bigbtn" onclick="finale()">🌻 HACER CLIC AQUÍ</button>
-    <div class="final" id="finalMsg">
-        <b>Resultado oficial:</b><br><br>
-        Tienes una amistad que se aprecia bastante 😎🌻<br>
-        Gracias por las risas, las conversaciones, los consejos y los buenos momentos.<br>
-        <b>Que sigan viniendo más anécdotas y menos estrés.</b> 🙌
+<section class="section">
+    <h2>Pequeños detalles que valen bastante</h2>
+    <p class="note">Puedes abrirlos uno por uno.</p>
+
+    <div class="details">
+        <div class="detail" onclick="toggleDetail('d1')">
+            <div class="icon">😂</div>
+            <strong>Las risas</strong>
+            <span>Haz clic para abrir</span>
+        </div>
+        <div class="detail" onclick="toggleDetail('d2')">
+            <div class="icon">☕</div>
+            <strong>Las conversaciones</strong>
+            <span>Haz clic para abrir</span>
+        </div>
+        <div class="detail" onclick="toggleDetail('d3')">
+            <div class="icon">🤝</div>
+            <strong>La confianza</strong>
+            <span>Haz clic para abrir</span>
+        </div>
     </div>
+
+    <div class="hidden-text" id="d1">
+        Hay días normales que terminan siendo buenos recuerdos solo porque hubo una risa en el momento justo.
+    </div>
+    <div class="hidden-text" id="d2">
+        A veces una buena conversación vale más que cualquier plan elaborado.
+    </div>
+    <div class="hidden-text" id="d3">
+        La mejor parte de una buena amistad es poder ser uno mismo sin tener que explicar demasiado.
+    </div>
+</section>
+
+<section class="section">
+    <h2>Y para cerrar...</h2>
+    <p class="note">Hay un último detalle.</p>
+    <button class="final-btn" onclick="showFinal()">🌻 Ver mensaje final</button>
+
+    <div class="final" id="finalMessage">
+        <b>Solo quería dejarte este detalle porque tu amistad se aprecia.</b><br><br>
+        Gracias por los buenos momentos, las conversaciones, las ocurrencias y por estar presente de una forma sencilla pero valiosa.<br><br>
+        Que sigan viniendo más días tranquilos, más risas y más buenos recuerdos. 🌻
+    </div>
+</section>
+
+<div class="small">Hecho con buena onda y sin cursilerías 😄</div>
 </div>
 
 <script>
-let count = 0;
-const phrases = [
-    "Vale por un café y una conversación larga ☕",
-    "Cupón oficial para un plan improvisado 😎",
-    "Premio: una buena dosis de risas 😂"
-];
-
-document.querySelectorAll('.flower').forEach(flower => {
-    flower.addEventListener('click', () => {
-        if (flower.classList.contains('clicked')) return;
-        flower.classList.add('clicked');
-        count++;
-        document.getElementById('count').textContent = count;
-        document.getElementById('flowerMessage').textContent = flower.dataset.msg;
-
-        if (count === 6) {
-            setTimeout(() => {
-                document.getElementById('flowerMessage').innerHTML =
-                "🎉 ¡Completaste las 6! Diagnóstico: <b>amistad de calidad desbloqueada</b>.";
-            }, 350);
-        }
+document.querySelectorAll('.flower').forEach(f => {
+    f.addEventListener('click', () => {
+        const box = document.getElementById('flowerText');
+        box.style.opacity = "0";
+        setTimeout(() => {
+            box.innerHTML = f.dataset.msg;
+            box.style.opacity = "1";
+        }, 140);
     });
 });
 
-function openCard(btn, i){
-    if(btn.classList.contains('open')) return;
-    btn.classList.add('open');
-    btn.innerHTML = phrases[i];
+function toggleDetail(id){
+    const all = document.querySelectorAll('.hidden-text');
+    all.forEach(x => {
+        if(x.id !== id) x.style.display = "none";
+    });
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === "block" ? "none" : "block";
 }
 
-function quiz(opt){
-    const r = document.getElementById('quizResult');
-    const answers = {
-        A:"😂 Buena elección. Si hay risas, ya hay buen plan.",
-        B:"🍟 Conversar con algo para picar: clásico infalible.",
-        C:"📱 Los memes también son una forma de comunicación oficial entre amigos.",
-        D:"🤝 Esta es de las importantes: estar cuando realmente se necesita."
-    };
-    r.style.display = "block";
-    r.textContent = answers[opt];
-}
+function showFinal(){
+    const box = document.getElementById('finalMessage');
+    box.style.display = "block";
 
-function finale(){
-    document.getElementById('finalMsg').style.display = "block";
-    const emojis = ["🌻","✨","💛","🌼","🎉"];
-    for(let i=0;i<45;i++){
-        const c=document.createElement('div');
-        c.className='confetti';
-        c.textContent=emojis[Math.floor(Math.random()*emojis.length)];
-        c.style.left=Math.random()*100+'vw';
-        c.style.animationDelay=(Math.random()*0.8)+'s';
-        c.style.fontSize=(16+Math.random()*18)+'px';
-        document.body.appendChild(c);
-        setTimeout(()=>c.remove(),3800);
+    const symbols = ["🌻","🌼","✨"];
+    for(let i=0;i<26;i++){
+        const p = document.createElement('div');
+        p.className = 'petals';
+        p.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+        p.style.left = Math.random()*100 + 'vw';
+        p.style.fontSize = (16 + Math.random()*13) + 'px';
+        p.style.animationDelay = (Math.random()*0.7) + 's';
+        document.body.appendChild(p);
+        setTimeout(()=>p.remove(),4800);
     }
 }
 </script>
@@ -375,9 +368,4 @@ function finale(){
 </html>
 '''
 
-components.html(interactive_html, height=1320, scrolling=True)
-
-st.markdown(
-    "<div style='text-align:center;color:#72662f;font-size:.92rem;margin-top:12px;'>🌻 Hecho para una buena amistad, sin cursilerías 😄</div>",
-    unsafe_allow_html=True
-)
+components.html(html, height=1380, scrolling=True)
