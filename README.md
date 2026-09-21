@@ -1,8 +1,16 @@
-# Flores Amarillas para Amistades 🌻
+# 🌻 Flores Amarillas - Modo Amistad
 
-Aplicación sencilla en Streamlit para enviar un detalle de flores amarillas a una amistad.
+Aplicación interactiva en Streamlit pensada para enviar a una amistad.
 
-## Ejecutar en tu PC
+Incluye:
+- Flores clickeables.
+- Contador de flores encontradas.
+- Frases de amistad.
+- Tarjetas sorpresa.
+- Mini reto de amistad.
+- Botón final con lluvia de emojis/confeti.
+
+## Ejecutar localmente
 
 ```bash
 pip install -r requirements.txt
@@ -11,10 +19,10 @@ streamlit run app.py
 
 ## Subir a Streamlit Community Cloud
 
-1. Sube esta carpeta a un repositorio de GitHub.
-2. En Streamlit Community Cloud crea una nueva app.
-3. Selecciona el repositorio.
-4. Indica `app.py` como archivo principal.
-5. Deploy.
+1. Descomprime la carpeta.
+2. Sube los archivos a un repositorio de GitHub.
+3. Crea una nueva app en Streamlit Community Cloud.
+4. Selecciona `app.py` como Main file.
+5. Pulsa Deploy.
 
-Puedes cambiar el mensaje directamente dentro de `app.py`.
+Puedes modificar fácilmente las frases dentro del archivo `app.py`.
