@@ -1,24 +1,24 @@
-# Flores Amarillas para una Amistad 🌻
+# Flores Amarillas WOW 🌻
 
-Versión elegante e interactiva para Streamlit.
+Experiencia visual e interactiva para Streamlit, pensada para una amistad.
 
 Incluye:
-- Jardín de flores amarillas clickeables.
-- Mensajes que aparecen suavemente al tocar cada flor.
-- Tres detalles de amistad que se abren al hacer clic.
-- Cierre con mensaje final y animación ligera de flores.
-- Sin estética de videojuego, retos, puntajes ni contadores.
+- Portada visual tipo premium.
+- Ramo de flores amarillas construido con CSS.
+- Flores clickeables con mensajes individuales.
+- Pétalos flotando y efectos suaves.
+- Tarjetas interactivas.
+- Mensaje final con efecto sorpresa.
+- Diseño adaptable a celular.
 
 ## Ejecutar
-
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## Subir a Streamlit Community Cloud
-
-1. Sube estos archivos a GitHub.
-2. Crea una nueva app.
-3. Selecciona `app.py`.
+## Publicar en Streamlit Community Cloud
+1. Sube los archivos a GitHub.
+2. Crea una nueva app en Streamlit.
+3. Usa `app.py` como archivo principal.
 4. Deploy.
