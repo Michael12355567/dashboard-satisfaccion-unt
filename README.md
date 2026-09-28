@@ -1,16 +1,19 @@
-# Dashboard UNT POWERBI FIXED
+# Dashboard UNT · Convenios e Internacionalización
 
-Sube TODO el contenido de este ZIP a GitHub.
+Tablero Streamlit rediseñado desde cero para seguimiento de:
+- Convenios nacionales
+- Convenios internacionales
+- Movilidad académica
+- Matrícula como contexto institucional
+- Indicador relativo de movilidad por 1,000 matriculados
 
-Importante:
-- app.py
-- utils.py
-- requirements.txt
-- .streamlit/config.toml
-- carpeta data/
-- también los 4 archivos de datos en la raíz
+## Ejecutar localmente
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-Luego: Streamlit Cloud -> Manage app -> Reboot app
-Main file path: app.py
+## Despliegue en Streamlit Cloud
+Subir **todo el contenido de esta carpeta** a la raíz del repositorio y seleccionar `app.py` como archivo principal.
 
-Esta versión busca los archivos recursivamente, así que no depende de que estén solo dentro de /data.
+Los archivos de datos deben permanecer en la carpeta `data/`.
