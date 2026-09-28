@@ -7,11 +7,26 @@ import plotly.express as px
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 
+def _find_file(filename):
+    candidates = [DATA_DIR / filename, BASE_DIR / filename]
+    for path in candidates:
+        if path.exists():
+            return path
+    # Fallback: busca sin distinguir mayúsculas/minúsculas en raíz y data
+    target = filename.lower()
+    for folder in [DATA_DIR, BASE_DIR]:
+        if folder.exists():
+            for path in folder.iterdir():
+                if path.is_file() and path.name.lower() == target:
+                    return path
+    st.error(f"No se encontró el archivo: {filename}. Súbelo al repositorio en la raíz o dentro de /data.")
+    st.stop()
+
 @st.cache_data(show_spinner=False)
 def load_data():
-    nac = pd.read_excel(DATA_DIR / "CONVENIOS_NACIONALES_.xlsx", sheet_name="Base_PowerBI")
-    inte = pd.read_excel(DATA_DIR / "CONVENIOS_INTERNACIONALES.xlsx", sheet_name="Convenios")
-    mov = pd.read_excel(DATA_DIR / "MOVILIDAD_ACADEMICA.xlsx", sheet_name="Movilidad")
+    nac = pd.read_excel(_find_file("CONVENIOS_NACIONALES_.xlsx"), sheet_name="Base_PowerBI")
+    inte = pd.read_excel(_find_file("CONVENIOS_INTERNACIONALES.xlsx"), sheet_name="Convenios")
+    mov = pd.read_excel(_find_file("MOVILIDAD_ACADEMICA.xlsx"), sheet_name="Movilidad")
 
     # Normalización de fechas
     nac["Fecha_Inicio"] = pd.to_datetime(nac["Fecha_Inicio"], errors="coerce")
