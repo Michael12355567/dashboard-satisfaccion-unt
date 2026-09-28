@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from utils import load_data, fmt_int, fmt_pct, pct, safe_values, mat_for_filter
+from utils import load_data, fmt_int, fmt_pct, pct, safe_values
 
 st.set_page_config(
     page_title="UNT | Cooperación y Movilidad",

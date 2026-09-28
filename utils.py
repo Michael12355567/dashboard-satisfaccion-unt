@@ -14,17 +14,39 @@ def _norm(s):
     return re.sub(r"[^a-z0-9]+","",s.lower())
 
 def _find_file(names):
+    """Busca un archivo de datos de forma robusta en Streamlit Cloud.
+
+    Prioriza la carpeta data/ y, como respaldo, la raíz del proyecto.
+    También tolera pequeñas variaciones de espacios, guiones y tildes.
+    """
     wanted = {_norm(n) for n in names}
-    candidates = [p for p in BASE_DIR.rglob("*") if p.is_file()]
+
+    search_dirs = [BASE_DIR / "data", BASE_DIR]
+    candidates = []
+    for folder in search_dirs:
+        if folder.exists():
+            candidates.extend([p for p in folder.iterdir() if p.is_file()])
+
+    # 1) Coincidencia normalizada exacta
     for p in candidates:
         if _norm(p.name) in wanted:
             return p
+
+    # 2) Coincidencia aproximada por nombre
     for p in candidates:
         pn = _norm(p.name)
         if any(w in pn or pn in w for w in wanted):
             return p
-    available = [str(p.relative_to(BASE_DIR)) for p in candidates if p.suffix.lower() in [".xlsx",".xls",".csv"]]
-    raise FileNotFoundError(f"No se encontró el archivo requerido. Archivos visibles: {available}")
+
+    available = [
+        str(p.relative_to(BASE_DIR))
+        for p in candidates
+        if p.suffix.lower() in {".xlsx", ".xls", ".csv"}
+    ]
+    raise FileNotFoundError(
+        "No se encontró el archivo requerido. "
+        f"Buscado: {names}. Archivos de datos visibles: {available}"
+    )
 
 def _read_excel(path, preferred):
     xls = pd.ExcelFile(path)
