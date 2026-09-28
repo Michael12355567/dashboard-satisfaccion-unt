@@ -1,145 +1,140 @@
+
 from pathlib import Path
 import pandas as pd
 import numpy as np
 import streamlit as st
-import plotly.express as px
+import unicodedata
+from datetime import date
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
 
-def _find_file(filename):
-    candidates = [DATA_DIR / filename, BASE_DIR / filename]
-    for path in candidates:
-        if path.exists():
-            return path
-    # Fallback: busca sin distinguir mayúsculas/minúsculas en raíz y data
-    target = filename.lower()
-    for folder in [DATA_DIR, BASE_DIR]:
-        if folder.exists():
-            for path in folder.iterdir():
-                if path.is_file() and path.name.lower() == target:
-                    return path
-    st.error(f"No se encontró el archivo: {filename}. Súbelo al repositorio en la raíz o dentro de /data.")
-    st.stop()
+def _norm(s):
+    s = "" if s is None else str(s)
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return s.strip().lower().replace(" ", "").replace("_", "").replace("-", "")
+
+def find_file(names):
+    wanted = {_norm(x) for x in names}
+    candidates = list((BASE_DIR / "data").glob("*.xlsx")) + list(BASE_DIR.glob("*.xlsx"))
+    if not candidates:
+        candidates = list(BASE_DIR.rglob("*.xlsx"))
+    for p in candidates:
+        if _norm(p.name) in wanted:
+            return p
+    # Fallback flexible
+    for p in candidates:
+        n = _norm(p.name)
+        if any(w in n or n in w for w in wanted):
+            return p
+    raise FileNotFoundError(
+        f"No se encontró el archivo requerido. Archivos Excel visibles: "
+        f"{[str(x.relative_to(BASE_DIR)) for x in candidates]}"
+    )
 
 @st.cache_data(show_spinner=False)
 def load_data():
-    nac = pd.read_excel(_find_file("CONVENIOS_NACIONALES_.xlsx"), sheet_name="Base_PowerBI")
-    inte = pd.read_excel(_find_file("CONVENIOS_INTERNACIONALES.xlsx"), sheet_name="Convenios")
-    mov = pd.read_excel(_find_file("MOVILIDAD_ACADEMICA.xlsx"), sheet_name="Movilidad")
+    p_nac = find_file(["CONVENIOS_NACIONALES_.xlsx", "CONVENIOS NACIONALES.xlsx"])
+    p_int = find_file(["CONVENIOS_INTERNACIONALES.xlsx", "CONVENIOS INTERNACIONALES VF.xlsx"])
+    p_mov = find_file(["MOVILIDAD_ACADEMICA.xlsx", "MOVILIDAD ACADEMICA.xlsx"])
 
-    # Normalización de fechas
-    nac["Fecha_Inicio"] = pd.to_datetime(nac["Fecha_Inicio"], errors="coerce")
-    nac["Fecha_Término"] = pd.to_datetime(nac["Fecha_Término"], errors="coerce")
-    inte["INICIO"] = pd.to_datetime(inte["INICIO"], errors="coerce")
-    inte["VENCE"] = pd.to_datetime(inte["VENCE"], errors="coerce")
+    nac = pd.read_excel(p_nac, sheet_name="Base_PowerBI")
+    inte = pd.read_excel(p_int, sheet_name="Convenios")
+    mov = pd.read_excel(p_mov, sheet_name="Movilidad")
 
-    # Normalización de texto de movilidad
-    for c in ["MOVILIDAD", "PERÍODO", "MODALIDAD", "QUIÉN", "REGIÓN / PAÍS", "CARRERA PROFESIONAL", "GÉNERO"]:
+    # National agreements: standard model
+    nac2 = pd.DataFrame({
+        "ID": nac.get("ID_Convenio"),
+        "AÑO": pd.to_numeric(nac.get("Año_Registro"), errors="coerce"),
+        "INSTITUCIÓN": nac.get("Institución").astype(str).str.strip(),
+        "ÁMBITO": "Nacional",
+        "PAÍS": "Perú",
+        "TIPO": nac.get("Tipo_Convenio").astype(str).str.strip(),
+        "INICIO": pd.to_datetime(nac.get("Fecha_Inicio"), errors="coerce"),
+        "VENCE": pd.to_datetime(nac.get("Fecha_Término"), errors="coerce"),
+        "RESOLUCIÓN": nac.get("N_Resolución").astype(str).str.strip(),
+        "RESPONSABLE": nac.get("Coordinador_Responsable").astype(str).str.strip(),
+    })
+
+    # International agreements: standard model
+    inte2 = pd.DataFrame({
+        "ID": inte.get("N°"),
+        "AÑO": pd.to_numeric(inte.get("AÑO"), errors="coerce"),
+        "INSTITUCIÓN": inte.get("INSTITUCIÓN").astype(str).str.strip(),
+        "ÁMBITO": "Internacional",
+        "PAÍS": inte.get("PAÍS").astype(str).str.strip(),
+        "TIPO": inte.get("TIPO").astype(str).str.strip(),
+        "INICIO": pd.to_datetime(inte.get("INICIO"), errors="coerce"),
+        "VENCE": pd.to_datetime(inte.get("VENCE"), errors="coerce"),
+        "RESOLUCIÓN": inte.get("RESOLUCIÓN").astype(str).str.strip(),
+        "RESPONSABLE": "",
+    })
+
+    conv = pd.concat([nac2, inte2], ignore_index=True)
+    conv["AÑO"] = conv["AÑO"].astype("Int64")
+
+    today = pd.Timestamp(date.today())
+    conv["ESTADO"] = np.select(
+        [
+            conv["VENCE"].isna(),
+            conv["VENCE"] < today,
+            (conv["VENCE"] >= today) & (conv["VENCE"] <= today + pd.Timedelta(days=365))
+        ],
+        ["Sin fecha", "Vencido", "Vence ≤ 12 meses"],
+        default="Vigente"
+    )
+
+    # Mobility cleanup
+    mov = mov.copy()
+    mov.columns = [str(c).strip() for c in mov.columns]
+    mov["AÑO"] = pd.to_numeric(mov["AÑO"], errors="coerce").astype("Int64")
+    mov["TOTAL"] = pd.to_numeric(mov["TOTAL"], errors="coerce").fillna(1)
+    for c in ["MOVILIDAD","PERÍODO","MODALIDAD","QUIÉN","REGIÓN / PAÍS",
+              "CARRERA PROFESIONAL","UNIVERSIDAD DE ORIGEN","SIGLAS ORIGEN",
+              "UNIVERSIDAD DE DESTINO","SIGLAS DESTINO","GÉNERO"]:
         if c in mov.columns:
             mov[c] = mov[c].astype(str).str.strip()
-    mov["TOTAL"] = pd.to_numeric(mov["TOTAL"], errors="coerce").fillna(0)
-    mov["AÑO"] = pd.to_numeric(mov["AÑO"], errors="coerce").astype("Int64")
 
-    # Unificación de convenios
-    nac_u = pd.DataFrame({
-        "Ámbito": "Nacional",
-        "Institución": nac["Institución"],
-        "País": "Perú",
-        "Tipo": nac["Tipo_Convenio"],
-        "Inicio": nac["Fecha_Inicio"],
-        "Fin": nac["Fecha_Término"],
-        "Año": pd.to_numeric(nac["Año_Registro"], errors="coerce").astype("Int64"),
-        "Resolución": nac["N_Resolución"],
-        "Responsable": nac["Coordinador_Responsable"],
-    })
-    int_u = pd.DataFrame({
-        "Ámbito": "Internacional",
-        "Institución": inte["INSTITUCIÓN"],
-        "País": inte["PAÍS"].replace({"Méxcio": "México"}),
-        "Tipo": inte["TIPO"],
-        "Inicio": inte["INICIO"],
-        "Fin": inte["VENCE"],
-        "Año": pd.to_numeric(inte["AÑO"], errors="coerce").astype("Int64"),
-        "Resolución": inte["RESOLUCIÓN"],
-        "Responsable": np.nan,
-    })
-    conv = pd.concat([nac_u, int_u], ignore_index=True)
-
-    hoy = pd.Timestamp.today().normalize()
-    dias = (conv["Fin"] - hoy).dt.days
-    conv["Estado"] = np.select(
-        [conv["Fin"].isna(), dias < 0, (dias >= 0) & (dias <= 180), dias > 180],
-        ["Sin fecha", "Vencido", "Próximo a vencer", "Vigente"],
-        default="Sin fecha",
-    )
-    return nac, inte, mov, conv
-
-
-def page_config(title):
-    st.set_page_config(page_title=title, page_icon="📊", layout="wide", initial_sidebar_state="expanded")
-    inject_css()
-
-
-def inject_css():
-    st.markdown(
-        """
-        <style>
-        .stApp {background: #F5F7FA;}
-        [data-testid="stSidebar"] {background: linear-gradient(180deg,#5B1027,#7A1733);}
-        [data-testid="stSidebar"] * {color: #FFFFFF !important;}
-        .block-container {padding-top: 1.2rem; padding-bottom: 2rem; max-width: 1500px;}
-        .hero {background: linear-gradient(120deg,#64142D,#8A1C3E); color:white; padding:22px 26px; border-radius:18px; margin-bottom:18px; box-shadow:0 8px 24px rgba(31,41,55,.10)}
-        .hero h1 {font-size:2rem; margin:0 0 5px 0;}
-        .hero p {margin:0; opacity:.92; font-size:1rem;}
-        div[data-testid="stMetric"] {background:white; border:1px solid #E5E7EB; padding:16px 18px; border-radius:16px; box-shadow:0 4px 16px rgba(31,41,55,.06)}
-        div[data-testid="stMetricLabel"] {font-weight:700;}
-        .insight {background:#FFFFFF; border-left:5px solid #7A1733; padding:14px 16px; border-radius:10px; margin:8px 0; box-shadow:0 3px 12px rgba(31,41,55,.05)}
-        .section-title {font-size:1.2rem; font-weight:800; margin-top:8px; margin-bottom:6px; color:#374151;}
-        .small-note {color:#6B7280; font-size:.88rem;}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def hero(title, subtitle):
-    st.markdown(f'<div class="hero"><h1>{title}</h1><p>{subtitle}</p></div>', unsafe_allow_html=True)
-
+    return conv, mov
 
 def fmt_int(x):
     try:
         return f"{int(round(float(x))):,}".replace(",", " ")
     except Exception:
-        return "—"
+        return "0"
 
-
-def fmt_pct(x, digits=1):
+def fmt_pct(x, d=1):
     try:
-        return f"{float(x):.{digits}f}%"
+        return f"{float(x):.{d}f}%"
     except Exception:
-        return "—"
+        return "0.0%"
 
+def pct(n, d):
+    return (100*n/d) if d else 0
 
-def apply_plot_style(fig, height=380):
-    fig.update_layout(
-        height=height,
-        margin=dict(l=20, r=20, t=55, b=20),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Arial", size=13),
-        legend_title_text="",
-        hoverlabel=dict(namelength=-1),
-    )
-    return fig
+def safe_unique(series):
+    vals = pd.Series(series).dropna().astype(str)
+    vals = vals[~vals.str.lower().isin(["nan","none",""])]
+    return sorted(vals.unique().tolist())
 
+def filter_mobility(df, years=None, modalidad=None, who=None, movement=None):
+    out = df.copy()
+    if years:
+        out = out[out["AÑO"].isin(years)]
+    if modalidad:
+        out = out[out["MODALIDAD"].isin(modalidad)]
+    if who:
+        out = out[out["QUIÉN"].isin(who)]
+    if movement:
+        out = out[out["MOVILIDAD"].isin(movement)]
+    return out
 
-def sidebar_brand():
-    st.sidebar.markdown("## 📊 Estadística UNT")
-    st.sidebar.caption("Cooperación, convenios y movilidad académica")
-    st.sidebar.markdown("---")
-
-
-def download_csv(df, filename, label="Descargar CSV"):
-    csv = df.to_csv(index=False).encode("utf-8-sig")
-    st.download_button(label, csv, file_name=filename, mime="text/csv")
+def filter_agreements(df, years=None, scope=None, status=None):
+    out = df.copy()
+    if years:
+        out = out[out["AÑO"].isin(years)]
+    if scope:
+        out = out[out["ÁMBITO"].isin(scope)]
+    if status:
+        out = out[out["ESTADO"].isin(status)]
+    return out
