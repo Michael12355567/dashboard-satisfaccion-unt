@@ -4,471 +4,454 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-
-from utils import (
-    load_data, fmt_int, fmt_pct, pct, safe_unique,
-    filter_mobility, filter_agreements
-)
+from utils import load_data, fmt_int, fmt_pct, pct, safe_values, mat_for_filter
 
 st.set_page_config(
-    page_title="UNT | Estadística de Cooperación y Movilidad",
+    page_title="UNT | Cooperación y Movilidad",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ---------- VISUAL SYSTEM ----------
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-.stApp { background: #F4F7FB; color: #172033; }
-.block-container { padding-top: 1.1rem; padding-bottom: 2rem; max-width: 1600px; }
-
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #0B1F3A 0%, #102A4D 100%);
-    border-right: 1px solid rgba(255,255,255,.08);
+html, body, [class*="css"] {font-family:'Inter',sans-serif;}
+.stApp {background:#F5F7FB;}
+.block-container {padding-top:.7rem; max-width:1680px;}
+[data-testid="stSidebar"]{background:#071923;}
+[data-testid="stSidebar"] *{color:#EAF4F8;}
+[data-testid="stSidebar"] .stRadio label{padding:.28rem .4rem;border-radius:8px;}
+[data-testid="stSidebar"] .stRadio label:hover{background:#0F2D3B;}
+.header{
+ background:linear-gradient(105deg,#0B2A44 0%,#0E4F73 62%,#0E7181 100%);
+ color:white;border-radius:18px;padding:22px 26px;margin-bottom:14px;
+ box-shadow:0 10px 30px rgba(10,39,62,.15);
 }
-[data-testid="stSidebar"] * { color: #F5F8FC; }
-[data-testid="stSidebar"] .stMultiSelect span,
-[data-testid="stSidebar"] .stSelectbox span { color: #172033 !important; }
-
-.hero {
-    background: linear-gradient(120deg,#0B1F3A 0%,#123A66 58%,#176B87 100%);
-    border-radius: 22px;
-    padding: 26px 30px;
-    color: white;
-    box-shadow: 0 14px 34px rgba(13,37,65,.18);
-    margin-bottom: 18px;
+.header .kicker{font-size:.72rem;letter-spacing:.16em;font-weight:800;opacity:.72;text-transform:uppercase}
+.header h1{font-size:1.8rem;margin:.2rem 0 .15rem 0}
+.header p{margin:0;color:rgba(255,255,255,.78);font-size:.92rem}
+.filterbar{
+ background:#FFFFFF;border:1px solid #E3E9F1;border-radius:14px;padding:12px 14px 2px 14px;
+ box-shadow:0 6px 18px rgba(25,45,80,.05);margin-bottom:14px
 }
-.hero-kicker { font-size: .78rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; opacity: .78; }
-.hero h1 { margin: 4px 0 4px 0; font-size: 2rem; line-height: 1.12; }
-.hero p { margin: 0; color: rgba(255,255,255,.78); font-size: .98rem; }
-
-.section-title { font-size: 1.06rem; font-weight: 800; color: #16233B; margin: 10px 0 8px 0; }
-.section-sub { color:#68758B; font-size:.85rem; margin-top:-6px; margin-bottom:12px; }
-
-.kpi-card {
-    background:#FFFFFF;
-    border:1px solid #E6EBF2;
-    border-radius:18px;
-    padding:18px 18px 16px 18px;
-    min-height:126px;
-    box-shadow:0 7px 18px rgba(25,45,80,.055);
-    position:relative;
-    overflow:hidden;
+.kpi{
+ background:white;border:1px solid #E4EAF2;border-radius:15px;padding:15px 16px;
+ min-height:112px;box-shadow:0 6px 18px rgba(24,48,80,.055);position:relative;overflow:hidden
 }
-.kpi-card:before {
-    content:""; position:absolute; left:0; top:0; bottom:0; width:5px;
-    background:linear-gradient(180deg,#176B87,#18A0AE);
+.kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#0F7084}
+.klabel{font-size:.72rem;color:#6A788B;text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.kvalue{font-size:1.9rem;font-weight:800;color:#0A2338;margin-top:8px;line-height:1}
+.kfoot{font-size:.75rem;color:#7B8798;margin-top:8px}
+.section{font-size:1.02rem;font-weight:800;color:#14273A;margin:14px 0 6px 0}
+.note{font-size:.78rem;color:#748196}
+.panel{
+ background:#FFFFFF;border:1px solid #E5EAF1;border-radius:16px;padding:4px 10px 0 10px;
+ box-shadow:0 6px 18px rgba(24,48,80,.05)
 }
-.kpi-label { color:#66758B; font-size:.76rem; font-weight:700; text-transform:uppercase; letter-spacing:.055em; }
-.kpi-value { color:#0B1F3A; font-size:2rem; font-weight:800; margin-top:7px; line-height:1; }
-.kpi-foot { color:#7A8799; font-size:.76rem; margin-top:8px; line-height:1.25; }
-
-.insight {
-    background:#FFFFFF;
-    border:1px solid #E5EBF3;
-    border-radius:16px;
-    padding:15px 17px;
-    box-shadow:0 6px 16px rgba(25,45,80,.045);
+.insight{
+ background:#FFFFFF;border:1px solid #E5EAF1;border-radius:14px;padding:14px 15px;
+ min-height:90px;box-shadow:0 5px 15px rgba(24,48,80,.045)
 }
-.insight b { color:#0B1F3A; }
-
-.panel {
-    background:#FFFFFF;
-    border:1px solid #E6EBF2;
-    border-radius:18px;
-    padding:8px 12px 4px 12px;
-    box-shadow:0 7px 18px rgba(25,45,80,.05);
-}
-.smallnote { color:#7A8799; font-size:.78rem; }
-
-div[data-testid="stRadio"] > div { gap: 6px; }
-div[data-testid="stRadio"] label {
-    background:#FFFFFF;
-    border:1px solid #DFE6EF;
-    border-radius:12px;
-    padding:7px 13px;
-}
-hr { border-color:#E6EBF2; }
+.insight b{font-size:1.25rem;color:#0B4F69}
+.stSelectbox label, .stMultiSelect label{font-weight:700!important;color:#3F5065!important;font-size:.78rem!important}
+div[data-baseweb="select"] > div{border-radius:10px!important}
 </style>
 """, unsafe_allow_html=True)
 
-conv, mov = load_data()
+conv, mov, mat = load_data()
+COLORS=["#0F7084","#18A4A6","#E1A43A","#4F72A5","#7D65A8","#4E9B73","#CE6C6C"]
 
-# ---------- SIDEBAR ----------
-with st.sidebar:
-    st.markdown("### UNT · Unidad de Estadística")
-    st.caption("Sistema estadístico de cooperación y movilidad")
-    st.markdown("---")
-    page = st.radio(
-        "Navegación",
-        ["Resumen ejecutivo", "Convenios", "Movilidad académica", "Indicadores estadísticos", "Base de datos"],
-        index=0
-    )
-    st.markdown("---")
-    st.markdown("#### Filtros globales")
-    years_all = sorted(set(conv["AÑO"].dropna().astype(int).tolist()) | set(mov["AÑO"].dropna().astype(int).tolist()))
-    years_sel = st.multiselect("Año", years_all, default=years_all)
-    st.caption("Los filtros afectan las métricas y visuales de la página activa.")
-
-# Common theme
-COLORS = ["#176B87", "#18A0AE", "#F0A33A", "#496B9A", "#8E6CB1", "#49A078", "#D36B6B"]
-
-def style_fig(fig, height=330, legend=True):
-    fig.update_layout(
-        height=height,
-        margin=dict(l=12,r=12,t=54,b=20),
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        font=dict(family="Inter", color="#27354A", size=12),
-        title_font=dict(size=15, color="#17233B"),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
-        showlegend=legend,
-        hoverlabel=dict(bgcolor="white", font_size=12)
-    )
-    fig.update_xaxes(showgrid=False, linecolor="#E9EDF3")
-    fig.update_yaxes(gridcolor="#EDF1F5", zeroline=False)
-    return fig
+def hero(title, subtitle):
+    st.markdown(f"""<div class="header">
+    <div class="kicker">Universidad Nacional de Trujillo · Unidad de Estadística</div>
+    <h1>{title}</h1><p>{subtitle}</p></div>""", unsafe_allow_html=True)
 
 def kpi(label, value, foot=""):
-    st.markdown(
-        f"""<div class="kpi-card">
-        <div class="kpi-label">{label}</div>
-        <div class="kpi-value">{value}</div>
-        <div class="kpi-foot">{foot}</div>
-        </div>""",
-        unsafe_allow_html=True
+    st.markdown(f"""<div class="kpi"><div class="klabel">{label}</div>
+    <div class="kvalue">{value}</div><div class="kfoot">{foot}</div></div>""", unsafe_allow_html=True)
+
+def figstyle(fig, h=340, legend=True):
+    fig.update_layout(
+        height=h, paper_bgcolor="white", plot_bgcolor="white",
+        margin=dict(l=12,r=12,t=55,b=24),
+        font=dict(family="Inter",size=12,color="#314156"),
+        title_font=dict(size=15,color="#17283B"),
+        legend=dict(orientation="h",y=1.03,x=0),
+        showlegend=legend,
+        hoverlabel=dict(bgcolor="white",font_size=12)
     )
+    fig.update_xaxes(showgrid=False,linecolor="#E7ECF2")
+    fig.update_yaxes(gridcolor="#EDF1F5",zeroline=False)
+    return fig
 
-def hero(title, subtitle, kicker="INTELIGENCIA ESTADÍSTICA · UNT"):
-    st.markdown(
-        f"""<div class="hero">
-        <div class="hero-kicker">{kicker}</div>
-        <h1>{title}</h1>
-        <p>{subtitle}</p>
-        </div>""", unsafe_allow_html=True
+with st.sidebar:
+    st.markdown("## 📊 Estadística UNT")
+    st.caption("Cooperación, convenios y movilidad académica")
+    st.markdown("---")
+    page=st.radio(
+        "Módulos",
+        ["Resumen general","Convenios","Movilidad académica","Impacto e indicadores","Base de datos"],
+        label_visibility="collapsed"
     )
+    st.markdown("---")
+    st.caption("Dashboard institucional · datos estadísticos")
 
-conv_f = conv[conv["AÑO"].isin(years_sel)] if years_sel else conv.iloc[0:0]
-mov_f = mov[mov["AÑO"].isin(years_sel)] if years_sel else mov.iloc[0:0]
+# ---------- GLOBAL TOP FILTERS ----------
+years_common=sorted(set(mov["AÑO"].dropna().astype(int)) & set(mat["AÑO"].dropna().astype(int)))
+if not years_common:
+    years_common=sorted(set(mov["AÑO"].dropna().astype(int)))
 
-# ---------- RESUMEN ----------
-if page == "Resumen ejecutivo":
-    hero(
-        "Cooperación, convenios y movilidad académica",
-        "Lectura ejecutiva de alcance institucional, internacionalización, vigencia y participación académica."
-    )
+if "f_year" not in st.session_state: st.session_state.f_year="Todos"
+if "f_sede" not in st.session_state: st.session_state.f_sede="Todas"
+if "f_fac" not in st.session_state: st.session_state.f_fac="Todas"
+if "f_car" not in st.session_state: st.session_state.f_car="Todas"
+if "f_mod" not in st.session_state: st.session_state.f_mod="Todas"
 
-    total_conv = len(conv_f)
-    nac = (conv_f["ÁMBITO"] == "Nacional").sum()
-    inte = (conv_f["ÁMBITO"] == "Internacional").sum()
-    vig = (conv_f["ESTADO"] == "Vigente").sum()
-    exp12 = (conv_f["ESTADO"] == "Vence ≤ 12 meses").sum()
-    paises = conv_f.loc[conv_f["ÁMBITO"]=="Internacional","PAÍS"].nunique()
+def reset_filters():
+    st.session_state.f_year="Todos"
+    st.session_state.f_sede="Todas"
+    st.session_state.f_fac="Todas"
+    st.session_state.f_car="Todas"
+    st.session_state.f_mod="Todas"
 
-    total_mov = mov_f["TOTAL"].sum()
-    int_mov = mov_f.loc[mov_f["MODALIDAD"].str.upper()=="INTERNACIONAL","TOTAL"].sum()
-    entrante = mov_f.loc[mov_f["MOVILIDAD"].str.upper()=="INMIGRATORIA","TOTAL"].sum()
-    estudiantes = mov_f.loc[mov_f["QUIÉN"].str.upper().str.contains("ESTUD"),"TOTAL"].sum()
+hero(
+    "Vinculación, cooperación y movilidad académica",
+    "Tablero estadístico interactivo con filtros tipo Power BI e indicadores normalizados por matrícula."
+)
 
-    c1,c2,c3,c4,c5,c6 = st.columns(6)
-    with c1: kpi("Convenios", fmt_int(total_conv), f"{fmt_int(nac)} nacionales · {fmt_int(inte)} internacionales")
-    with c2: kpi("Convenios vigentes", fmt_int(vig), f"{fmt_int(exp12)} vencen en ≤ 12 meses")
-    with c3: kpi("Países vinculados", fmt_int(paises), "Cobertura de convenios internacionales")
-    with c4: kpi("Movilidades", fmt_int(total_mov), "Registros acumulados en el periodo filtrado")
-    with c5: kpi("Movilidad internacional", fmt_pct(pct(int_mov,total_mov)), f"{fmt_int(int_mov)} movilidades")
-    with c6: kpi("Movilidad entrante", fmt_pct(pct(entrante,total_mov)), "Participación inmigratoria")
+st.markdown('<div class="filterbar">',unsafe_allow_html=True)
+fc1,fc2,fc3,fc4,fc5,fc6=st.columns([1,1.2,1.55,1.65,1.15,.9])
 
-    st.markdown('<div class="section-title">Señales estadísticas de mayor impacto</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-sub">No solo conteos: composición, concentración, cobertura y evolución.</div>', unsafe_allow_html=True)
+with fc1:
+    y_options=["Todos"]+[str(y) for y in years_common]
+    st.selectbox("Año",y_options,key="f_year")
 
-    # Data for visual 1
-    annual = mov_f.groupby(["AÑO","MODALIDAD"], dropna=False)["TOTAL"].sum().reset_index()
-    if not annual.empty:
-        annual["AÑO"] = annual["AÑO"].astype(str)
-    colA, colB = st.columns([1.55,1])
+# dependent filters based on matriculation
+mat_base=mat.copy()
+if st.session_state.f_year!="Todos":
+    mat_base=mat_base[mat_base["AÑO"]==int(st.session_state.f_year)]
 
-    with colA:
-        st.markdown('<div class="panel">', unsafe_allow_html=True)
-        fig = px.bar(
-            annual, x="AÑO", y="TOTAL", color="MODALIDAD",
-            barmode="stack",
-            title="Movilidad académica por año y modalidad",
-            color_discrete_sequence=COLORS
-        )
-        fig.update_traces(marker_line_width=0, hovertemplate="<b>%{x}</b><br>%{fullData.name}: %{y:,.0f}<extra></extra>")
-        style_fig(fig, 350)
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar":False})
-        st.markdown('</div>', unsafe_allow_html=True)
+with fc2:
+    sede_opts=["Todas"]+safe_values(mat_base["SEDE"])
+    if st.session_state.f_sede not in sede_opts: st.session_state.f_sede="Todas"
+    st.selectbox("Sede",sede_opts,key="f_sede")
 
-    with colB:
-        st.markdown('<div class="panel">', unsafe_allow_html=True)
-        comp = mov_f.groupby("MOVILIDAD")["TOTAL"].sum().reset_index()
-        fig2 = px.pie(
-            comp, names="MOVILIDAD", values="TOTAL", hole=.66,
-            title="Equilibrio de movilidad: saliente vs. entrante",
-            color_discrete_sequence=[COLORS[0],COLORS[2],COLORS[3]]
-        )
-        fig2.update_traces(textposition="inside", textinfo="percent", hovertemplate="<b>%{label}</b><br>%{value:,.0f}<br>%{percent}<extra></extra>")
-        style_fig(fig2, 350)
-        st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar":False})
-        st.markdown('</div>', unsafe_allow_html=True)
+if st.session_state.f_sede!="Todas":
+    mat_base=mat_base[mat_base["SEDE"]==st.session_state.f_sede]
 
-    colC,colD = st.columns(2)
-    with colC:
-        topc = (mov_f.groupby("CARRERA PROFESIONAL")["TOTAL"].sum().sort_values(ascending=False).head(10).sort_values()).reset_index()
-        st.markdown('<div class="panel">', unsafe_allow_html=True)
-        fig3 = px.bar(
-            topc, x="TOTAL", y="CARRERA PROFESIONAL", orientation="h",
-            title="Top 10 carreras con mayor movilidad",
-            color_discrete_sequence=[COLORS[0]]
-        )
-        fig3.update_traces(hovertemplate="<b>%{y}</b><br>Movilidad: %{x:,.0f}<extra></extra>")
-        style_fig(fig3, 390, legend=False)
-        st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar":False})
-        st.markdown('</div>', unsafe_allow_html=True)
+with fc3:
+    fac_opts=["Todas"]+safe_values(mat_base["FACULTAD"])
+    if st.session_state.f_fac not in fac_opts: st.session_state.f_fac="Todas"
+    st.selectbox("Facultad",fac_opts,key="f_fac")
 
-    with colD:
-        country = conv_f[conv_f["ÁMBITO"]=="Internacional"].groupby("PAÍS").size().sort_values(ascending=False).head(10).sort_values().reset_index(name="CONVENIOS")
-        st.markdown('<div class="panel">', unsafe_allow_html=True)
-        fig4 = px.bar(
-            country, x="CONVENIOS", y="PAÍS", orientation="h",
-            title="Países con mayor vinculación por convenios",
-            color_discrete_sequence=[COLORS[2]]
-        )
-        fig4.update_traces(hovertemplate="<b>%{y}</b><br>Convenios: %{x}<extra></extra>")
-        style_fig(fig4, 390, legend=False)
-        st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar":False})
-        st.markdown('</div>', unsafe_allow_html=True)
+if st.session_state.f_fac!="Todas":
+    mat_base=mat_base[mat_base["FACULTAD"]==st.session_state.f_fac]
 
-    st.markdown('<div class="section-title">Lectura ejecutiva automática</div>', unsafe_allow_html=True)
-    female = mov_f.loc[mov_f["GÉNERO"].str.upper()=="FEMENINO","TOTAL"].sum()
-    docent = mov_f.loc[mov_f["QUIÉN"].str.upper().str.contains("DOC"),"TOTAL"].sum()
-    top_country = country.iloc[-1]["PAÍS"] if len(country) else "—"
-    i1,i2,i3,i4 = st.columns(4)
-    with i1:
-        st.markdown(f'<div class="insight"><b>{fmt_pct(pct(inte,total_conv))}</b><br><span class="smallnote">de los convenios filtrados son internacionales.</span></div>', unsafe_allow_html=True)
-    with i2:
-        st.markdown(f'<div class="insight"><b>{fmt_pct(pct(female,total_mov))}</b><br><span class="smallnote">de la movilidad corresponde a participación femenina.</span></div>', unsafe_allow_html=True)
-    with i3:
-        st.markdown(f'<div class="insight"><b>{fmt_pct(pct(docent,total_mov))}</b><br><span class="smallnote">de la movilidad corresponde a docentes.</span></div>', unsafe_allow_html=True)
-    with i4:
-        st.markdown(f'<div class="insight"><b>{top_country}</b><br><span class="smallnote">aparece entre los países con mayor número de convenios.</span></div>', unsafe_allow_html=True)
+career_opts=["Todas"]+safe_values(mat_base["CARRERA"])
+if st.session_state.f_fac=="EDUCACION Y CIENCIAS DE LA COMUNICACION":
+    if "EDUCACIÓN SECUNDARIA (TODAS)" not in career_opts:
+        career_opts.insert(1,"EDUCACIÓN SECUNDARIA (TODAS)")
 
-# ---------- CONVENIOS ----------
-elif page == "Convenios":
-    hero("Convenios institucionales", "Análisis de cobertura, vigencia, tipología y concentración de convenios nacionales e internacionales.")
+with fc4:
+    if st.session_state.f_car not in career_opts: st.session_state.f_car="Todas"
+    st.selectbox("Carrera",career_opts,key="f_car")
 
-    f1,f2 = st.columns(2)
-    with f1:
-        scope = st.multiselect("Ámbito", safe_unique(conv_f["ÁMBITO"]), default=safe_unique(conv_f["ÁMBITO"]))
-    with f2:
-        status = st.multiselect("Estado", safe_unique(conv_f["ESTADO"]), default=safe_unique(conv_f["ESTADO"]))
-    df = filter_agreements(conv_f, scope=scope, status=status)
+with fc5:
+    mod_opts=["Todas"]+safe_values(mov["MODALIDAD"])
+    if st.session_state.f_mod not in mod_opts: st.session_state.f_mod="Todas"
+    st.selectbox("Modalidad",mod_opts,key="f_mod")
 
-    total=len(df); vig=(df["ESTADO"]=="Vigente").sum(); exp=(df["ESTADO"]=="Vence ≤ 12 meses").sum()
-    intl=(df["ÁMBITO"]=="Internacional").sum(); countries=df.loc[df["ÁMBITO"]=="Internacional","PAÍS"].nunique()
-    a,b,c,d,e = st.columns(5)
-    with a: kpi("Convenios filtrados",fmt_int(total),"Base consolidada")
-    with b: kpi("Vigentes",fmt_int(vig),fmt_pct(pct(vig,total))+" del total")
-    with c: kpi("Vence ≤ 12 meses",fmt_int(exp),"Seguimiento prioritario")
-    with d: kpi("Internacionales",fmt_int(intl),fmt_pct(pct(intl,total))+" del total")
-    with e: kpi("Países",fmt_int(countries),"Cobertura internacional")
+with fc6:
+    st.write("")
+    st.button("↺ Quitar filtros",use_container_width=True,on_click=reset_filters)
 
-    left,right = st.columns([1.35,1])
-    with left:
-        yearly = df.groupby(["AÑO","ÁMBITO"]).size().reset_index(name="CONVENIOS")
+st.markdown('</div>',unsafe_allow_html=True)
+
+# Apply filters
+year = None if st.session_state.f_year=="Todos" else int(st.session_state.f_year)
+sede = st.session_state.f_sede
+fac = st.session_state.f_fac
+car = st.session_state.f_car
+mod = st.session_state.f_mod
+
+mov_f=mov.copy()
+mat_f=mat.copy()
+conv_f=conv.copy()
+
+if year:
+    mov_f=mov_f[mov_f["AÑO"]==year]
+    mat_f=mat_f[mat_f["AÑO"]==year]
+    conv_f=conv_f[conv_f["AÑO"]==year]
+
+if sede!="Todas":
+    mat_f=mat_f[mat_f["SEDE"]==sede]
+
+if fac!="Todas":
+    mov_f=mov_f[mov_f["FACULTAD"]==fac]
+    mat_f=mat_f[mat_f["FACULTAD"]==fac]
+
+if car!="Todas":
+    if car=="EDUCACIÓN SECUNDARIA (TODAS)":
+        mov_f=mov_f[mov_f["CARRERA_CANON"]=="EDUCACIÓN SECUNDARIA (TODAS)"]
+        mat_f=mat_f[mat_f["CARRERA"].str.upper().str.startswith("EDUCACIÓN SECUNDARIA")]
+    else:
+        mov_f=mov_f[mov_f["CARRERA_CANON"]==car]
+        mat_f=mat_f[mat_f["CARRERA"]==car]
+
+if mod!="Todas":
+    mov_f=mov_f[mov_f["MODALIDAD"]==mod]
+
+# If a sede is selected, mobility cannot be filtered directly because mobility file lacks sede.
+# We therefore show matriculation-normalized indicators using selected sede, while raw mobility remains by year/faculty/career.
+sede_warning = sede!="Todas"
+
+# ---------- RESUMEN GENERAL ----------
+if page=="Resumen general":
+    total_conv=len(conv_f)
+    nac=(conv_f["ÁMBITO"]=="Nacional").sum()
+    inte=(conv_f["ÁMBITO"]=="Internacional").sum()
+    total_mov=mov_f["TOTAL"].sum()
+    int_mov=mov_f.loc[mov_f["MODALIDAD"].str.upper()=="INTERNACIONAL","TOTAL"].sum()
+    in_mov=mov_f.loc[mov_f["MOVILIDAD"].str.upper()=="INMIGRATORIA","TOTAL"].sum()
+    students=mov_f.loc[mov_f["QUIÉN"].str.upper().str.contains("ESTUD"),"TOTAL"].sum()
+    enrolled=mat_f["MATRICULADOS"].sum()
+    rate1000=1000*students/enrolled if enrolled else 0
+
+    c1,c2,c3,c4,c5,c6=st.columns(6)
+    with c1:kpi("Convenios",fmt_int(total_conv),f"{fmt_int(nac)} nac. · {fmt_int(inte)} int.")
+    with c2:kpi("Movilidad académica",fmt_int(total_mov),"Registros del filtro actual")
+    with c3:kpi("% internacional",fmt_pct(pct(int_mov,total_mov)),f"{fmt_int(int_mov)} movilidades")
+    with c4:kpi("% entrante",fmt_pct(pct(in_mov,total_mov)),f"{fmt_int(in_mov)} movilidades")
+    with c5:kpi("Matriculados · Periodo 1",fmt_int(enrolled),"Nunca suma Periodo 1 + Periodo 2")
+    with c6:kpi("Tasa movilidad / 1 000",f"{rate1000:.1f}","Movilidad estudiantil / matriculados P1")
+
+    if sede_warning:
+        st.caption("Nota: la base de movilidad no contiene sede. El filtro Sede afecta matrícula y tasas normalizadas, no el conteo bruto de movilidad.")
+
+    st.markdown('<div class="section">Indicadores de impacto y evolución</div>',unsafe_allow_html=True)
+
+    a,b=st.columns([1.55,1])
+    with a:
+        yearly=mov.copy()
+        if fac!="Todas": yearly=yearly[yearly["FACULTAD"]==fac]
+        if car!="Todas":
+            if car=="EDUCACIÓN SECUNDARIA (TODAS)":
+                yearly=yearly[yearly["CARRERA_CANON"]=="EDUCACIÓN SECUNDARIA (TODAS)"]
+            else:
+                yearly=yearly[yearly["CARRERA_CANON"]==car]
+        if mod!="Todas": yearly=yearly[yearly["MODALIDAD"]==mod]
+        yearly=yearly.groupby(["AÑO","MODALIDAD"])["TOTAL"].sum().reset_index()
+        yearly=yearly[yearly["AÑO"].isin(years_common)]
         yearly["AÑO"]=yearly["AÑO"].astype(str)
-        fig=px.bar(yearly,x="AÑO",y="CONVENIOS",color="ÁMBITO",barmode="group",
-                   title="Registro de convenios por año y ámbito",color_discrete_sequence=COLORS)
-        style_fig(fig,360)
-        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
-    with right:
-        stat=df.groupby("ESTADO").size().reset_index(name="CONVENIOS")
-        fig=px.pie(stat,names="ESTADO",values="CONVENIOS",hole=.62,title="Estado de vigencia",
-                   color_discrete_sequence=COLORS)
-        fig.update_traces(textinfo="percent",textposition="inside")
-        style_fig(fig,360)
-        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
-
-    l2,r2 = st.columns(2)
-    with l2:
-        types=(df.groupby("TIPO").size().sort_values(ascending=False).head(8).sort_values()).reset_index(name="CONVENIOS")
-        fig=px.bar(types,x="CONVENIOS",y="TIPO",orientation="h",title="Tipos de convenio más frecuentes",
-                   color_discrete_sequence=[COLORS[0]])
-        style_fig(fig,380,legend=False)
-        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
-    with r2:
-        countries=(df[df["ÁMBITO"]=="Internacional"].groupby("PAÍS").size().sort_values(ascending=False).head(10).sort_values()).reset_index(name="CONVENIOS")
-        fig=px.bar(countries,x="CONVENIOS",y="PAÍS",orientation="h",title="Top países por convenios internacionales",
-                   color_discrete_sequence=[COLORS[2]])
-        style_fig(fig,380,legend=False)
-        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
-
-    st.markdown('<div class="section-title">Detalle de convenios</div>',unsafe_allow_html=True)
-    show=df[["AÑO","ÁMBITO","INSTITUCIÓN","PAÍS","TIPO","INICIO","VENCE","ESTADO","RESOLUCIÓN"]].copy()
-    show["INICIO"]=show["INICIO"].dt.strftime("%d/%m/%Y")
-    show["VENCE"]=show["VENCE"].dt.strftime("%d/%m/%Y")
-    st.dataframe(show,use_container_width=True,height=430,hide_index=True)
-
-# ---------- MOVILIDAD ----------
-elif page == "Movilidad académica":
-    hero("Movilidad académica", "Perfil estadístico de participación, modalidad, flujo, género, carreras y destinos.")
-
-    f1,f2,f3 = st.columns(3)
-    with f1:
-        mod = st.multiselect("Modalidad",safe_unique(mov_f["MODALIDAD"]),default=safe_unique(mov_f["MODALIDAD"]))
-    with f2:
-        who = st.multiselect("Participante",safe_unique(mov_f["QUIÉN"]),default=safe_unique(mov_f["QUIÉN"]))
-    with f3:
-        flow = st.multiselect("Flujo",safe_unique(mov_f["MOVILIDAD"]),default=safe_unique(mov_f["MOVILIDAD"]))
-    df = mov_f[mov_f["MODALIDAD"].isin(mod) & mov_f["QUIÉN"].isin(who) & mov_f["MOVILIDAD"].isin(flow)]
-
-    total=df["TOTAL"].sum()
-    intl=df.loc[df["MODALIDAD"].str.upper()=="INTERNACIONAL","TOTAL"].sum()
-    inb=df.loc[df["MOVILIDAD"].str.upper()=="INMIGRATORIA","TOTAL"].sum()
-    female=df.loc[df["GÉNERO"].str.upper()=="FEMENINO","TOTAL"].sum()
-    careers=df["CARRERA PROFESIONAL"].replace("nan",np.nan).nunique()
-    a,b,c,d,e = st.columns(5)
-    with a:kpi("Movilidades",fmt_int(total),"Periodo filtrado")
-    with b:kpi("Internacionales",fmt_pct(pct(intl,total)),f"{fmt_int(intl)} registros")
-    with c:kpi("Entrantes",fmt_pct(pct(inb,total)),f"{fmt_int(inb)} registros")
-    with d:kpi("Participación femenina",fmt_pct(pct(female,total)),f"{fmt_int(female)} registros")
-    with e:kpi("Carreras con movilidad",fmt_int(careers),"Cobertura observada")
-
-    yearly=df.groupby(["AÑO","MODALIDAD"])["TOTAL"].sum().reset_index()
-    yearly["AÑO"]=yearly["AÑO"].astype(str)
-    left,right=st.columns([1.5,1])
-    with left:
         fig=px.bar(yearly,x="AÑO",y="TOTAL",color="MODALIDAD",barmode="stack",
                    title="Evolución anual de la movilidad",color_discrete_sequence=COLORS)
-        style_fig(fig,360)
+        figstyle(fig,350)
         st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
-    with right:
-        g=df.groupby("GÉNERO")["TOTAL"].sum().reset_index()
-        fig=px.pie(g,names="GÉNERO",values="TOTAL",hole=.64,title="Participación por género",
+
+    with b:
+        flow=mov_f.groupby("MOVILIDAD")["TOTAL"].sum().reset_index()
+        fig=px.pie(flow,names="MOVILIDAD",values="TOTAL",hole=.68,
+                   title="Flujo académico: saliente vs. entrante",color_discrete_sequence=COLORS)
+        fig.update_traces(textinfo="percent",textposition="inside")
+        figstyle(fig,350)
+        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+
+    a,b=st.columns(2)
+    with a:
+        carr=(mov_f.groupby("CARRERA CANON" if "CARRERA CANON" in mov_f.columns else "CARRERA_CANON")["TOTAL"]
+              .sum().sort_values(ascending=False).head(10).sort_values()).reset_index()
+        carr.columns=["Carrera","Movilidad"]
+        fig=px.bar(carr,x="Movilidad",y="Carrera",orientation="h",
+                   title="Top 10 carreras con mayor movilidad",color_discrete_sequence=[COLORS[0]])
+        figstyle(fig,390,False)
+        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+
+    with b:
+        countries=(conv_f[conv_f["ÁMBITO"]=="Internacional"].groupby("PAÍS").size()
+                   .sort_values(ascending=False).head(10).sort_values()).reset_index(name="Convenios")
+        fig=px.bar(countries,x="Convenios",y="PAÍS",orientation="h",
+                   title="Países con mayor vinculación internacional",color_discrete_sequence=[COLORS[2]])
+        figstyle(fig,390,False)
+        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+
+# ---------- CONVENIOS ----------
+elif page=="Convenios":
+    total=len(conv_f); vig=(conv_f["ESTADO"]=="Vigente").sum()
+    exp=(conv_f["ESTADO"]=="Vence ≤ 12 meses").sum()
+    intl=(conv_f["ÁMBITO"]=="Internacional").sum()
+    countries=conv_f.loc[conv_f["ÁMBITO"]=="Internacional","PAÍS"].nunique()
+    a,b,c,d,e=st.columns(5)
+    with a:kpi("Convenios",fmt_int(total),"Filtro actual")
+    with b:kpi("Nacionales",fmt_int((conv_f["ÁMBITO"]=="Nacional").sum()),"Ámbito nacional")
+    with c:kpi("Internacionales",fmt_int(intl),fmt_pct(pct(intl,total))+" del total")
+    with d:kpi("Vigentes",fmt_int(vig),f"{fmt_int(exp)} vencen ≤ 12 meses")
+    with e:kpi("Países",fmt_int(countries),"Cobertura internacional")
+
+    l,r=st.columns([1.4,1])
+    with l:
+        yy=conv_f.groupby(["AÑO","ÁMBITO"]).size().reset_index(name="CONVENIOS")
+        yy["AÑO"]=yy["AÑO"].astype(str)
+        fig=px.bar(yy,x="AÑO",y="CONVENIOS",color="ÁMBITO",barmode="group",
+                   title="Convenios registrados por año",color_discrete_sequence=COLORS)
+        figstyle(fig,350); st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+    with r:
+        ss=conv_f.groupby("ESTADO").size().reset_index(name="CONVENIOS")
+        fig=px.pie(ss,names="ESTADO",values="CONVENIOS",hole=.65,title="Vigencia de convenios",
                    color_discrete_sequence=COLORS)
         fig.update_traces(textinfo="percent",textposition="inside")
-        style_fig(fig,360)
-        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+        figstyle(fig,350); st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
 
     c1,c2=st.columns(2)
     with c1:
-        carr=(df.groupby("CARRERA PROFESIONAL")["TOTAL"].sum().sort_values(ascending=False).head(12).sort_values()).reset_index()
-        fig=px.bar(carr,x="TOTAL",y="CARRERA PROFESIONAL",orientation="h",
-                   title="Carreras con mayor movilidad",color_discrete_sequence=[COLORS[0]])
-        style_fig(fig,430,legend=False)
-        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+        tp=(conv_f.groupby("TIPO").size().sort_values(ascending=False).head(10).sort_values()).reset_index(name="CONVENIOS")
+        fig=px.bar(tp,x="CONVENIOS",y="TIPO",orientation="h",title="Tipos de convenio",
+                   color_discrete_sequence=[COLORS[0]])
+        figstyle(fig,400,False); st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
     with c2:
-        dest=(df.groupby("REGIÓN / PAÍS")["TOTAL"].sum().sort_values(ascending=False).head(12).sort_values()).reset_index()
-        fig=px.bar(dest,x="TOTAL",y="REGIÓN / PAÍS",orientation="h",
-                   title="Principales regiones / países",color_discrete_sequence=[COLORS[2]])
-        style_fig(fig,430,legend=False)
-        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+        p=(conv_f[conv_f["ÁMBITO"]=="Internacional"].groupby("PAÍS").size()
+           .sort_values(ascending=False).head(10).sort_values()).reset_index(name="CONVENIOS")
+        fig=px.bar(p,x="CONVENIOS",y="PAÍS",orientation="h",title="Top países",
+                   color_discrete_sequence=[COLORS[2]])
+        figstyle(fig,400,False); st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
 
-    st.markdown('<div class="section-title">Detalle de movilidad</div>',unsafe_allow_html=True)
-    cols=["AÑO","PERÍODO","MOVILIDAD","MODALIDAD","QUIÉN","REGIÓN / PAÍS","CARRERA PROFESIONAL",
-          "UNIVERSIDAD DE ORIGEN","UNIVERSIDAD DE DESTINO","GÉNERO","TOTAL"]
-    st.dataframe(df[cols],use_container_width=True,height=420,hide_index=True)
+# ---------- MOVILIDAD ----------
+elif page=="Movilidad académica":
+    total=mov_f["TOTAL"].sum()
+    intl=mov_f.loc[mov_f["MODALIDAD"].str.upper()=="INTERNACIONAL","TOTAL"].sum()
+    incoming=mov_f.loc[mov_f["MOVILIDAD"].str.upper()=="INMIGRATORIA","TOTAL"].sum()
+    female=mov_f.loc[mov_f["GÉNERO"].str.upper()=="FEMENINO","TOTAL"].sum()
+    students=mov_f.loc[mov_f["QUIÉN"].str.upper().str.contains("ESTUD"),"TOTAL"].sum()
+    teachers=mov_f.loc[mov_f["QUIÉN"].str.upper().str.contains("DOC"),"TOTAL"].sum()
 
-# ---------- INDICADORES ----------
-elif page == "Indicadores estadísticos":
-    hero("Indicadores estadísticos", "Medidas derivadas para interpretar internacionalización, equilibrio de flujos, cobertura y concentración.")
+    a,b,c,d,e,f=st.columns(6)
+    with a:kpi("Movilidad total",fmt_int(total),"Filtro actual")
+    with b:kpi("Internacional",fmt_pct(pct(intl,total)),f"{fmt_int(intl)} registros")
+    with c:kpi("Entrante",fmt_pct(pct(incoming,total)),f"{fmt_int(incoming)} registros")
+    with d:kpi("Estudiantes",fmt_int(students),fmt_pct(pct(students,total))+" del total")
+    with e:kpi("Docentes",fmt_int(teachers),fmt_pct(pct(teachers,total))+" del total")
+    with f:kpi("Participación femenina",fmt_pct(pct(female,total)),f"{fmt_int(female)} registros")
 
-    total_mov=mov_f["TOTAL"].sum()
-    total_conv=len(conv_f)
-    international=mov_f.loc[mov_f["MODALIDAD"].str.upper()=="INTERNACIONAL","TOTAL"].sum()
+    l,r=st.columns([1.45,1])
+    with l:
+        yy=mov_f.groupby(["AÑO","MODALIDAD"])["TOTAL"].sum().reset_index()
+        yy["AÑO"]=yy["AÑO"].astype(str)
+        fig=px.bar(yy,x="AÑO",y="TOTAL",color="MODALIDAD",barmode="stack",
+                   title="Movilidad por año y modalidad",color_discrete_sequence=COLORS)
+        figstyle(fig,350); st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+    with r:
+        gg=mov_f.groupby("GÉNERO")["TOTAL"].sum().reset_index()
+        fig=px.pie(gg,names="GÉNERO",values="TOTAL",hole=.64,title="Participación por género",
+                   color_discrete_sequence=COLORS)
+        fig.update_traces(textinfo="percent",textposition="inside")
+        figstyle(fig,350); st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+
+    c1,c2=st.columns(2)
+    with c1:
+        x=(mov_f.groupby("CARRERA_CANON")["TOTAL"].sum().sort_values(ascending=False).head(12).sort_values()).reset_index()
+        fig=px.bar(x,x="TOTAL",y="CARRERA_CANON",orientation="h",title="Carreras con mayor movilidad",
+                   color_discrete_sequence=[COLORS[0]])
+        figstyle(fig,430,False); st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+    with c2:
+        x=(mov_f.groupby("REGIÓN / PAÍS")["TOTAL"].sum().sort_values(ascending=False).head(12).sort_values()).reset_index()
+        fig=px.bar(x,x="TOTAL",y="REGIÓN / PAÍS",orientation="h",title="Principales regiones / países",
+                   color_discrete_sequence=[COLORS[2]])
+        figstyle(fig,430,False); st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+
+# ---------- IMPACTO ----------
+elif page=="Impacto e indicadores":
+    students=mov_f.loc[mov_f["QUIÉN"].str.upper().str.contains("ESTUD"),"TOTAL"].sum()
+    intl_students=mov_f.loc[
+        mov_f["QUIÉN"].str.upper().str.contains("ESTUD") &
+        (mov_f["MODALIDAD"].str.upper()=="INTERNACIONAL"),"TOTAL"
+    ].sum()
+    outgoing_students=mov_f.loc[
+        mov_f["QUIÉN"].str.upper().str.contains("ESTUD") &
+        (mov_f["MOVILIDAD"].str.upper()=="EMIGRATORIA"),"TOTAL"
+    ].sum()
+    enrolled=mat_f["MATRICULADOS"].sum()
+    rate=1000*students/enrolled if enrolled else 0
+    rate_int=1000*intl_students/enrolled if enrolled else 0
+    rate_out=1000*outgoing_students/enrolled if enrolled else 0
+
+    # coverage by canonical mobility careers vs current filtered matriculation careers
+    mov_c=set(mov_f["CARRERA_CANON"].dropna().astype(str))
+    mat_c=set(mat_f["CARRERA"].dropna().astype(str))
+    if "EDUCACIÓN SECUNDARIA (TODAS)" in mov_c:
+        if any(c.startswith("EDUCACIÓN SECUNDARIA") for c in mat_c):
+            covered_secondary=True
+        else:
+            covered_secondary=False
+    covered=sum(1 for c in mat_c if c in mov_c)
+    if "EDUCACIÓN SECUNDARIA (TODAS)" in mov_c and covered_secondary:
+        covered += sum(1 for c in mat_c if c.startswith("EDUCACIÓN SECUNDARIA"))
+    coverage=pct(covered,len(mat_c)) if mat_c else 0
+
+    a,b,c,d=st.columns(4)
+    with a:kpi("Tasa de movilidad / 1 000",f"{rate:.1f}","Estudiantes en movilidad / matriculados P1")
+    with b:kpi("Tasa internacional / 1 000",f"{rate_int:.1f}","Movilidad internacional estudiantil / matriculados P1")
+    with c:kpi("Tasa saliente / 1 000",f"{rate_out:.1f}","Movilidad emigratoria estudiantil / matriculados P1")
+    with d:kpi("Cobertura de carreras",fmt_pct(coverage),f"{covered} de {len(mat_c)} carreras con movilidad")
+
+    total=mov_f["TOTAL"].sum()
     incoming=mov_f.loc[mov_f["MOVILIDAD"].str.upper()=="INMIGRATORIA","TOTAL"].sum()
     outgoing=mov_f.loc[mov_f["MOVILIDAD"].str.upper()=="EMIGRATORIA","TOTAL"].sum()
-    intl_conv=(conv_f["ÁMBITO"]=="Internacional").sum()
-    countries=conv_f.loc[conv_f["ÁMBITO"]=="Internacional","PAÍS"].nunique()
-    careers=mov_f["CARRERA PROFESIONAL"].replace("nan",np.nan).nunique()
-
-    # concentration top 5 destinations
+    female=mov_f.loc[mov_f["GÉNERO"].str.upper()=="FEMENINO","TOTAL"].sum()
     dest=mov_f.groupby("REGIÓN / PAÍS")["TOTAL"].sum().sort_values(ascending=False)
-    top5=dest.head(5).sum()
-    concentration=pct(top5,total_mov)
-    ratio=(outgoing/incoming) if incoming else np.nan
+    conc5=pct(dest.head(5).sum(),total)
+    ratio=outgoing/incoming if incoming else np.nan
 
-    a,b,c,d = st.columns(4)
-    with a:kpi("Índice de internacionalización",fmt_pct(pct(international,total_mov)),"Movilidad internacional / movilidad total")
-    with b:kpi("Índice de movilidad entrante",fmt_pct(pct(incoming,total_mov)),"Movilidad inmigratoria / movilidad total")
-    with c:kpi("Peso de convenios internacionales",fmt_pct(pct(intl_conv,total_conv)),"Convenios internacionales / total")
-    with d:kpi("Concentración Top 5 destinos",fmt_pct(concentration),"Participación de los cinco destinos principales")
+    a,b,c,d=st.columns(4)
+    with a:kpi("Índice de movilidad entrante",fmt_pct(pct(incoming,total)),"Entrante / movilidad total")
+    with b:kpi("Razón saliente : entrante","—" if pd.isna(ratio) else f"{ratio:.1f} : 1","Balance de flujos")
+    with c:kpi("Participación femenina",fmt_pct(pct(female,total)),"Composición por género")
+    with d:kpi("Concentración Top 5",fmt_pct(conc5),"Peso de los cinco destinos principales")
 
-    st.markdown('<div class="section-title">Indicadores complementarios</div>',unsafe_allow_html=True)
-    x1,x2,x3,x4=st.columns(4)
-    with x1:
-        val="—" if pd.isna(ratio) else f"{ratio:.1f} : 1"
-        kpi("Razón saliente / entrante",val,"Cuántas salidas existen por cada entrada")
-    with x2:kpi("Cobertura internacional",fmt_int(countries),"Países con convenios internacionales")
-    with x3:kpi("Carreras observadas",fmt_int(careers),"Programas con registros de movilidad")
-    with x4:kpi("Convenios próximos a vencer",fmt_int((conv_f["ESTADO"]=="Vence ≤ 12 meses").sum()),"Ventana de seguimiento: 12 meses")
-
-    st.info(
-        "Para incorporar tasas por cada 1 000 matriculados —un indicador comparativo más sólido— "
-        "se requiere agregar la base anual de matrícula por carrera/sede. La estructura del tablero ya puede ampliarse para ello."
-    )
-
-    # Scorecard by year
-    annual_m=mov_f.groupby("AÑO")["TOTAL"].sum()
-    annual_int=mov_f[mov_f["MODALIDAD"].str.upper()=="INTERNACIONAL"].groupby("AÑO")["TOTAL"].sum()
-    annual_in=mov_f[mov_f["MOVILIDAD"].str.upper()=="INMIGRATORIA"].groupby("AÑO")["TOTAL"].sum()
-    years=sorted(mov_f["AÑO"].dropna().astype(int).unique())
+    st.markdown('<div class="section">Comparación anual normalizada</div>',unsafe_allow_html=True)
     rows=[]
-    for y in years:
-        t=float(annual_m.get(y,0))
-        rows.append({
-            "Año":y,
-            "Movilidad total":int(t),
-            "% internacional":pct(annual_int.get(y,0),t),
-            "% entrante":pct(annual_in.get(y,0),t),
-        })
-    score=pd.DataFrame(rows)
-    if not score.empty:
-        fig=go.Figure()
-        fig.add_trace(go.Bar(x=score["Año"].astype(str),y=score["% internacional"],name="% internacional",marker_color=COLORS[0]))
-        fig.add_trace(go.Bar(x=score["Año"].astype(str),y=score["% entrante"],name="% entrante",marker_color=COLORS[2]))
-        fig.update_layout(barmode="group",title="Comparación anual de indicadores porcentuales")
-        style_fig(fig,390)
-        st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+    for y in years_common:
+        my=mov[mov["AÑO"]==y]
+        sy=my.loc[my["QUIÉN"].str.upper().str.contains("ESTUD"),"TOTAL"].sum()
+        iy=my.loc[
+            my["QUIÉN"].str.upper().str.contains("ESTUD") &
+            (my["MODALIDAD"].str.upper()=="INTERNACIONAL"),"TOTAL"
+        ].sum()
+        maty=mat[mat["AÑO"]==y]
+        if sede!="Todas": maty=maty[maty["SEDE"]==sede]
+        if fac!="Todas": maty=maty[maty["FACULTAD"]==fac]
+        if car!="Todas":
+            if car=="EDUCACIÓN SECUNDARIA (TODAS)":
+                maty=maty[maty["CARRERA"].str.upper().str.startswith("EDUCACIÓN SECUNDARIA")]
+            else:
+                maty=maty[maty["CARRERA"]==car]
+        den=maty["MATRICULADOS"].sum()
+        rows.append({"AÑO":str(y),"Tasa movilidad / 1000":1000*sy/den if den else 0,
+                     "Tasa internacional / 1000":1000*iy/den if den else 0})
+    df=pd.DataFrame(rows)
+    fig=go.Figure()
+    fig.add_trace(go.Bar(x=df["AÑO"],y=df["Tasa movilidad / 1000"],name="Movilidad / 1 000",marker_color=COLORS[0]))
+    fig.add_trace(go.Bar(x=df["AÑO"],y=df["Tasa internacional / 1000"],name="Internacional / 1 000",marker_color=COLORS[2]))
+    fig.update_layout(barmode="group",title="Tasas de movilidad por cada 1 000 matriculados · Periodo 1")
+    figstyle(fig,390)
+    st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+    st.caption("Denominador: matrícula del Periodo 1 de cada año. No se suman Periodo 1 y Periodo 2.")
 
-        st.dataframe(
-            score.style.format({"% internacional":"{:.1f}%","% entrante":"{:.1f}%"}),
-            use_container_width=True,hide_index=True
-        )
-
-# ---------- DATABASE ----------
+# ---------- BASE ----------
 else:
-    hero("Base de datos", "Consulta operativa y exportable de los registros que alimentan el tablero.")
-    tab1,tab2=st.tabs(["Convenios","Movilidad académica"])
-    with tab1:
-        query=st.text_input("Buscar en convenios",placeholder="Institución, país, resolución, tipo...")
-        df=conv_f.copy()
-        if query:
-            mask=df.astype(str).apply(lambda c:c.str.contains(query,case=False,na=False)).any(axis=1)
-            df=df[mask]
-        st.dataframe(df,use_container_width=True,height=520,hide_index=True)
-        st.download_button(
-            "Descargar convenios filtrados (CSV)",
-            df.to_csv(index=False).encode("utf-8-sig"),
-            "convenios_filtrados.csv","text/csv",use_container_width=True
-        )
-    with tab2:
-        query2=st.text_input("Buscar en movilidad",placeholder="Carrera, país, universidad, modalidad...")
-        df2=mov_f.copy()
-        if query2:
-            mask=df2.astype(str).apply(lambda c:c.str.contains(query2,case=False,na=False)).any(axis=1)
-            df2=df2[mask]
-        st.dataframe(df2,use_container_width=True,height=520,hide_index=True)
-        st.download_button(
-            "Descargar movilidad filtrada (CSV)",
-            df2.to_csv(index=False).encode("utf-8-sig"),
-            "movilidad_filtrada.csv","text/csv",use_container_width=True
-        )
+    t1,t2,t3=st.tabs(["Movilidad","Convenios","Matrícula · Periodo 1"])
+    with t1:
+        st.dataframe(mov_f,use_container_width=True,height=500,hide_index=True)
+        st.download_button("Descargar movilidad filtrada",mov_f.to_csv(index=False).encode("utf-8-sig"),
+                           "movilidad_filtrada.csv","text/csv")
+    with t2:
+        st.dataframe(conv_f,use_container_width=True,height=500,hide_index=True)
+        st.download_button("Descargar convenios filtrados",conv_f.to_csv(index=False).encode("utf-8-sig"),
+                           "convenios_filtrados.csv","text/csv")
+    with t3:
+        st.dataframe(mat_f,use_container_width=True,height=500,hide_index=True)
+        st.caption("Esta tabla contiene únicamente matrícula del Periodo 1.")
+        st.download_button("Descargar matrícula P1 filtrada",mat_f.to_csv(index=False).encode("utf-8-sig"),
+                           "matricula_periodo1_filtrada.csv","text/csv")
 
 st.markdown("---")
-st.caption("Universidad Nacional de Trujillo · Unidad de Estadística · Dashboard de cooperación y movilidad académica")
+st.caption("Universidad Nacional de Trujillo · Unidad de Estadística · Dashboard estadístico interactivo")
