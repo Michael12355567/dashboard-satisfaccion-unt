@@ -1,25 +1,16 @@
-# Dashboard UNT — versión estilo Power BI
+# Dashboard UNT POWERBI FIXED
 
-## Qué incluye
-- Filtros superiores tipo Power BI: Año, Sede, Facultad, Carrera y Modalidad.
-- Botón "Quitar filtros".
-- Filtros dependientes: Facultad -> Carrera.
-- KPI, gráficos y tablas se recalculan automáticamente.
-- Matrícula: SOLO Periodo 1. No se suma con Periodo 2.
-- Indicadores normalizados por cada 1 000 matriculados.
-- Convenios nacionales e internacionales.
-- Movilidad académica.
-- Base de datos exportable.
+Sube TODO el contenido de este ZIP a GitHub.
 
-## Publicación
-Sube TODO el contenido de esta carpeta a GitHub y usa `app.py` como Main file path.
+Importante:
+- app.py
+- utils.py
+- requirements.txt
+- .streamlit/config.toml
+- carpeta data/
+- también los 4 archivos de datos en la raíz
 
-Si ya tenías una versión anterior:
-1. Reemplaza `app.py`, `utils.py`, `requirements.txt`.
-2. Reemplaza completa la carpeta `data/`.
-3. Reemplaza `.streamlit/config.toml`.
-4. En Streamlit Cloud: Manage app -> Reboot app.
+Luego: Streamlit Cloud -> Manage app -> Reboot app
+Main file path: app.py
 
-## Importante sobre Sede
-La base de movilidad entregada no tiene campo sede. Por eso el filtro Sede afecta matrícula y las tasas
-normalizadas, pero no puede filtrar el conteo bruto de movilidad sin inventar información.
+Esta versión busca los archivos recursivamente, así que no depende de que estén solo dentro de /data.
