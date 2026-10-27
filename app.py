@@ -1,149 +1,322 @@
-import json,re
+"""Gestor SIRIES–UNT. Prototipo funcional LOCAL con login y extracción autorizada.
+
+No publicar esta instancia en internet con datos personales: para producción requiere
+SSO institucional, MFA, HTTPS, revisión de seguridad y alojamiento autorizado.
+"""
+from __future__ import annotations
+
+import json
+import time
+from datetime import datetime, timezone
+
 import pandas as pd
-import plotly.express as px
 import streamlit as st
-from services import BASE, leer_academico, filtrar, resumen, tendencia, word_informe, pdf_informe, validar
 
-st.set_page_config(page_title='Portal Estadístico UNT',page_icon='🎓',layout='wide',initial_sidebar_state='expanded')
-st.markdown('''<style>
-.stApp {background:#F7F9FC;} .block-container{padding-top:1.25rem;}
-h1,h2,h3 {color:#092653;} [data-testid="stSidebar"]{background:#EEF2F8;}
-div[data-testid="stMetric"]{background:white;padding:15px;border:1px solid #DDE5EF;border-radius:9px;}
-</style>''',unsafe_allow_html=True)
+from reportes import tabla, calidad, resumen, excel
+from seguridad import verificar, bloqueado, registrar, ultimos_movimientos
+from ura_api import URAClient, URAError
 
-@st.cache_data
-def base():
-    df=leer_academico();validar(df)
-    return df
+st.set_page_config(page_title="Gestor Estadístico SIRIES | UNT", page_icon="🎓", layout="wide")
 
-original=base()
-st.sidebar.title('🎓 Estadística UNT')
-st.sidebar.caption('2021–2026 · Prototipo local basado en registros institucionales')
-if 'extra_df' not in st.session_state:st.session_state.extra_df=None
-full=pd.concat([original,st.session_state.extra_df],ignore_index=True) if st.session_state.extra_df is not None else original
 
-facultades=['Toda la UNT']+sorted(full[full.dimension=='Facultad'].grupo.dropna().unique().tolist())
-fac=st.sidebar.selectbox('Facultad',facultades)
-carlist=sorted(full[(full.dimension=='Facultad') & ((full.grupo==fac) if fac!='Toda la UNT' else True)].programa.unique().tolist())
-car=st.sidebar.selectbox('Carrera profesional',['Todas']+carlist)
-sedes=['Todas']+sorted(full[full.dimension=='Sede'].grupo.dropna().unique().tolist())
-sede=st.sidebar.selectbox('Sede',sedes)
-ind=st.sidebar.multiselect('Indicadores académicos',sorted(full.indicador.unique()),default=sorted(full.indicador.unique()))
-years=st.sidebar.slider('Periodo',2021,2026,(2021,2026))
-anios=list(range(years[0],years[1]+1))
-st.sidebar.info('Porcentaje de crecimiento y proyecciones son resultados calculados. El sistema no atribuye automáticamente cifras institucionales a una facultad sin desglose.')
+def conf(nombre, defecto=""):
+    # secretos opcionales: la pantalla informa si falta configurar
+    try:
+        return str(st.secrets.get(nombre, defecto))
+    except (FileNotFoundError, Exception):
+        return str(defecto)
 
-filtered=filtrar(full,fac,car,sede,anios,ind)
-annual=resumen(filtered)
-st.title('Portal de Información Estadística UNT')
-st.caption('Consultas, análisis histórico, informes editables y proyecciones orientativas · No publicado en línea')
-if fac!='Toda la UNT':st.subheader(fac if car=='Todas' else f'{fac} · {car}')
 
-pan,consultar,informe,predecir,asistente,otras,administracion=st.tabs(['📊 Panorama','🔎 Explorador','📄 Informes Word/PDF','📈 Proyecciones','💬 Consultas guiadas','🏛 Otros indicadores','⚙️ Administración'])
-with pan:
-    if annual.empty:st.warning('No se encontraron registros para los filtros. Prueba ampliar los años, carreras o sedes.')
+def mensaje_error(e):
+    if isinstance(e, URAError):
+        st.error(str(e))
     else:
-        latest=annual.anio.max()
-        current=annual[annual.anio==latest]
-        columns=st.columns(min(4,len(current)))
-        for c,(_,r) in zip(columns,current.head(4).iterrows()):c.metric(r.indicador,f'{int(r.valor):,}'.replace(',',' '),help=f'Año {latest}')
-        choosing=st.selectbox('Visualizar indicador',list(annual.indicador.unique()),key='chartind')
-        dat=annual[annual.indicador==choosing]
-        fig=px.line(dat,x='anio',y='valor',markers=True,title=f'{choosing}: evolución anual',labels={'anio':'Año','valor':'Cantidad'})
-        fig.update_layout(plot_bgcolor='white',paper_bgcolor='white',font_color='#092653',xaxis=dict(dtick=1))
-        st.plotly_chart(fig,use_container_width=True)
-        st.dataframe(annual.pivot_table(index='indicador',columns='anio',values='valor',aggfunc='sum'),use_container_width=True)
-with consultar:
-    st.subheader('Detalle por carrera y año')
-    if filtered.empty:st.warning('Sin registros para este filtro.')
-    else:
-        pivot=filtered.pivot_table(index=['indicador','programa'],columns='anio',values='valor',aggfunc='sum')
-        st.dataframe(pivot,use_container_width=True,height=450)
-        st.download_button('Descargar datos filtrados (CSV)',filtered.to_csv(index=False).encode('utf-8-sig'),'estadisticas_unt.csv','text/csv')
-        with st.expander('Gráfico comparativo de carreras'):
-            selected=st.selectbox('Indicador a comparar',sorted(filtered.indicador.unique()),key='compare')
-            comp=filtered[filtered.indicador==selected]
-            st.plotly_chart(px.bar(comp,x='anio',y='valor',color='programa',barmode='group',title=selected),use_container_width=True)
-with informe:
-    st.subheader('Generador automático de informes')
-    st.write('El informe utiliza la selección de facultad, carrera, sede, años e indicadores del panel lateral y genera un archivo real para descargar.')
-    tt='Informe estadístico UNT' if fac=='Toda la UNT' else f'Informe estadístico de la Facultad de {fac}'
-    if car!='Todas':tt+=f' – {car}'
-    tt+=f', {years[0]}–{years[1]}'
-    st.text_input('Título del informe',tt,key='titulo_informe')
-    extra=st.text_area('Nota metodológica opcional','')
-    if filtered.empty:st.warning('Selecciona datos antes de generar el informe.')
-    else:
-        c1,c2=st.columns(2)
-        with c1:
-            try:st.download_button('📄 Descargar Word (.docx)',word_informe(filtered,st.session_state.titulo_informe,fac if car=='Todas' else car,extra),file_name='Informe_Estadistico_UNT.docx',mime='application/vnd.openxmlformats-officedocument.wordprocessingml.document',use_container_width=True)
-            except Exception as e:st.error(f'No se pudo generar Word: {e}')
-        with c2:
-            try:st.download_button('📕 Descargar PDF (.pdf)',pdf_informe(filtered,st.session_state.titulo_informe,fac if car=='Todas' else car),file_name='Informe_Estadistico_UNT.pdf',mime='application/pdf',use_container_width=True)
-            except Exception as e:st.error(f'No se pudo generar PDF: {e}')
-        st.caption('Diseño institucional adaptable. No reproduce pixel a pixel la plantilla histórica; incluye carátula, resultados por indicador y tablas editables.')
-with predecir:
-    st.subheader('Proyecciones orientativas')
-    if annual.empty:st.warning('Selecciona al menos un indicador.')
-    else:
-        which=st.selectbox('Serie a proyectar',sorted(annual.indicador.unique()),key='projind')
-        horizon=st.slider('Años futuros',1,5,3)
-        hist=annual[annual.indicador==which].sort_values('anio')
-        forecast=tendencia(hist,horizon)
-        if forecast.empty:st.warning('Se necesitan al menos tres años observados para proyectar.')
+        st.error("Ocurrió un error durante el procesamiento. Comprueba la configuración y los datos.")
+
+
+def iniciar_sesion():
+    user = conf("ADMIN_USERNAME")
+    pwdhash = conf("ADMIN_PASSWORD_HASH")
+    if not user or not pwdhash:
+        st.error("Aún no configuraste el usuario administrador.")
+        st.info("En la carpeta del proyecto, ejecuta: `py configurar.py` y luego reinicia Streamlit.")
+        st.stop()
+    if st.session_state.get("autorizado", False):
+        if st.session_state.get("usuario") != user or (time.monotonic() - st.session_state.get("actividad", 0) > 20 * 60):
+            st.session_state.clear()
+            st.warning("La sesión ha caducado. Vuelve a iniciar sesión.")
+            st.rerun()
+        st.session_state["actividad"] = time.monotonic()
+        return
+    st.title("🔐 Acceso restringido · SIRIES UNT")
+    st.caption("Unidad de Estadística – Oficina de Planeamiento y Presupuesto")
+    st.warning("Sistema local. No está autorizado para publicarse en internet ni compartir registros personales.")
+    with st.form("form_login", clear_on_submit=True):
+        entrada_usuario = st.text_input("Usuario", max_chars=32)
+        entrada_clave = st.text_input("Contraseña", type="password")
+        enviar = st.form_submit_button("Ingresar", use_container_width=True)
+    if enviar:
+        if not entrada_usuario or not entrada_clave:
+            st.error("Ingresa usuario y contraseña.")
+        elif bloqueado(entrada_usuario):
+            st.error("Acceso temporalmente bloqueado por intentos fallidos. Prueba después de 15 minutos.")
+        elif verificar(entrada_usuario, entrada_clave, user, pwdhash):
+            st.session_state["autorizado"] = True
+            st.session_state["usuario"] = user
+            st.session_state["actividad"] = time.monotonic()
+            registrar(user, "LOGIN", "Inicio de sesión")
+            st.rerun()
         else:
-            histplot=hist.rename(columns={'valor':'cantidad'}).assign(tipo='Observado')
-            fplot=forecast.rename(columns={'estimacion':'cantidad'}).assign(tipo='Proyección')
-            merged=pd.concat([histplot[['anio','cantidad','tipo']],fplot[['anio','cantidad','tipo']]])
-            st.plotly_chart(px.line(merged,x='anio',y='cantidad',color='tipo',markers=True,title='Tendencia lineal (demostrativa)'),use_container_width=True)
-            st.dataframe(forecast.rename(columns={'estimacion':'Estimación','inferior':'Banda inferior ilustrativa','superior':'Banda superior ilustrativa'}),hide_index=True,use_container_width=True)
-            st.warning('Proyección estadística simple, no pronóstico oficial. Las bandas son descriptivas, no intervalos de confianza calibrados. Un cambio de admisión o política puede invalidar la extrapolación.')
-with asistente:
-    st.subheader('Consultas en lenguaje natural — motor verificable')
-    st.write('Ejemplos: «¿Cuántos postulantes hubo en 2026?», «Muestra ingresantes 2021 a 2026», «¿Cuántos matriculados tiene esta facultad?»')
-    q=st.text_input('Escribe tu consulta')
-    if q:
-        low=q.casefold();available=sorted(annual.indicador.unique())
-        selected=next((k for k in available if k.casefold() in low),None)
-        # Sin interpretación generativa: solo patrones reconocidos sobre filtros actuales.
-        if not selected:st.info('No reconozco un indicador inequívoco. Prueba indicar "postulantes", "ingresantes", "matriculados", "vacantes", "bachilleres" o "titulados".')
-        else:
-            selected_data=annual[annual.indicador==selected]
-            foundyears=[int(y) for y in re.findall(r'20\d{2}',low)]
-            if foundyears and len(foundyears)==1:selected_data=selected_data[selected_data.anio==foundyears[0]]
-            if selected_data.empty:st.warning('No hay datos para ese año y selección.')
+            st.error("Credenciales incorrectas o cuenta temporalmente bloqueada.")
+    st.stop()
+
+
+def cierre():
+    registrar(st.session_state.get("usuario", ""), "LOGOUT", "Cierre de sesión")
+    st.session_state.clear()
+    st.rerun()
+
+
+def conectarse():
+    token = conf("URA_API_TOKEN")
+    if not token:
+        raise URAError("No está configurado el token de la URA. Ejecuta `py configurar.py` con un token renovado.")
+    return URAClient(token)
+
+
+def consulta(func, accion, descripcion):
+    try:
+        valor = func()
+        registrar(st.session_state.get("usuario", ""), accion, descripcion)
+        return valor
+    except Exception as err:
+        mensaje_error(err)
+        registrar(st.session_state.get("usuario", ""), "ERROR", f"{accion}: {type(err).__name__}")
+        return None
+
+
+def registro_resultado(filas, advertencias, metadata):
+    st.session_state["resultado"] = {"filas": filas, "advertencias": advertencias, "metadata": metadata}
+
+
+def mostrar_resultados():
+    r = st.session_state.get("resultado")
+    if not r:
+        st.info("Todavía no hay un reporte descargado en esta sesión.")
+        return
+    df = tabla(r["filas"])
+    qc = calidad(df, r["advertencias"])
+    st.subheader("Reporte obtenido")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Filas recibidas", f"{qc['filas']:,}")
+    col2.metric("Columnas", qc["columnas"])
+    col3.metric("DNI con formato inválido", qc["dni_invalidos"])
+    st.caption("Las filas no necesariamente equivalen a personas distintas. No se eliminan duplicados automáticamente.")
+    st.info("Los datos corresponden a la fecha de extracción. No son necesariamente una fotografía al cierre del semestre.")
+    st.write("**Resumen agregado por categoría (conteos de filas)**")
+    res = resumen(df)
+    if not res.empty:
+        st.dataframe(res, hide_index=True, use_container_width=True, height=260)
+    else:
+        st.write("El reporte no contiene registros.")
+    st.write("**Advertencias de calidad de la URA (agrupadas)**")
+    if not r["metadata"].get("advertencias_consultadas", True):
+        st.warning("La consulta de advertencias no está disponible para esta extracción. No significa que no existan problemas.")
+    if not qc["advertencias"].empty:
+        st.dataframe(qc["advertencias"], hide_index=True, use_container_width=True)
+    else:
+        st.success("No se recibieron advertencias o no están disponibles para este tipo de reporte.")
+    st.write("**Campos vacíos (sin contar campos que la guía indica siempre nulos)**")
+    if not qc["nulos"].empty:
+        st.dataframe(qc["nulos"], hide_index=True, use_container_width=True, height=220)
+    else:
+        st.write("No se detectaron campos vacíos adicionales.")
+    with st.expander("Ver metadatos de esta extracción"):
+        st.json(r["metadata"])
+    if st.button("Preparar Excel para descarga", key="build_excel"):
+        with st.spinner("Preparando el libro Excel..."):
+            try:
+                st.session_state["excel_preparado"] = excel(r["filas"], r["advertencias"], r["metadata"])
+                st.success("Excel preparado. Haz clic en el botón de descarga.")
+            except Exception as e:
+                mensaje_error(e)
+    if st.session_state.get("excel_preparado"):
+        nombre = f"UNT_SIRIES_{r['metadata'].get('tipo','reporte')}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+        st.download_button("⬇️ Descargar Excel (datos personales)",
+                           st.session_state["excel_preparado"],
+                           file_name=nombre, mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                           use_container_width=True)
+    st.caption("Guarda el Excel únicamente en una carpeta institucional protegida. No publiques registros identificables en Power BI web.")
+
+
+def lista_filtrada(items, campo_id, campo_nombre, titulo):
+    opciones = {}
+    for a in items or []:
+        if isinstance(a, dict) and campo_id in a:
+            nombre = str(a.get(campo_nombre) or "Sin descripción")
+            valor = a[campo_id]
+            opciones[f"{nombre} — ID {valor}"] = valor
+    elegir = st.multiselect(titulo, list(opciones), help="Sin selección significa todas.")
+    return [opciones[v] for v in elegir]
+
+
+def pregrado():
+    st.subheader("1. Reportes SIRIES de pregrado")
+    st.write("Consulta los catálogos primero. Los filtros vienen del servidor de la URA, no de ejemplos inventados.")
+    if st.button("🔍 Consultar períodos, escuelas y sedes disponibles"):
+        resultado = consulta(lambda: conectarse().catalogos(), "CATALOGOS", "Catálogos de pregrado")
+        if resultado is not None:
+            st.session_state["catalogos"] = resultado
+            st.success("Catálogos recibidos correctamente.")
+    cat = st.session_state.get("catalogos")
+    if cat:
+        periods = cat.get("periodos") or {}
+        opciones = sorted(periods.keys(), reverse=True) if isinstance(periods, dict) else []
+        if not opciones:
+            st.warning("La URA no devolvió períodos válidos.")
+            return
+        st.metric("Períodos disponibles", len(opciones))
+        tipo = st.radio("Reporte", ["Matriculados", "Egresados"], horizontal=True)
+        escogidos = st.multiselect("Períodos académicos (hasta 20)", opciones, default=opciones[:1])
+        escuelas = lista_filtrada(cat.get("escuelas"), "idEscuela", "nombre", "Escuelas profesionales")
+        sedes = lista_filtrada(cat.get("sedes"), "idSede", "nombre", "Sedes")
+        if st.button("📨 Solicitar generación del reporte", type="primary"):
+            if not (1 <= len(escogidos) <= 20):
+                st.error("Selecciona entre 1 y 20 períodos.")
             else:
-                st.success(f'{selected}: '+', '.join(f'{int(r.anio)}: {int(r.valor):,}'.replace(',',' ') for r in selected_data.itertuples()))
-                st.caption('Respuesta calculada exclusivamente con los registros filtrados. No es un modelo generativo ni consulta fuentes externas.')
-with otras:
-    st.subheader('Tablas institucionales adicionales')
-    st.write('Información complementaria nacional/institucional: posgrado, docentes, administrativos, RENACYT, innovación, movilidad, convenios, bienestar y presupuesto. No se atribuye automáticamente a una facultad.')
-    tables=json.loads((BASE/'data'/'tablas_institucionales.json').read_text(encoding='utf8'))
-    names={7:'Tasa de ingreso',8:'Matrícula anual',11:'Egresados UNT',16:'Posgrado',22:'Personal docente UNT',23:'Grados docentes',24:'Administrativos',25:'Regímenes administrativos',26:'RENACYT',27:'Investigadores por facultad',28:'Laboratorios por facultad',29:'Patentes',30:'Startups',31:'Movilidad nacional/internacional',36:'Movilidad por carrera',38:'Convenios internacionales',41:'Convenios nacionales',42:'Bienestar',43:'Atenciones mensuales',45:'Comedor por facultad',47:'Presupuesto UNT'}
-    number=st.selectbox('Tabla a consultar',list(names),format_func=lambda n:f'Tabla {n}: {names[n]}')
-    data=tables[number-1]
-    st.dataframe(pd.DataFrame(data['filas'],columns=data['columnas']),use_container_width=True,hide_index=True)
-    st.caption('Se presenta la tabla tal como consta en el documento institucional, sin imputar atribuciones a programas o facultades.')
-with administracion:
-    st.subheader('Incorporar nuevos datos académicos (durante esta sesión)')
-    st.write('Carga un CSV con las columnas indicador, dimension, grupo, programa, anio, valor. Las filas se validan y no se guardan permanentemente ni se publican.')
-    upload=st.file_uploader('Archivo CSV',type=['csv'])
-    if upload is not None:
-        try:
-            nd=pd.read_csv(upload)
-            required=['indicador','dimension','grupo','programa','anio','valor']
-            assert all(k in nd for k in required),'Faltan columnas obligatorias.'
-            nd=nd[required].copy();nd.anio=pd.to_numeric(nd.anio,errors='raise').astype(int);nd.valor=pd.to_numeric(nd.valor,errors='raise')
-            assert nd.dimension.isin(['Facultad','Sede']).all(),'Dimensiones no reconocidas'
-            assert nd.indicador.isin(original.indicador.unique()).all(),'Indicadores no reconocidos'
-            assert (nd.valor>=0).all(),'Hay valores negativos'
-            dupl=pd.concat([original,nd]).duplicated(subset=['indicador','dimension','grupo','programa','anio']).sum()
-            assert not dupl,f'Existen {dupl} claves duplicadas. No se reemplazaron datos existentes.'
-            st.success(f'Validado: {len(nd)} registros nuevos.')
-            if st.button('Incorporar temporalmente'):
-                st.session_state.extra_df=nd;st.rerun()
-        except Exception as e:st.error(f'Archivo no válido: {e}')
-    if st.session_state.extra_df is not None:
-        st.info('Hay datos temporales cargados para esta sesión.')
-        if st.button('Retirar datos temporales'):st.session_state.extra_df=None;st.rerun()
-    st.markdown('**Control de acceso:** prototipo local. Antes de un despliegue institucional se requiere autenticación, permisos, bitácora, protección de datos personales y aprobación de publicación.')
+                codigo = "siries_matriculados_pregrado" if tipo == "Matriculados" else "siries_egresados_pregrado"
+                with st.spinner("Enviando la solicitud a la URA..."):
+                    valor = consulta(lambda: conectarse().crear_pregrado(codigo, escogidos, escuelas, sedes),
+                                     "SOLICITAR", f"{codigo} / {','.join(escogidos)}")
+                if valor:
+                    st.session_state["job"] = {"id": valor["id"], "tipo": codigo, "periodos": escogidos,
+                                               "solicitado_en": datetime.now(timezone.utc).isoformat()}
+                    st.session_state["estado"] = valor.get("estado", "pendiente")
+                    st.session_state.pop("resultado", None)
+                    st.session_state.pop("excel_preparado", None)
+                    st.success("Solicitud creada. No es necesario solicitar nuevamente para consultar el avance.")
+    else:
+        st.info("Haz clic en el botón de catálogos para comenzar.")
+
+    job = st.session_state.get("job")
+    if not job:
+        return
+    st.divider()
+    st.write("**Seguimiento de la solicitud activa**")
+    st.code(job["id"], language=None)
+    st.write("Períodos solicitados:", ", ".join(job["periodos"]))
+    st.write("Estado conocido:", st.session_state.get("estado", "pendiente"))
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔄 Consultar estado"):
+            val = consulta(lambda: conectarse().estado(job["id"]), "ESTADO", "Consulta de estado")
+            if val:
+                st.session_state["estado"] = val.get("estado", "desconocido")
+                progreso = val.get("avance") or {}
+                st.write("Avance:", progreso)
+                st.info("Estado: " + str(val.get("estado", "desconocido")))
+    with col2:
+        if st.button("⬇️ Descargar reporte completado"):
+            # Verificación contra API, no confiamos solo en un estado anterior de la pantalla.
+            actual = consulta(lambda: conectarse().estado(job["id"]), "ESTADO", "Verificar antes de descargar")
+            if actual and actual.get("estado") == "completado":
+                with st.spinner("Descargando los registros y las advertencias..."):
+                    api = conectarse()
+                    filas = consulta(lambda: api.descargar_pregrado(job["id"]), "DESCARGA", job["tipo"])
+                    if filas is not None:
+                        avisos = consulta(lambda: api.advertencias(job["id"]), "ADVERTENCIAS", "Control de calidad")
+                        aviso_disponible = avisos is not None
+                        if avisos is None:
+                            st.warning("No se pudieron obtener las advertencias. Los datos no se marcarán como validados.")
+                            avisos = []
+                        registro_resultado(filas, avisos, {**job, "estado": "completado",
+                            "advertencias_consultadas": aviso_disponible,
+                            "fecha_descarga_utc": datetime.now(timezone.utc).isoformat(),
+                            "fuente": "API URA UNT"})
+                        st.session_state.pop("excel_preparado", None)
+                        st.success("Reporte descargado para esta sesión.")
+            elif actual:
+                st.warning("El reporte todavía no está completado. Estado: " + str(actual.get("estado")))
+    if st.session_state.get("estado") == "fallido":
+        if st.button("Reintentar reporte fallido"):
+            val = consulta(lambda: conectarse().reintentar(job["id"]), "REINTENTAR", "Reporte fallido")
+            if val is not None:
+                st.success("Reintento solicitado a la URA.")
+
+
+def segunda():
+    st.subheader("2. Reportes de Segunda Especialidad")
+    st.caption("Dos formatos: SIRIES (respuesta inmediata) o sistema de Segunda Especialidad (paginado).")
+    if st.button("🔍 Consultar filtros de Segunda Especialidad"):
+        val = consulta(lambda: conectarse().filtros_segunda(), "FILTROS_SE", "Catálogo Segunda Especialidad")
+        if val is not None:
+            st.session_state["filtros_segunda"] = val
+    cat = st.session_state.get("filtros_segunda")
+    if not cat:
+        st.info("Consulta primero los semestres y las especialidades disponibles.")
+        return
+    sem = cat.get("semestres") or []
+    sem_dict = {str(d.get("descripcion", "Semestre")) + " — ID " + str(d["idAnio_Semestre"]): d["idAnio_Semestre"]
+                for d in sem if isinstance(d, dict) and "idAnio_Semestre" in d}
+    if not sem_dict:
+        st.warning("El catálogo no contiene semestres de Segunda Especialidad.")
+        return
+    semestre = sem_dict[st.selectbox("Semestre", list(sem_dict))]
+    especialidades = {str(d.get("nombre", "Sin nombre")) + " — ID " + str(d["idSegunda_Especialidad"]): d["idSegunda_Especialidad"]
+                     for d in cat.get("especialidades", []) if isinstance(d, dict) and "idSegunda_Especialidad" in d}
+    espec_txt = st.selectbox("Especialidad", ["Todas"] + list(especialidades))
+    codigo_espec = None if espec_txt == "Todas" else especialidades[espec_txt]
+    sedes = {str(d.get("nombre", "Sin nombre")) + " — ID " + str(d["idSede"]): d["idSede"]
+             for d in cat.get("sedes", []) if isinstance(d, dict) and "idSede" in d}
+    sede_txt = st.selectbox("Sede", ["Todas"] + list(sedes))
+    codigo_sede = None if sede_txt == "Todas" else sedes[sede_txt]
+    categoria = st.radio("Reporte", ["matriculados", "egresados"], horizontal=True)
+    formato = st.radio("Formato", ["siries", "origen"], horizontal=True,
+                       format_func=lambda x: "SIRIES" if x == "siries" else "Segunda Especialidad / paginado")
+    if st.button("⬇️ Consultar y descargar Segunda Especialidad", type="primary"):
+        with st.spinner("Consultando datos de Segunda Especialidad..."):
+            result = consulta(lambda: conectarse().segunda_especialidad(categoria, semestre, formato, codigo_espec, codigo_sede),
+                              "DESCARGA_SE", f"{categoria} / semestre {semestre} / formato {formato}")
+        if result is not None:
+            registro_resultado(result, [], {"tipo": f"segunda_{categoria}_{formato}", "semestre": semestre,
+                "especialidad": codigo_espec or "Todas", "sede": codigo_sede or "Todas",
+                "fecha_descarga_utc": datetime.now(timezone.utc).isoformat(),
+                "fuente": "API URA UNT", "advertencias_consultadas": False})
+            st.session_state.pop("excel_preparado", None)
+            st.success("Registros descargados y disponibles para crear el Excel.")
+
+
+# Solo se renderizan páginas de datos tras un control de autenticación satisfactorio.
+iniciar_sesion()
+with st.sidebar:
+    st.title("🎓 SIRIES · UNT")
+    st.caption("Unidad de Estadística – OPP")
+    st.write("🔐 Usuario: " + st.session_state.get("usuario", ""))
+    st.success("Sesión autenticada (acceso local)")
+    if st.button("Cerrar sesión", use_container_width=True):
+        cierre()
+    st.divider()
+    if conf("URA_API_TOKEN"):
+        st.write("🔑 Credencial URA: configurada, pendiente de prueba si no has consultado")
+    else:
+        st.warning("🔑 Falta configurar el token URA")
+    st.caption("No subir este aplicativo con datos personales a una nube pública. El login local no sustituye MFA/SSO.")
+
+st.title("Sistema de Extracción Estadística SIRIES – UNT")
+st.caption("Versión 1.0 local · Matriculados, egresados y Segunda Especialidad · Elaborado según la guía URA")
+st.warning("Información de estudiantes: uso interno autorizado. Una contraseña no vuelve segura una publicación pública en internet.")
+mod_pre, mod_seg, mod_datos, mod_bitacora = st.tabs(["📚 Pregrado", "🎓 Segunda Especialidad", "📊 Resultados / Excel", "🕒 Bitácora"])
+with mod_pre:
+    pregrado()
+with mod_seg:
+    segunda()
+with mod_datos:
+    mostrar_resultados()
+with mod_bitacora:
+    st.subheader("Registro local de operaciones")
+    try:
+        log = pd.DataFrame(ultimos_movimientos(), columns=["Fecha UTC", "Usuario", "Acción", "Descripción"])
+        st.dataframe(log, hide_index=True, use_container_width=True)
+    except Exception:
+        st.error("No se pudo cargar la bitácora.")
+    st.caption("No se guardan números de documentos, nombres de estudiantes, contraseñas ni tokens en la bitácora.")

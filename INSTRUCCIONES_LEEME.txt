@@ -1,0 +1,71 @@
+GESTOR ESTADÍSTICO SIRIES — UNT (VERSIÓN 1.0 LOCAL)
+===============================================
+OBJETIVO: consultar la API URA y descargar matrículas/egresos en Excel, revisando
+advertencias y guardando una bitácora SIN datos personales.
+
+IMPORTANTE:
+- Esta versión está diseñada para TU COMPUTADORA (127.0.0.1), NO para internet.
+- El usuario/contraseña de Streamlit NO sustituye SSO, MFA, HTTPS, VPN ni revisión TI.
+- NO copies en el programa un token previamente difundido. Pide rotación a URA.
+- El token y el hash de tu contraseña se guardan en .streamlit/secrets.toml;
+  protege la cuenta de Windows y no subas esta carpeta a GitHub, correo o nube.
+- El aplicativo no se ha conectado ni probado contra el servidor real de la URA.
+
+REQUISITOS
+Windows 10/11, Python 3.11 o 3.12 (64 bits), acceso a red institucional.
+
+PASO 1. Descomprime este ZIP en una carpeta de tu PC, por ejemplo C:\UNT_SIRIES
+PASO 2. Haz doble clic en 01_INSTALAR_Y_CONFIGURAR.bat
+        (prepara Python, crea usuario, clave y configura TOKEN)
+PASO 3. Haz doble clic en 02_ABRIR_APLICATIVO.bat
+PASO 4. Abre http://127.0.0.1:8501 e ingresa usuario y contraseña.
+
+ALTERNATIVA MANUAL EN CMD / POWERSHELL:
+    py -m pip install -r requirements.txt
+    py configurar.py
+    py -m streamlit run app.py
+(Preferiblemente utiliza el entorno virtual creado por el instalador).
+PASO 8. En 'Pregrado', clic 'Consultar períodos, escuelas y sedes disponibles'.
+PASO 6. Escoge matrícula o egreso, período y opcionalmente escuela/sede.
+PASO 7. Clic 'Solicitar generación'. La URA entrega el ID del reporte.
+PASO 8. Usa 'Consultar estado' hasta ver 'completado'. Puede tardar minutos.
+PASO 9. Clic 'Descargar reporte completado'.
+PASO 10. En 'Resultados / Excel' elige 'Preparar Excel' y 'Descargar Excel'.
+
+SEGUNDA ESPECIALIDAD
+Abre la pestaña correspondiente. Consulta filtros, elige semestre y tipo, y
+presiona consultar y descargar. 'SIRIES' entrega todas las filas del semestre;
+'origen' recorre automáticamente las páginas de la API.
+
+QUÉ INFORMACIÓN ENTREGA LA API (SEGÚN GUÍA URA)
+Pregrado: matriculados y egresados, por períodos, escuela y sede.
+Segunda especialidad: matriculados/egresados en formato SIRIES o propio.
+No existe en esta guía una descarga de todas las tablas de la base de datos
+ni de postulantes, ingresantes, docentes o posgrado general.
+
+SI OCURRE UN ERROR
+401: token ausente/inválido; confirmar con URA.
+409: aún no listo o conflicto de filtros; consultar estado.
+410: caducó luego de 7 días; crear nueva solicitud.
+422: filtros incorrectos.
+429: excedió 60 solicitudes/min; la app hace reintentos acotados.
+500/503: problema temporal de servidor.
+
+SEGURIDAD
+1) No pongas en internet la URL local o los datos personales.
+2) No envíes el archivo secrets.toml ni bases de estudiantes por chat o correo.
+3) Los resultados se mantienen en memoria durante la sesión y se descargan
+   de forma explícita. La bitácora local no almacena filas de estudiantes.
+4) No se eliminan filas duplicadas automáticamente; la guía URA permite una fila
+   por estudiante/escuela/período/sistema académico.
+5) 'Nulos esperados' (p.ej., discapacidad, escala de pago) se distinguen.
+6) El Excel incluye: Datos, Resumen_filas, Calidad_nulos,
+   Advertencias_resumen, Advertencias_originales y Metadatos.
+7) Úsalo inicialmente para validación. Antes de reportar a MINEDU compara
+   totales y reglas con el cierre oficial y la plantilla SIRIES vigente.
+8) Si publicas en internet: SOLO tras autorización de UNT y una revisión formal
+   de seguridad. Usar HTTPS, SSO/OIDC institucional, MFA, VPN y roles/permisos.
+   NO basta un formulario de login para proteger expedientes estudiantiles.
+
+FUENTE: Guía de uso — API de reportes SIRIES para la Unidad de Estadística-OPP
+(8 páginas), colección Postman y oficio URA de 13/10/2026.
