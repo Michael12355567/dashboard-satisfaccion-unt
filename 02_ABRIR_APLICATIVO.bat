@@ -8,5 +8,5 @@ if not exist ".venv\Scripts\python.exe" (
 )
 echo Abre en el navegador: http://127.0.0.1:8501
 echo Para detener el servidor, cierra esta ventana o pulsa Ctrl+C.
-".venv\Scripts\python.exe" -m streamlit run app.py
+".venv\Scripts\python.exe" -m streamlit run app.py --server.address=127.0.0.1 --server.port=8501
 pause

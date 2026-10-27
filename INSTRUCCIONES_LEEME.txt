@@ -1,10 +1,11 @@
-GESTOR ESTADÍSTICO SIRIES — UNT (VERSIÓN 1.0 LOCAL)
+GESTOR ESTADÍSTICO SIRIES — UNT (VERSIÓN 1.1 CORREGIDA)
 ===============================================
 OBJETIVO: consultar la API URA y descargar matrículas/egresos en Excel, revisando
 advertencias y guardando una bitácora SIN datos personales.
 
 IMPORTANTE:
-- Esta versión está diseñada para TU COMPUTADORA (127.0.0.1), NO para internet.
+- Esta versión permite ejecución LOCAL con datos reales, y demostración en Cloud SIN consultar datos reales por defecto.
+- En el ZIP, app.py y requirements.txt están juntos EN LA RAÍZ para facilitar la subida a GitHub.
 - El usuario/contraseña de Streamlit NO sustituye SSO, MFA, HTTPS, VPN ni revisión TI.
 - NO copies en el programa un token previamente difundido. Pide rotación a URA.
 - El token y el hash de tu contraseña se guardan en .streamlit/secrets.toml;
@@ -25,7 +26,7 @@ ALTERNATIVA MANUAL EN CMD / POWERSHELL:
     py configurar.py
     py -m streamlit run app.py
 (Preferiblemente utiliza el entorno virtual creado por el instalador).
-PASO 8. En 'Pregrado', clic 'Consultar períodos, escuelas y sedes disponibles'.
+PASO 5. En 'Pregrado', clic 'Consultar períodos, escuelas y sedes disponibles'.
 PASO 6. Escoge matrícula o egreso, período y opcionalmente escuela/sede.
 PASO 7. Clic 'Solicitar generación'. La URA entrega el ID del reporte.
 PASO 8. Usa 'Consultar estado' hasta ver 'completado'. Puede tardar minutos.
@@ -69,3 +70,6 @@ SEGURIDAD
 
 FUENTE: Guía de uso — API de reportes SIRIES para la Unidad de Estadística-OPP
 (8 páginas), colección Postman y oficio URA de 13/10/2026.
+
+STREAMLIT CLOUD
+Consulta LEEME_GITHUB_CLOUD.md. NO subas el token a GitHub ni lo configures en un sitio públicamente accesible para descargar registros personales. Los datos reales permanecen desactivados en el despliegue Cloud recomendado.

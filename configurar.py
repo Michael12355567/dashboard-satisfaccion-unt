@@ -38,6 +38,7 @@ def main():
     contenido += "ADMIN_USERNAME = " + json.dumps(nombre) + "\n"
     contenido += "ADMIN_PASSWORD_HASH = " + json.dumps(pwd_hash) + "\n"
     contenido += "URA_API_TOKEN = " + json.dumps(token) + "\n"
+    contenido += "PERMITIR_EXTRACCION = true\n"  # Solo configuración local explícita.
     RUTA.parent.mkdir(exist_ok=True)
     # Crear atomicamente y con permisos restrictivos donde el sistema lo permite.
     tmp = RUTA.with_suffix(".tmp")

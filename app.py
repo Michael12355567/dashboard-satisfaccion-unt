@@ -13,7 +13,15 @@ import pandas as pd
 import streamlit as st
 
 from reportes import tabla, calidad, resumen, excel
-from seguridad import verificar, bloqueado, registrar, ultimos_movimientos
+# Si Streamlit Cloud omitió instalar las dependencias, mostrar un mensaje claro
+# en lugar de una excepción que confunda al usuario. Nunca continuar sin autenticación.
+try:
+    from seguridad import verificar, bloqueado, registrar, ultimos_movimientos
+except ModuleNotFoundError as error:
+    if error.name in {"argon2", "argon2_cffi_bindings", "_argon2_cffi_bindings"}:
+        st.error("Falta instalar argon2-cffi. Verifica que requirements.txt esté junto a app.py en GitHub y reinicia el despliegue.")
+        st.stop()
+    raise
 from ura_api import URAClient, URAError
 
 st.set_page_config(page_title="Gestor Estadístico SIRIES | UNT", page_icon="🎓", layout="wide")
@@ -23,7 +31,7 @@ def conf(nombre, defecto=""):
     # secretos opcionales: la pantalla informa si falta configurar
     try:
         return str(st.secrets.get(nombre, defecto))
-    except (FileNotFoundError, Exception):
+    except Exception:
         return str(defecto)
 
 
@@ -38,8 +46,8 @@ def iniciar_sesion():
     user = conf("ADMIN_USERNAME")
     pwdhash = conf("ADMIN_PASSWORD_HASH")
     if not user or not pwdhash:
-        st.error("Aún no configuraste el usuario administrador.")
-        st.info("En la carpeta del proyecto, ejecuta: `py configurar.py` y luego reinicia Streamlit.")
+        st.error("Falta configurar el usuario administrador; el acceso se mantiene cerrado.")
+        st.info("En Windows ejecuta `py configurar.py`. En Streamlit Cloud configura ADMIN_USERNAME y ADMIN_PASSWORD_HASH en App settings → Secrets (consulta LEEME_GITHUB_CLOUD.md).")
         st.stop()
     if st.session_state.get("autorizado", False):
         if st.session_state.get("usuario") != user or (time.monotonic() - st.session_state.get("actividad", 0) > 20 * 60):
@@ -50,10 +58,10 @@ def iniciar_sesion():
         return
     st.title("🔐 Acceso restringido · SIRIES UNT")
     st.caption("Unidad de Estadística – Oficina de Planeamiento y Presupuesto")
-    st.warning("Sistema local. No está autorizado para publicarse en internet ni compartir registros personales.")
+    st.warning("Acceso de prueba. No alojes datos personales ni el token URA en Streamlit Community Cloud. Usa el despliegue local para reportes reales.")
     with st.form("form_login", clear_on_submit=True):
         entrada_usuario = st.text_input("Usuario", max_chars=32)
-        entrada_clave = st.text_input("Contraseña", type="password")
+        entrada_clave = st.text_input("Contraseña", type="password", max_chars=128)
         enviar = st.form_submit_button("Ingresar", use_container_width=True)
     if enviar:
         if not entrada_usuario or not entrada_clave:
@@ -77,7 +85,15 @@ def cierre():
     st.rerun()
 
 
+def permitir_extraccion():
+    # Esta función se activa SOLO explícitamente en instalaciones locales autorizadas.
+    # Para subir código a GitHub/Cloud permanece apagada por defecto.
+    return conf("PERMITIR_EXTRACCION", "false").strip().lower() == "true"
+
+
 def conectarse():
+    if not permitir_extraccion():
+        raise URAError("Las consultas con información académica están DESACTIVADAS en esta instalación. Úsalas solo en un equipo/servidor institucional autorizado, según LEEME_GITHUB_CLOUD.md.")
     token = conf("URA_API_TOKEN")
     if not token:
         raise URAError("No está configurado el token de la URA. Ejecuta `py configurar.py` con un token renovado.")
@@ -292,18 +308,22 @@ with st.sidebar:
     st.title("🎓 SIRIES · UNT")
     st.caption("Unidad de Estadística – OPP")
     st.write("🔐 Usuario: " + st.session_state.get("usuario", ""))
-    st.success("Sesión autenticada (acceso local)")
+    st.success("Sesión autenticada")
     if st.button("Cerrar sesión", use_container_width=True):
         cierre()
     st.divider()
-    if conf("URA_API_TOKEN"):
-        st.write("🔑 Credencial URA: configurada, pendiente de prueba si no has consultado")
+    if not permitir_extraccion():
+        st.info("🔒 Consulta URA deshabilitada (modo demostración sin datos personales).")
+    elif conf("URA_API_TOKEN"):
+        st.write("🔑 Credencial URA configurada (por verificar con una consulta).")
     else:
         st.warning("🔑 Falta configurar el token URA")
     st.caption("No subir este aplicativo con datos personales a una nube pública. El login local no sustituye MFA/SSO.")
 
 st.title("Sistema de Extracción Estadística SIRIES – UNT")
-st.caption("Versión 1.0 local · Matriculados, egresados y Segunda Especialidad · Elaborado según la guía URA")
+st.caption("Versión 1.1 corregida · Matriculados, egresados y Segunda Especialidad · Basado en la guía URA")
+if not permitir_extraccion():
+    st.info("MODO DEMOSTRACIÓN: puedes ver las pantallas después de iniciar sesión, pero los botones que consultan la API mostrarán que el acceso está desactivado. Para usar datos reales, ejecuta el programa localmente con autorización.")
 st.warning("Información de estudiantes: uso interno autorizado. Una contraseña no vuelve segura una publicación pública en internet.")
 mod_pre, mod_seg, mod_datos, mod_bitacora = st.tabs(["📚 Pregrado", "🎓 Segunda Especialidad", "📊 Resultados / Excel", "🕒 Bitácora"])
 with mod_pre:
